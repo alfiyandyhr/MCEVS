@@ -9,7 +9,7 @@ class FuselageWeight(om.ExplicitComponent):
 		l_fuse	: fuselage length, not including nose mounted nacelle length [m]
 		p_max	: maximum fuselage perimeter [m]
 	Inputs:
-		eVTOL|W_total : total weight [kg]
+		eVTOL|W_takeoff : total take-off weight [kg]
 	Outputs:
 		eVTOL|W_fuselage : fuselage weight [kg]
 	Notes:
@@ -26,22 +26,22 @@ class FuselageWeight(om.ExplicitComponent):
 		self.options.declare('p_max', types=float, units='m', desc='Maximum fuselage perimeter')
 
 	def setup(self):
-		self.add_input('eVTOL|W_total', units='kg', desc='Total weight')
+		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total weight')
 		self.add_output('eVTOL|W_fuselage', units='kg', desc='Fuselage weight')
-		self.declare_partials('eVTOL|W_fuselage', 'eVTOL|W_total')
+		self.declare_partials('eVTOL|W_fuselage', 'eVTOL|W_takeoff')
 
 	def compute(self, inputs, outputs):
 		n_pax = self.options['n_pax']
 		l_fuse = self.options['l_fuse']		# in [m]
 		p_max = self.options['p_max']		# in [m]
-		W_total = inputs['eVTOL|W_total']	# in [kg]
+		W_takeoff = inputs['eVTOL|W_takeoff']	# in [kg]
 
 		# Calculating W_fuselage
 		kg_to_lb = 2.20462**0.144
 		m_to_ft = 3.28084**0.383
 		lb_to_kg = 0.453592
 		
-		W_fuselage = 14.86 * W_total**0.144 * (l_fuse/p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
+		W_fuselage = 14.86 * W_takeoff**0.144 * (l_fuse/p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
 
 		outputs['eVTOL|W_fuselage'] = W_fuselage # in [kg]
 
@@ -49,11 +49,11 @@ class FuselageWeight(om.ExplicitComponent):
 		n_pax = self.options['n_pax']
 		l_fuse = self.options['l_fuse'] 	# in [m]
 		p_max = self.options['p_max'] 		# in [m]
-		W_total = inputs['eVTOL|W_total']	# in [kg]
+		W_takeoff = inputs['eVTOL|W_takeoff']	# in [kg]
 
 		kg_to_lb = 2.20462**0.144
 		m_to_ft = 3.28084**0.383
 		lb_to_kg = 0.453592
-		dWfuse_dWtotal = 14.86 * 0.144 * W_total**(-0.856) * (l_fuse/p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
+		dWfuse_dWtakeoff = 14.86 * 0.144 * W_takeoff**(-0.856) * (l_fuse/p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
 
-		partials['eVTOL|W_fuselage', 'eVTOL|W_total'] = dWfuse_dWtotal
+		partials['eVTOL|W_fuselage', 'eVTOL|W_takeoff'] = dWfuse_dWtakeoff
