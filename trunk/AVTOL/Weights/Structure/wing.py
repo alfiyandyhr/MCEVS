@@ -31,7 +31,7 @@ class WingWeight(om.ExplicitComponent):
 		self.options.declare('n_ult', types=float, desc='Design ultimate load factor')
 
 	def setup(self):
-		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total weight')
+		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
 		self.add_input('eVTOL|S_wing', units='m**2', desc='Wing area')
 		self.add_output('eVTOL|W_wing', units='kg', desc='Wing weight')
 		self.declare_partials('eVTOL|W_wing', 'eVTOL|W_takeoff')
