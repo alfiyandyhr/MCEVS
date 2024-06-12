@@ -8,7 +8,7 @@ class WingWeight(om.ExplicitComponent):
 		wing_AR : wing aspect ratio
 		n_ult	: design ultimate load factor
 	Inputs:
-		eVTOL|W_total 	: total weight [kg]
+		eVTOL|W_takeoff : total take-off weight [kg]
 		eVTOL|S_wing	: wing area [m**2]
 	Outputs:
 		eVTOL|W_wing	: wing weight [kg]
@@ -31,16 +31,16 @@ class WingWeight(om.ExplicitComponent):
 		self.options.declare('n_ult', types=float, desc='Design ultimate load factor')
 
 	def setup(self):
-		self.add_input('eVTOL|W_total', units='kg', desc='Total weight')
+		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total weight')
 		self.add_input('eVTOL|S_wing', units='m**2', desc='Wing area')
 		self.add_output('eVTOL|W_wing', units='kg', desc='Wing weight')
-		self.declare_partials('eVTOL|W_wing', 'eVTOL|W_total')
+		self.declare_partials('eVTOL|W_wing', 'eVTOL|W_takeoff')
 		self.declare_partials('eVTOL|W_wing', 'eVTOL|S_wing')
 
 	def compute(self, inputs, outputs):
 		wing_AR = self.options['wing_AR']
 		n_ult = self.options['n_ult']
-		W_total = inputs['eVTOL|W_total']
+		W_takeoff = inputs['eVTOL|W_takeoff']
 		S_wing = inputs['eVTOL|S_wing']
 
 		# Calculating W_wing
@@ -48,14 +48,14 @@ class WingWeight(om.ExplicitComponent):
 		m2_to_ft2 = (3.28084*3.28084)**0.360
 		lb_to_kg = 0.453592
 
-		W_wing = 0.04674 * W_total**0.397 * S_wing**0.360 * n_ult**0.397 * wing_AR**1.712 * kg_to_lb * m2_to_ft2 * lb_to_kg
+		W_wing = 0.04674 * W_takeoff**0.397 * S_wing**0.360 * n_ult**0.397 * wing_AR**1.712 * kg_to_lb * m2_to_ft2 * lb_to_kg
 
 		outputs['eVTOL|W_wing'] = W_wing # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		wing_AR = self.options['wing_AR']
 		n_ult = self.options['n_ult']
-		W_total = inputs['eVTOL|W_total']
+		W_takeoff = inputs['eVTOL|W_takeoff']
 		S_wing = inputs['eVTOL|S_wing']
 
 		# Calculating W_wing
@@ -63,11 +63,11 @@ class WingWeight(om.ExplicitComponent):
 		m2_to_ft2 = (3.28084*3.28084)**0.360
 		lb_to_kg = 0.453592
 
-		dWwing_dWtotal = 0.04674 * 0.397 * W_total**(-0.603) * S_wing**0.360 * n_ult**0.397 * wing_AR**1.712 * kg_to_lb * m2_to_ft2 * lb_to_kg
+		dWwing_dWtakeoff = 0.04674 * 0.397 * W_takeoff**(-0.603) * S_wing**0.360 * n_ult**0.397 * wing_AR**1.712 * kg_to_lb * m2_to_ft2 * lb_to_kg
 
-		dWwing_dSwing = 0.04674 * W_total**0.397 * 0.360 * S_wing**(-0.640) * n_ult**0.397 * wing_AR**1.712 * kg_to_lb * m2_to_ft2 * lb_to_kg
+		dWwing_dSwing = 0.04674 * W_takeoff**0.397 * 0.360 * S_wing**(-0.640) * n_ult**0.397 * wing_AR**1.712 * kg_to_lb * m2_to_ft2 * lb_to_kg
 
-		partials['eVTOL|W_wing', 'eVTOL|W_total'] = dWwing_dWtotal
+		partials['eVTOL|W_wing', 'eVTOL|W_takeoff'] = dWwing_dWtakeoff
 		partials['eVTOL|W_wing', 'eVTOL|S_wing'] = dWwing_dSwing
 
 
