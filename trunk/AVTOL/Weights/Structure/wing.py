@@ -6,7 +6,7 @@ class WingWeight(om.ExplicitComponent):
 	Computes cantilever wing weight
 	Parameters:
 		wing_AR : wing aspect ratio
-		n_ult	: design ultimate load factor
+		n_ult	: design ultimate load factor (default=3.0)
 	Inputs:
 		eVTOL|W_takeoff : total take-off weight [kg]
 		eVTOL|S_wing	: wing area [m**2]
@@ -16,6 +16,7 @@ class WingWeight(om.ExplicitComponent):
 		> Class II Cessna method for General Aviation airplanes
 		> Used for small, relatively low performance type airplanes
 		> Maximum cruise speed <= 200 kts (320 kph, Mach 0.3)
+		> n_ult = 3.0, valid for light utility aircraft
 		> This method includes:
 			* weight of wing tip fairing
 			* wing control surfaces
@@ -28,7 +29,7 @@ class WingWeight(om.ExplicitComponent):
 	"""
 	def initialize(self):
 		self.options.declare('wing_AR', types=float, desc='Wing aspect ratio')
-		self.options.declare('n_ult', types=float, desc='Design ultimate load factor')
+		self.options.declare('n_ult', types=float, default=3.0, desc='Design ultimate load factor')
 
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
