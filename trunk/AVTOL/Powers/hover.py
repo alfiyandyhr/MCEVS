@@ -11,7 +11,7 @@ class PowerHover(om.ExplicitComponent):
 		g 			: gravitational acceleration [m/s**2]
 	Inputs:
 		eVTOL|W_takeoff : total take-off weight [kg]
-		Rotor|Diameter	: lifting rotor diameter [m]
+		Rotor|radius	: lifting rotor radius [m]
 	Outputs:
 		power_hover	: power required for hover [W]
 		thrust_each : thrust produced by each rotor during hover [N]
@@ -24,7 +24,7 @@ class PowerHover(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
-		self.add_input('Rotor|Diameter', units='m', desc='Lifting rotor diameter')
+		self.add_input('Rotor|radius', units='m', desc='Lifting rotor radius')
 		self.add_output('power_hover', units='W', desc='Power required for hover')
 		self.add_output('thrust_each', units='N', desc='Thrust of each rotor during hover')
 		self.declare_partials('*', '*')
@@ -36,9 +36,9 @@ class PowerHover(om.ExplicitComponent):
 		g = self.options['g']
 
 		W_takeoff = inputs['eVTOL|W_takeoff']
-		D = inputs['Rotor|Diameter'] # in [m]
+		r = inputs['Rotor|radius'] # in [m]
 
-		S_disk = 0.25 * np.pi * D**2
+		S_disk = np.pi * r**2
 		outputs['power_hover'] = 1/hover_FM * np.sqrt(((W_takeoff*g)**3)/(2*rho_air*S_disk*N_rotor))
 		outputs['thrust_each'] = (W_takeoff*g)/N_rotor
 
@@ -49,11 +49,12 @@ class PowerHover(om.ExplicitComponent):
 		g = self.options['g']
 
 		W_takeoff = inputs['eVTOL|W_takeoff']
-		D = inputs['Rotor|Diameter'] # in [m]
+		r = inputs['Rotor|radius'] # in [m]
 
-		S_disk = 0.25 * np.pi * D**2
-		dSdisk_dD = 0.5 * np.pi * D
+		S_disk = np.pi * r**2
+		dSdisk_dr = 2 * np.pi * r
 
 		partials['power_hover', 'eVTOL|W_takeoff'] = 1.5/hover_FM * np.sqrt((W_takeoff * g**3)/(2*rho_air*S_disk*N_rotor))
-		partials['power_hover', 'Rotor|Diameter'] = -0.5/hover_FM * np.sqrt(((W_takeoff*g)**3)/(2*rho_air*N_rotor*S_disk**3)) * dSdisk_dD
+		partials['power_hover', 'Rotor|radius'] = -0.5/hover_FM * np.sqrt(((W_takeoff*g)**3)/(2*rho_air*N_rotor*S_disk**3)) * dSdisk_dr
 		partials['thrust_each', 'eVTOL|W_takeoff'] = g / N_rotor
+
