@@ -20,7 +20,7 @@ class WingedCruiseDrag(om.ExplicitComponent):
 		> Oswald efficiency is in the function of wing aspect ratio (typically ~0.8)
 		> The wing should be un-swept.
 	Source:
-
+		Raymer, D. P. Aircraft Design: A Conceptual Approach. Reston, Virginia: American Institute of Aeronautics and Astronautics, Inc., 2006.
 	"""
 	def initialize(self):
 		self.options.declare('rho_air', default=1.225, desc='Air density')
