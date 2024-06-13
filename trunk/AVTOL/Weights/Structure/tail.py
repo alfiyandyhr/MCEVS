@@ -5,7 +5,7 @@ class HorizontalTailWeight(om.ExplicitComponent):
 	"""
 	Computes horizontal tail weight
 	Parameters:
-		htail_AR	: horizontal tail aspect ratio
+		htail_AR	: horizontal tail aspect ratio (default=2.0)
 		t_rh		: maximum root thickness [m]
 	Inputs:
 		eVTOL|W_takeoff : total take-off weight [kg]
@@ -21,7 +21,7 @@ class HorizontalTailWeight(om.ExplicitComponent):
 		Roskam, J. Airplane Design - Part V: Component Weight Estimation. Lawrence, Kansas: Analysis and Research Corporation, 2003.
 	"""
 	def initialize(self):
-		self.options.declare('htail_AR', types=float, desc='Horizontal tail aspect ratio')
+		self.options.declare('htail_AR', types=float, default=2.0, desc='Horizontal tail aspect ratio')
 		self.options.declare('t_rh', types=float, units='m', desc='Maximum root thickness')
 
 	def setup(self):
@@ -70,7 +70,7 @@ class VerticalTailWeight(om.ExplicitComponent):
 	"""
 	Computes vertical tail weight
 	Parameters:
-		vtail_AR	: horizontal tail aspect ratio
+		vtail_AR	: horizontal tail aspect ratio (default=1.3)
 		vtail_sweep	: vertical tail quarter chord sweep angle [deg]
 		t_rv		: maximum root thickness [m]
 	Inputs:
@@ -86,7 +86,7 @@ class VerticalTailWeight(om.ExplicitComponent):
 		Roskam, J. Airplane Design - Part V: Component Weight Estimation. Lawrence, Kansas: Analysis and Research Corporation, 2003.
 	"""
 	def initialize(self):
-		self.options.declare('vtail_AR', types=float, desc='Horizontal tail aspect ratio')
+		self.options.declare('vtail_AR', types=float, default=1.3, desc='Horizontal tail aspect ratio')
 		self.options.declare('vtail_sweep', types=float, desc='Vertical tail quarter chord sweep angle')
 		self.options.declare('t_rv', types=float, units='m', desc='Maximum root thickness')
 
