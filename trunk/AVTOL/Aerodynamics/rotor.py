@@ -58,7 +58,7 @@ class RotorAdvanceRatio(om.ExplicitComponent):
 		Rotor|omega 	: rotor's angular velocity [rad/s]
 		v_inf			: freestream velocity [m/s]
 	Outputs:
-		Rotor|mu
+		Rotor|mu 		: rotor's advance ratio
 	Source:
 		Johnson, W., “Rotorcraft Aeromechanics,” Cambridge University Press, 2013.
 	"""
@@ -92,7 +92,7 @@ class RotorAdvanceRatio(om.ExplicitComponent):
 class InducedVelocity(om.ExplicitComponent):
 	"""
 	Computes the induced velocity of a rotor from lambda's equation
-		lambda = (v_inf * sin(a) + v_ind) / (omega * r)
+		lambda = (v_inf * sin(alpha) + v_ind) / (omega * r)
 	Inputs:
 		Rotor|radius	: rotor radius [m]
 		Rotor|alpha		: rotor tilt angle [rad]
@@ -132,3 +132,41 @@ class InducedVelocity(om.ExplicitComponent):
 		partials['v_induced', 'Rotor|omega'] = r * lmbd
 		partials['v_induced', 'Rotor|lambda'] = omega * r
 		partials['v_induced', 'v_inf'] = - np.sin(a)
+
+class RotorInflow(om.ImplicitComponent):
+	"""
+	Computes the inflow of a rotor (lambda) implicitly
+	Inputs:
+		Rotor|mu 	 : rotor's advance ratio
+		Rotor|alpha	 : rotor tilt angle [rad]
+		Rotor|Ct 	 : rotor's thrust coefficient
+	Outputs:
+		Rotor|lambda : rotor inflow ratio, positive down through disk
+	"""
+	def setup(self):
+		self.add_input('Rotor|mu', desc='Advance ratio')
+		self.add_input('Rotor|alpha', units='rad', desc='Rotor tilt angle')
+		self.add_input('Rotor|Ct', desc='Thrust coefficient')
+		self.add_output('Rotor|lambda', val=0.1, lower=0.0, upper=10.0, desc='Rotor inflow')
+		self.declare_partials('*', '*')
+
+	def apply_nonlinear(self, inputs, outputs, residuals):
+		mu = inputs['Rotor|mu']
+		a = inputs['Rotor|alpha']
+		Ct = inputs['Rotor|Ct']
+		lmbd = outputs['Rotor|lambda']
+		# Compute residuals
+		residuals['Rotor|lambda'] = mu*np.tan(a) + Ct / (2*np.sqrt((mu**2 + lmbd**2))) - lmbd
+
+	def linearize(self, inputs, outputs, partials):
+		mu = inputs['Rotor|mu']
+		a = inputs['Rotor|alpha']
+		Ct = inputs['Rotor|Ct']
+		lmbd = outputs['Rotor|lambda']
+
+		partials['Rotor|lambda', 'Rotor|mu'] = np.tan(a) - (Ct*mu)/(2*np.sqrt((mu**2 + lmbd**2)**3))
+		partials['Rotor|lambda', 'Rotor|alpha'] = mu / (np.cos(a) * np.cos(a))
+		partials['Rotor|lambda', 'Rotor|Ct'] = 1 / ( 2 * np.sqrt(mu**2 + lmbd**2) )
+		partials['Rotor|lambda', 'Rotor|lambda'] = - (Ct*lmbd) / (2 * np.sqrt((mu**2 + lmbd**2)**3)) - 1
+
+
