@@ -111,7 +111,7 @@ class MultirotorParasiteDragCoeff(om.ExplicitComponent):
 		N_rotor = self.options['N_rotor']
 		r = inputs['Rotor|radius']				# in [m]
 		W_takeoff = inputs['eVTOL|W_takeoff']	# in [kg]
-		v = inputs['eVTOL|Cruise_speed']
+		v = inputs['eVTOL|Cruise_speed']		# in [m/s**2]
 
 		# Equivalent flat plate area "f"
 		kg_to_lb = 2.20462**0.8903
