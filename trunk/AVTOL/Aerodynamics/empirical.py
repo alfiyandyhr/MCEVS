@@ -55,7 +55,7 @@ class CylindricalBodyDrag(om.ExplicitComponent):
 		partials['Aero|Drag', 'eVTOL|Cruise_speed'] = rho_air * v * S_body * CD_body
 		partials['Aero|Drag', 'Body|sin_beta'] = 0.5 * rho_air * v * v * S_body * dCD_dsinB
 
-class MultirotorParasiteDragCoeff(om.ExplicitComponent):
+class MultirotorParasiteDrag(om.ExplicitComponent):
 	"""
 	Computes the drag of a multirotor body
 	Parameters:
