@@ -101,6 +101,8 @@ class InducedVelocity(om.ExplicitComponent):
 		v_inf			: freestream velocity [m/s]
 	Outputs:
 		v_induced		: induced velocity of a rotor [m/s] 
+	Source:
+		Johnson, W., “Rotorcraft Aeromechanics,” Cambridge University Press, 2013.
 	"""
 	def setup(self):
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
@@ -142,6 +144,9 @@ class RotorInflow(om.ImplicitComponent):
 		Rotor|Ct 	 : rotor's thrust coefficient
 	Outputs:
 		Rotor|lambda : rotor inflow ratio, positive down through disk
+	Source:
+		B. Govindarajan and A. Sridharan, “Conceptual Sizing of Vertical Lift Package Delivery Platforms,”
+		Journal of Aircraft, vol. 57, no. 6, pp. 1170–1188, Nov. 2020, doi: 10.2514/1.C035805.
 	"""
 	def setup(self):
 		self.add_input('Rotor|mu', desc='Advance ratio')
