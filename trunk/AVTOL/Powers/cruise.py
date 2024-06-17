@@ -1,6 +1,8 @@
 import numpy as np
 import openmdao.api as om
 
+from AVTOL.Aerodynamics.empirical import MultirotorParasiteDrag
+
 class PowerForwardEdgewise(om.Group):
 	"""
 	Computes the power required in edgewise forward flight (cruise of wingless multirotor)
@@ -28,7 +30,7 @@ class PowerForwardEdgewise(om.Group):
 
 		# Step 1: Calculate BodyDrag() for the multirotor in cruise
 		self.add_subsystem('body_drag',
-							BodyDrag(),
+							MultirotorParasiteDrag(),
 							promotes_inputs=['eVTOL|*', 'Body|sin_beta'],
 							promotes_outputs=['Aero|Drag'])
 		
