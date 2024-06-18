@@ -17,7 +17,7 @@ class ThrustCoefficient(om.ExplicitComponent):
 		Johnson, W., “Rotorcraft Aeromechanics,” Cambridge University Press, 2013.
 	"""
 	def initialize(self):
-		self.options.declare('rho_air', default=1.225, units='kg/m**3', desc='Air density')
+		self.options.declare('rho_air', default=1.225, desc='Air density')
 
 	def setup(self):
 		self.add_input('Rotor|Thrust', units='N', desc='Thrust of a rotor')
@@ -174,4 +174,60 @@ class RotorInflow(om.ImplicitComponent):
 		partials['Rotor|lambda', 'Rotor|Ct'] = 1 / ( 2 * np.sqrt(mu**2 + lmbd**2) )
 		partials['Rotor|lambda', 'Rotor|lambda'] = - (Ct*lmbd) / (2 * np.sqrt((mu**2 + lmbd**2)**3)) - 1
 
+class PropellerRevolutionFromAdvanceRatio(om.ExplicitComponent):
+	"""
+	Computes the propeller revolution (omega) given the advance ratio
+		J = V / (n D)
+	Inputs:
+		Rotor|radius	: rotor radius [m]
+		Rotor|J 		: propeller's advance ratio
+		v_inf			: freestream velocity [m/s]
+	Outputs:
+		Rotor|omega 	: rotor's angular velocity [rad/s]
+	"""
+	def setup(self):
+		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
+		self.add_input('Rotor|J', desc='Advance ratio of propeller')
+		self.add_input('v_inf', units='m/s', desc='Freestream velocity')
+		self.add_output('Rotor|omega', units='rad/s', desc='Rotor angular velocity')
+		self.declare_partials('*', '*')
 
+	def compute(self, inputs, outputs):
+		v_inf = inputs['v_inf']		# in [m/s]
+		r = inputs['Rotor|radius']	# in [m]
+		J = inputs['Rotor|J']
+		n = v_inf / (2 * r * J) 	# revolutions/second
+
+		outputs['Rotor|omega'] = 2 * np.pi * n # in [rad/s]
+
+	def compute_partials(self, inputs, partials):
+		v_inf = inputs['v_inf']		# in [m/s]
+		r = inputs['Rotor|radius']	# in [m]
+		J = inputs['Rotor|J']
+
+		partials['Rotor|omega', 'v_inf'] = np.pi / (r * J)
+		partials['Rotor|omega', 'Rotor|radius'] = - (np.pi * v_inf) / (r**2 * J)
+		partials['Rotor|omega', 'Rotor|J'] = - (np.pi * v_inf) / (r * J**2)
+
+class ThrustOfEachRotor(om.ExplicitComponent):
+	"""
+	Computes the thrust required by each rotor given the weight or drag requirement
+	Parameters:
+		N_rotor			: Number of rotors
+	Inputs:
+		Thrust_all		: Thrust required (sum of all rotors) [N]
+	Outputs:
+		Rotor|Thrust 	: Thrust of each rotor [N]
+	"""
+	def initialize(self):
+		self.options.declare('N_rotor', types=int, desc='Number of rotors')
+
+	def setup(self):
+		self.add_input('Thrust_all', units='N', desc='Thrust required (sum of all rotors)')
+		self.add_output('Rotor|Thrust', units='N', desc='Thrust required by each rotor')
+		# partial is constant
+		N_rotor = self.options['N_rotor']
+		self.declare_partials('Rotor|Thrust', 'Thrust_all', val=1/N_rotor)
+
+	def compute(self, inputs, outputs):
+		outputs['Rotor|Thrust'] = inputs['Thrust_all'] / self.options['N_rotor']

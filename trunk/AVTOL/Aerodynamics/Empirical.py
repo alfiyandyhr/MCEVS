@@ -66,6 +66,7 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 		eVTOL|Cruise_speed 	: cruising speed of the eVTOL [m/s]
 		Rotor|radius		: rotor radius [m]
 	Outputs:
+		Aero|Cd0			: parasite drag coefficient
 		Aero|Drag 			: aerodynamic drag [N]
 	Notes:
 		> Based on an empirical equivalent flat plat drag area
@@ -84,6 +85,7 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
 		self.add_input('eVTOL|Cruise_speed', units='m/s', desc='Cruise speed')
+		self.add_output('Aero|Cd0', desc='Parasite drag coefficient')
 		self.add_output('Aero|Drag', units='N', desc='Drag of a multirotor body')
 		self.declare_partials('*', '*')
 
@@ -92,7 +94,7 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 		N_rotor = self.options['N_rotor']
 		r = inputs['Rotor|radius']				# in [m]
 		W_takeoff = inputs['eVTOL|W_takeoff']	# in [kg]
-		v = inputs['eVTOL|Cruise_speed']
+		v = inputs['eVTOL|Cruise_speed']		# in [m/s**2]
 
 		# Equivalent flat plate area "f"
 		kg_to_lb = 2.20462**0.8903
@@ -104,6 +106,7 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 		S_ref = N_rotor * np.pi * r**2 # total rotor area
 		CD0 = f/S_ref
 
+		outputs['Aero|Cd0'] = CD0
 		outputs['Aero|Drag'] = 0.5 * rho_air * v * v * S_ref * CD0
 
 	def compute_partials(self, inputs, partials):
@@ -120,12 +123,83 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 		f = 0.0327 * W_takeoff**0.8903 * kg_to_lb * ft2_to_m2
 		df_dW = 0.0327 * 0.8903 * W_takeoff**(-0.1097) * kg_to_lb * ft2_to_m2
 
+		partials['Aero|Cd0', 'Rotor|radius'] = f/(N_rotor * np.pi) * (-2/r**3)
+		partials['Aero|Cd0', 'eVTOL|W_takeoff'] = 1/(N_rotor * np.pi * r**2) * df_dW
+		partials['Aero|Cd0', 'eVTOL|Cruise_speed'] = 0
 		partials['Aero|Drag', 'Rotor|radius'] = 0.0
 		partials['Aero|Drag', 'eVTOL|W_takeoff'] = 0.5 * rho_air * v**2 * df_dW
 		partials['Aero|Drag', 'eVTOL|Cruise_speed'] = rho_air * v * f
 
 
+class WingedParasiteDrag(om.ExplicitComponent):
+	"""
+	Computes the drag of a winged configuration
+	Parameters:
+		rho_air				: air density [kg/m**3]
+	Inputs:
+		eVTOL|W_takeoff 	: total take-off weight [kg]
+		eVTOL|Cruise_speed 	: cruising speed of the eVTOL [m/s]
+		eVTOL|S_wing 		: wing area [m**2]
+	Outputs:
+		Aero|Cd0			: parasite drag coefficient
+		Aero|Parasite_drag	: parasite drag [N]
+	Notes:
+		> Based on an empirical equivalent flat plat drag area
+		> As a function of gross weight
+	Source:
+		1. Harris, F. D., “Introduction to Autogyros, Helicopters, and Other V/STOL Aircraft,”
+		   National Aeronautics and Space Administration, Ames Research Center, Moffett Field, Calif, 2011.
+		2. A. R. Kadhiresan and M. J. Duffy, “Conceptual Design and Mission Analysis for eVTOL Urban Air Mobility Flight Vehicle Configurations,”
+		   in AIAA Aviation 2019 Forum, Dallas, Texas: American Institute of Aeronautics and Astronautics, Jun. 2019. doi: 10.2514/6.2019-2873.
+	"""
+	def initialize(self):
+		self.options.declare('rho_air', types=float, default=1.225, desc='Air density')
+		
+	def setup(self):
+		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
+		self.add_input('eVTOL|Cruise_speed', units='m/s', desc='Cruise speed')
+		self.add_input('eVTOL|S_wing', units='m**2', desc='Wing reference area')
+		self.add_output('Aero|Cd0', desc='Parasite drag coefficient')
+		self.add_output('Aero|Parasite_drag', units='N', desc='Parasite drag of a winged config')
+		self.declare_partials('*', '*')
 
+	def compute(self, inputs, outputs):
+		rho_air = self.options['rho_air']
+		W_takeoff = inputs['eVTOL|W_takeoff']	# in [kg]
+		v = inputs['eVTOL|Cruise_speed']		# in [m/s**2]
+		S_wing = inputs['eVTOL|S_wing']			# in [m**2]
+
+		# Equivalent flat plate area "f"
+		kg_to_lb = 2.20462**(2/3)
+		ft2_to_m2 = 0.3048*0.3048
+
+		f = 1.6 * (W_takeoff/1000)**(2/3) * kg_to_lb * ft2_to_m2
+
+		# Parasite drag coefficient
+		S_ref = S_wing 	# ref area is the wing area
+		CD0 = f/S_ref
+
+		outputs['Aero|Cd0'] = CD0
+		outputs['Aero|Parasite_drag'] = 0.5 * rho_air * v * v * S_ref * CD0
+
+	def compute_partials(self, inputs, partials):
+		rho_air = self.options['rho_air']
+		W_takeoff = inputs['eVTOL|W_takeoff']	# in [kg]
+		v = inputs['eVTOL|Cruise_speed']		# in [m/s**2]
+		S_wing = inputs['eVTOL|S_wing']			# in [m**2]
+
+		# Equivalent flat plate area "f"
+		kg_to_lb = 2.20462**(2/3)
+		ft2_to_m2 = 0.3048*0.3048
+
+		f = 1.6 * (W_takeoff/1000)**(2/3) * kg_to_lb * ft2_to_m2
+		df_dW = 1.6 * (2/3) * W_takeoff**(-1/3) * (1/1000)**(2/3) * kg_to_lb * ft2_to_m2
+		S_ref = S_wing
+
+		partials['Aero|Cd0', 'eVTOL|W_takeoff'] = 1/S_ref * df_dW
+		partials['Aero|Cd0', 'eVTOL|Cruise_speed'] = 0
+		partials['Aero|Parasite_drag', 'eVTOL|W_takeoff'] = 0.5 * rho_air * v**2 * df_dW
+		partials['Aero|Parasite_drag', 'eVTOL|Cruise_speed'] = rho_air * v * f
 
 
 
