@@ -9,7 +9,7 @@ class MotorWeight(om.ExplicitComponent):
 	Inputs:
 		max_power : maximum power, i.e., power during climb [W]
 	Outputs:
-		eVTOL|W_motors : weight of all motors [kg]
+		Weights|Motors : weight of all motors [kg]
 	Notes:
 		> An empirical equation based on power density regression on DC electric motors
 		> It is suggested to renew the equation as more data become available
@@ -21,23 +21,21 @@ class MotorWeight(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('max_power', units='W', desc='Maximum power')
-		self.add_output('eVTOL|W_motors', units='kg', desc='Weight of all motors')
-		self.declare_partials('eVTOL|W_motors', 'max_power')
+		self.add_output('Weights|Motors', units='kg', desc='Weight of all motors')
+		self.declare_partials('Weights|Motors', 'max_power')
 
 	def compute(self, inputs, outputs):
 		N_motor = self.options['N_motor']
 		p_max = inputs['max_power']/1000.0 # in [kW]
 
 		# Calculating W_motors
-		W_to_hp = 0.00134102**0.782
-
 		W_motor = (0.188 * p_max + 5.836)/N_motor
 		W_motors = N_motor * W_motor
 
-		outputs['eVTOL|W_motors'] = W_motors # in [kg]
+		outputs['Weights|Motors'] = W_motors # in [kg]
 
 	def compute_partials(self, inputs, partials):
-		partials['eVTOL|W_motors', 'max_power'] = 0.188
+		partials['Weights|Motors', 'max_power'] = 0.188
 
 
 

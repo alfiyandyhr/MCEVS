@@ -11,7 +11,7 @@ class RotorWeight(om.ExplicitComponent):
 		Rotor|radius 	: rotor radius [m]
 		max_power		: maximum power, i.e., power during climb [W]
 	Outputs:
-		eVTOL|W_rotors	: weight of all rotors [kg]
+		Weights|Rotors	: weight of all rotors [kg]
 	Notes:
 		> Torenbeek method for Commercial Transport Airplanes (propeller section)
 		> For GA airplanes, it is recommended to use propeller manufacturer data
@@ -22,14 +22,14 @@ class RotorWeight(om.ExplicitComponent):
 	"""
 	def initialize(self):
 		self.options.declare('N_rotor', types=int, desc='Number of rotors')
-		self.options.declare('N_bl', types=int, desc='Number of blades per rotor')
+		self.options.declare('N_bl', default=4, types=int, desc='Number of blades per rotor')
 
 	def setup(self):
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
 		self.add_input('max_power', units='W', desc='Maximum power')
-		self.add_output('eVTOL|W_rotors', units='kg', desc='Weight of all rotors')
-		self.declare_partials('eVTOL|W_rotors', 'Rotor|radius')
-		self.declare_partials('eVTOL|W_rotors', 'max_power')
+		self.add_output('Weights|Rotors', units='kg', desc='Weight of all rotors')
+		self.declare_partials('Weights|Rotors', 'Rotor|radius')
+		self.declare_partials('Weights|Rotors', 'max_power')
 
 	def compute(self, inputs, outputs):
 		N_rotor = self.options['N_rotor']
@@ -47,7 +47,7 @@ class RotorWeight(om.ExplicitComponent):
 		W_rotor = k_prop * (2*r * (p_max/N_rotor) * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 		W_rotors = N_rotor * W_rotor
 
-		outputs['eVTOL|W_rotors'] = W_rotors # in [kg]
+		outputs['Weights|Rotors'] = W_rotors # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		N_rotor = self.options['N_rotor']
@@ -65,8 +65,8 @@ class RotorWeight(om.ExplicitComponent):
 		dWrotors_dr = N_rotor * k_prop * 0.782 * r**(-0.218) * (2 * (p_max/N_rotor) * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 		dWrotors_dp = N_rotor * k_prop * 0.782 * p_max**(-0.218) * (2*r / N_rotor * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 
-		partials['eVTOL|W_rotors', 'Rotor|radius'] = dWrotors_dr
-		partials['eVTOL|W_rotors', 'max_power'] = dWrotors_dp
+		partials['Weights|Rotors', 'Rotor|radius'] = dWrotors_dr
+		partials['Weights|Rotors', 'max_power'] = dWrotors_dp
 
 
 
