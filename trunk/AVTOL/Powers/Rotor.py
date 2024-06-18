@@ -1,6 +1,8 @@
 import numpy as np
 import openmdao.api as om
 
+from AVTOL.Utils.Functions import SoftMax
+
 class PowerForwardComp(om.ExplicitComponent):
 	"""
 	Computes power required for forward flight (cruising segment)
@@ -68,6 +70,9 @@ class PowerForwardComp(om.ExplicitComponent):
 class RotorProfilePower(om.ExplicitComponent):
 	"""
 	Computes the profile power of a rotor
+	Parameters:
+		rho_air			: air density [kg/m**3]
+		rotor_sigma 	: rotor's solidity
 	Inputs:
 		Rotor|radius	: rotor radius [m]
 		Rotor|mu 		: rotor's advance ratio
