@@ -7,7 +7,7 @@ class FurnishingWeight(om.ExplicitComponent):
 	Inputs:
 		eVTOL|W_takeoff : total take-off weight [kg]
 	Outputs:
-		eVTOL|W_furnishings : weight of all furnishings and equipment [kg]
+		Weights|Furnishings : weight of all furnishings and equipment [kg]
 	Notes:
 		> Value for coefficient K
 			low_estimate	: 6.0
@@ -18,7 +18,7 @@ class FurnishingWeight(om.ExplicitComponent):
 	"""
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
-		self.add_output('eVTOL|W_furnishings', units='kg', desc='Weight of all furnishings')
+		self.add_output('Weights|Furnishings', units='kg', desc='Weight of all furnishings')
 		self.declare_partials('eVTOL|W_motors', 'max_power')
 
 	def compute(self, inputs, outputs):
@@ -34,7 +34,7 @@ class FurnishingWeight(om.ExplicitComponent):
 
 		W_furnishings = K_avg * (W_takeoff/1000.0)**1.3 * kg_to_lb * lb_to_kg
 
-		outputs['eVTOL|W_furnishings'] = W_furnishings # in [kg]
+		outputs['Weights|Furnishings'] = W_furnishings # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		W_takeoff = inputs['eVTOL|W_takeoff'] # in [kg]
@@ -48,4 +48,4 @@ class FurnishingWeight(om.ExplicitComponent):
 		K_high = 23.0
 
 		dWfurn_dWtakeoff = K_avg * 1.3 * W_takeoff**0.3 * (1/1000.0)**1.3 * kg_to_lb * lb_to_kg
-		partials['eVTOL|W_furnishings', 'eVTOL|W_takeoff'] = dWfurn_dWtakeoff
+		partials['Weights|Furnishings', 'eVTOL|W_takeoff'] = dWfurn_dWtakeoff

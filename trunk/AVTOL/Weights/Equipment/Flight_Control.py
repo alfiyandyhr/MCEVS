@@ -7,7 +7,7 @@ class FlightControlWeight(om.ExplicitComponent):
 	Inputs:
 		eVTOL|W_takeoff : total take-off weight [kg]
 	Outputs:
-		eVTOL|W_flight_control : weight of all flight control systems [kg]
+		Weights|Flight_control : weight of all flight control systems [kg]
 	Notes:
 		> This equation includes all the equipments of the cockpit controls
 	Source:
@@ -15,8 +15,8 @@ class FlightControlWeight(om.ExplicitComponent):
 	"""
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
-		self.add_output('eVTOL|W_flight_control', units='kg', desc='Weight of all avionics systems')
-		self.declare_partials('eVTOL|W_flight_control', 'eVTOL|W_takeoff')
+		self.add_output('Weights|Flight_control', units='kg', desc='Weight of all avionics systems')
+		self.declare_partials('Weights|Flight_control', 'eVTOL|W_takeoff')
 
 	def compute(self, inputs, outputs):
 		W_takeoff = inputs['eVTOL|W_takeoff'] # in [kg]
@@ -27,7 +27,7 @@ class FlightControlWeight(om.ExplicitComponent):
 
 		W_flight_control = 11.5 * (W_takeoff/1000.0)**0.4 * kg_to_lb * lb_to_kg
 
-		outputs['eVTOL|W_flight_control'] = W_flight_control # in [kg]
+		outputs['Weights|Flight_control'] = W_flight_control # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		W_takeoff = inputs['eVTOL|W_takeoff'] # in [kg]
@@ -38,6 +38,6 @@ class FlightControlWeight(om.ExplicitComponent):
 
 		dWfc_dWtakeoff = 11.5 * 0.4 * W_takeoff**(-0.6) * (1/1000.0)**0.4 * kg_to_lb * lb_to_kg
 
-		partials['eVTOL|W_flight_control', 'eVTOL|W_takeoff'] = dWfc_dWtakeoff
+		partials['Weights|Flight_control', 'eVTOL|W_takeoff'] = dWfc_dWtakeoff
 
 
