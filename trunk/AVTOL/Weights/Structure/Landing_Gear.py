@@ -10,7 +10,7 @@ class LandingGearWeight(om.ExplicitComponent):
 	Inputs:
 		eVTOL|W_takeoff : total take-off weight [kg]
 	Outputs:
-		eVTOL|W_landing_gear : landing gear weight [kg]
+		Weights|Landing_gear : landing gear weight [kg]
 	Notes:
 		> Class II USAF Method for General Aviation airplanes
 		> Used for light and utility type airplanes
@@ -26,8 +26,8 @@ class LandingGearWeight(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
-		self.add_output('eVTOL|W_landing_gear', units='kg', desc='Landing gear weight')
-		self.declare_partials('eVTOL|W_landing_gear', 'eVTOL|W_takeoff')
+		self.add_output('Weights|Landing_gear', units='kg', desc='Landing gear weight')
+		self.declare_partials('Weights|Landing_gear', 'eVTOL|W_takeoff')
 
 	def compute(self, inputs, outputs):
 		l_sm = self.options['l_sm']
@@ -41,7 +41,7 @@ class LandingGearWeight(om.ExplicitComponent):
 
 		W_landing_gear = 0.054 * l_sm**0.501 * (W_takeoff*n_ult)**0.684 * kg_to_lb * m_to_ft * lb_to_kg
 
-		outputs['eVTOL|W_landing_gear'] = W_landing_gear # in [kg]
+		outputs['Weights|Landing_gear'] = W_landing_gear # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		l_sm = self.options['l_sm']
@@ -55,7 +55,7 @@ class LandingGearWeight(om.ExplicitComponent):
 
 		dWlg_dWtakeoff = 0.054 * l_sm**0.501 * 0.684 * W_takeoff**(-0.316) * n_ult**0.684 * kg_to_lb * m_to_ft * lb_to_kg
 
-		partials['eVTOL|W_landing_gear', 'eVTOL|W_takeoff'] = dWlg_dWtakeoff
+		partials['Weights|Landing_gear', 'eVTOL|W_takeoff'] = dWlg_dWtakeoff
 
 
 

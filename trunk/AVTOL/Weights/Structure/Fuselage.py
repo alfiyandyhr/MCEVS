@@ -11,7 +11,7 @@ class FuselageWeight(om.ExplicitComponent):
 	Inputs:
 		eVTOL|W_takeoff : total take-off weight [kg]
 	Outputs:
-		eVTOL|W_fuselage : fuselage weight [kg]
+		Weights|Fuselage : fuselage weight [kg]
 	Notes:
 		> Class II Cessna method for General Aviation airplanes
 		> Used for small, relatively low performance type airplanes
@@ -27,8 +27,8 @@ class FuselageWeight(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total weight')
-		self.add_output('eVTOL|W_fuselage', units='kg', desc='Fuselage weight')
-		self.declare_partials('eVTOL|W_fuselage', 'eVTOL|W_takeoff')
+		self.add_output('Weights|Fuselage', units='kg', desc='Fuselage weight')
+		self.declare_partials('Weights|Fuselage', 'eVTOL|W_takeoff')
 
 	def compute(self, inputs, outputs):
 		n_pax = self.options['n_pax']
@@ -43,7 +43,7 @@ class FuselageWeight(om.ExplicitComponent):
 		
 		W_fuselage = 14.86 * W_takeoff**0.144 * (l_fuse/p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
 
-		outputs['eVTOL|W_fuselage'] = W_fuselage # in [kg]
+		outputs['Weights|Fuselage'] = W_fuselage # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		n_pax = self.options['n_pax']
@@ -56,4 +56,4 @@ class FuselageWeight(om.ExplicitComponent):
 		lb_to_kg = 0.453592
 		dWfuse_dWtakeoff = 14.86 * 0.144 * W_takeoff**(-0.856) * (l_fuse/p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
 
-		partials['eVTOL|W_fuselage', 'eVTOL|W_takeoff'] = dWfuse_dWtakeoff
+		partials['Weights|Fuselage', 'eVTOL|W_takeoff'] = dWfuse_dWtakeoff

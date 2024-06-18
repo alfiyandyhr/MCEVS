@@ -11,7 +11,7 @@ class HorizontalTailWeight(om.ExplicitComponent):
 		eVTOL|W_takeoff : total take-off weight [kg]
 		eVTOL|S_htail	: horizontal tail area [m**2]
 	Outputs:
-		eVTOL|W_htail : horizontal tail weight [kg]
+		Weights|Htail : horizontal tail weight [kg]
 	Notes:
 		> Class II Cessna method for General Aviation airplanes
 		> Used for small, relatively low performance type airplanes
@@ -27,9 +27,9 @@ class HorizontalTailWeight(om.ExplicitComponent):
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
 		self.add_input('eVTOL|S_htail', units='m**2', desc='Horizontal tail area')
-		self.add_output('eVTOL|W_htail', units='kg', desc='Horizontal tail weight')
-		self.declare_partials('eVTOL|W_htail', 'eVTOL|W_takeoff_')
-		self.declare_partials('eVTOL|W_htail', 'eVTOL|S_htail_')
+		self.add_output('Weights|Htail', units='kg', desc='Horizontal tail weight')
+		self.declare_partials('Weights|Htail', 'eVTOL|W_takeoff_')
+		self.declare_partials('Weights|Htail', 'eVTOL|S_htail_')
 
 	def compute(self, inputs, outputs):
 		htail_AR = self.options['htail_AR']
@@ -45,7 +45,7 @@ class HorizontalTailWeight(om.ExplicitComponent):
 		
 		W_htail = (3.184 * W_takeoff**0.887 * S_htail**0.101 * htail_AR**0.138)/(174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
-		outputs['eVTOL|W_htail'] = W_htail # in [kg]
+		outputs['Weights|Htail'] = W_htail # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		htail_AR = self.options['htail_AR']
@@ -62,8 +62,8 @@ class HorizontalTailWeight(om.ExplicitComponent):
 		dWhtail_dWtakeoff = (3.184 * 0.887 * W_takeoff**(-0.113) * S_htail**0.101 * htail_AR**0.138)/(174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 		dWhtail_dShtail = (3.184 * W_takeoff**0.887 * 0.101 * S_htail**(-0.899) * htail_AR**0.138)/(174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
-		partials['eVTOL|W_htail', 'eVTOL|W_takeoff'] = dWhtail_dWtakeoff
-		partials['eVTOL|W_htail', 'eVTOL|S_htail'] = dWhtail_dShtail
+		partials['Weights|Htail', 'eVTOL|W_takeoff'] = dWhtail_dWtakeoff
+		partials['Weights|Htail', 'eVTOL|S_htail'] = dWhtail_dShtail
 
 
 class VerticalTailWeight(om.ExplicitComponent):
@@ -77,7 +77,7 @@ class VerticalTailWeight(om.ExplicitComponent):
 		eVTOL|W_takeoff : total take-off weight [kg]
 		eVTOL|S_vtail	: horizontal tail area [m**2]
 	Outputs:
-		eVTOL|W_vtail : horizontal tail weight [kg]
+		Weights|Vtail : horizontal tail weight [kg]
 	Notes:
 		> Class II Cessna method for General Aviation airplanes
 		> Used for small, relatively low performance type airplanes
@@ -93,9 +93,9 @@ class VerticalTailWeight(om.ExplicitComponent):
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
 		self.add_input('eVTOL|S_vtail', units='m**2', desc='Horizontal tail area')
-		self.add_output('eVTOL|W_vtail', units='kg', desc='Horizontal tail weight')
-		self.declare_partials('eVTOL|W_vtail', 'eVTOL|W_takeoff_')
-		self.declare_partials('eVTOL|W_vtail', 'eVTOL|S_vtail_')
+		self.add_output('Weights|Vtail', units='kg', desc='Horizontal tail weight')
+		self.declare_partials('Weights|Vtail', 'eVTOL|W_takeoff_')
+		self.declare_partials('Weights|Vtail', 'eVTOL|S_vtail_')
 
 	def compute(self, inputs, outputs):
 		vtail_AR = self.options['vtail_AR']
@@ -113,7 +113,7 @@ class VerticalTailWeight(om.ExplicitComponent):
 		
 		W_vtail = (1.68 * W_takeoff**0.567 * S_vtail**1.249 * vtail_AR**0.482)/(639.95 * t_rv**0.747) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
-		outputs['eVTOL|W_vtail'] = W_vtail # in [kg]
+		outputs['Weights|Vtail'] = W_vtail # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		vtail_AR = self.options['vtail_AR']
@@ -132,8 +132,8 @@ class VerticalTailWeight(om.ExplicitComponent):
 		dWvtail_dWtakeoff = (1.68 * 0.567 * W_takeoff**(-0.433) * S_vtail**1.249 * vtail_AR**0.482)/(639.95 * t_rv**0.747) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 		dWvtail_dSvtail = (1.68 * W_takeoff**0.567 * 1.249 * S_vtail**0.249 * vtail_AR**0.482)/(639.95 * t_rv**0.747) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
-		partials['eVTOL|W_vtail', 'eVTOL|W_takeoff'] = dWvtail_dWtakeoff
-		partials['eVTOL|W_vtail', 'eVTOL|S_vtail'] = dWvtail_dSvtail
+		partials['Weights|Vtail', 'eVTOL|W_takeoff'] = dWvtail_dWtakeoff
+		partials['Weights|Vtail', 'eVTOL|S_vtail'] = dWvtail_dSvtail
 
 
 
