@@ -21,7 +21,7 @@ class LandingGearWeight(om.ExplicitComponent):
 		Roskam, J. Airplane Design - Part V: Component Weight Estimation. Lawrence, Kansas: Analysis and Research Corporation, 2003.
 	"""
 	def initialize(self):
-		self.options.declare('l_sm', types=float, units='m', desc='Wing aspect ratio')
+		self.options.declare('l_sm', types=float, desc='Main landing gear strut length')
 		self.options.declare('n_ult', types=float, default=5.7, desc='Design ultimate load factor for landing')
 
 	def setup(self):

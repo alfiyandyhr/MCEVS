@@ -22,8 +22,8 @@ class FuselageWeight(om.ExplicitComponent):
 	"""
 	def initialize(self):
 		self.options.declare('n_pax', types=int, desc='Number of passengers, including the pilots')
-		self.options.declare('l_fuse', types=float, units='m', desc='Fuselage length')
-		self.options.declare('p_max', types=float, units='m', desc='Maximum fuselage perimeter')
+		self.options.declare('l_fuse', types=float, desc='Fuselage length')
+		self.options.declare('p_max', types=float, desc='Maximum fuselage perimeter')
 
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total weight')
