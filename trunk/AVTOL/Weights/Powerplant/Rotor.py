@@ -43,7 +43,7 @@ class RotorWeight(om.ExplicitComponent):
 		m_to_ft = 3.28084**0.782
 		W_to_hp = 0.00134102**0.782
 		lb_to_kg = 0.453592
-
+		
 		W_rotor = k_prop * (2*r * (p_max/N_rotor) * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 		W_rotors = N_rotor * W_rotor
 
