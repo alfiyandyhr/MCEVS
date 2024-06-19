@@ -35,7 +35,7 @@ class MotorWeight(om.ExplicitComponent):
 		outputs['Weights|Motors'] = W_motors # in [kg]
 
 	def compute_partials(self, inputs, partials):
-		partials['Weights|Motors', 'max_power'] = 0.188
+		partials['Weights|Motors', 'max_power'] = 0.188/1000.0
 
 
 
