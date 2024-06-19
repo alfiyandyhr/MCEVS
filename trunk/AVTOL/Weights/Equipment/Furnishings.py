@@ -19,7 +19,7 @@ class FurnishingWeight(om.ExplicitComponent):
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
 		self.add_output('Weights|Furnishings', units='kg', desc='Weight of all furnishings')
-		self.declare_partials('eVTOL|W_motors', 'max_power')
+		self.declare_partials('Weights|Furnishings', 'eVTOL|W_takeoff')
 
 	def compute(self, inputs, outputs):
 		W_takeoff = inputs['eVTOL|W_takeoff'] # in [kg]
