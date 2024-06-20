@@ -2,7 +2,7 @@ import numpy as np
 import openmdao.api as om
 
 from MCEVS.Powers.Hover import PowerHover
-from MCEVS.Powers.Cruise import PowerForwardWithWing
+from MCEVS.Powers.Cruise import PowerForwardEdgewise, PowerForwardWithWing
 
 class EnergyConsumption(om.Group):
 	"""
@@ -43,7 +43,6 @@ class EnergyConsumption(om.Group):
 		hover_FM = params['hover_FM']				# hover figure of merit
 		rho_air = params['rho_air']					# air density
 		g = params['gravitational_accel']			# gravitational acceleration
-		AoA = params['AoA_cruise'] 					# angle of attack during cruise
 
 		if eVTOL_config == 'multirotor':
 			pass
@@ -53,6 +52,7 @@ class EnergyConsumption(om.Group):
 			wing_AR = params['wing_AR']						# wing aspect ratio
 			# wing_e = params['wing_e']						# Oswald efficiency
 			prop_sigma = params['rotor_cruise_solidity']	# solidty of cruising rotors
+			AoA = params['AoA_cruise'] 						# angle of attack during cruise
 		else:
 			raise RuntimeError('eVTOL configuration is not available.')
 
@@ -70,7 +70,6 @@ class EnergyConsumption(om.Group):
 			self.add_subsystem('power_forward_edgewise',
 								PowerForwardEdgewise(N_rotor=N_rotors_lift, hover_FM=hover_FM, rotor_sigma=rotor_sigma),
 								promotes_inputs=input_list,
-								# promotes_outputs=['power_forward', 'Rotor|Thrust', 'Rotor|Ct'])
 								promotes_outputs=['*'])
 
 		elif eVTOL_config == 'lift+cruise':
