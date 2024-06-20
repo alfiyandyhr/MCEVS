@@ -25,19 +25,13 @@ class PowerplantWeight(om.Group):
 
 		# For multirotor
 		if params['evtol_config'] == 'multirotor':
-			pass
-			# self.add_subsystem('rotor_weight',
-			# 					RotorWeight(N_rotor=N_rotors_lift),
-			# 					promotes_inputs=[('Rotor|radius', 'Rotor|radius_lift')],
-			# 					promotes_outputs=['Weights|Rotors'])
-			# self.add_subsystem('motor_weight',
-			# 					MotorWeight(N_motor=N_rotors_lift), # one rotor typically has one motor
-			# 					promotes_outputs=['Weights|Motors'])
-			# self.connect('power_hover', 'motor_weight.max_power')   # assume max power output = power in hover
-			# self.add_subsystem('ESC_weight',
-			# 					ESCWeight(N_motor=N_rotors_lift), # one rotor typically has one motor
-			# 					promotes_outputs=['eVTOL|W_ESC_all'])
-			# self.connect('power_hover', 'ESC_weight.max_power')   # assume max power output = power in hover
+			self.add_subsystem('rotor_weight',
+								RotorWeight(N_rotor=N_rotors_lift),
+								promotes_inputs=[('Rotor|radius', 'Rotor|radius_lift')],
+								promotes_outputs=['Weights|Rotors'])
+			self.add_subsystem('motor_weight',
+								MotorWeight(N_motor=N_rotors_lift), # one rotor typically has one motor
+								promotes_outputs=['Weights|Motors'])
 
 		elif params['evtol_config'] == 'lift+cruise':
 			# Lifting rotors

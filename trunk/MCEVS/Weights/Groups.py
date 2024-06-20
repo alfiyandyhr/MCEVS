@@ -87,16 +87,22 @@ class MTOWEstimation(om.Group):
 							PowerplantWeight(params=params),
 							promotes_inputs=['*'],
 							promotes_outputs=['*'])
-		self.connect('power_hover', 'rotor_weight_lift.max_power')
-		self.connect('power_hover', 'motor_weight_lift.max_power')  	 # assume max power output = power in hover
-		self.connect('power_forward', 'rotor_weight_cruise.max_power')
-		self.connect('power_forward', 'motor_weight_cruise.max_power')   # assume max power output = power in cruise
+		if eVTOL_config == 'multirotor':
+			self.connect('power_hover', 'rotor_weight.max_power')
+			self.connect('power_hover', 'motor_weight.max_power')  			 # assume max power output = power in hover
+		elif eVTOL_config == 'lift+cruise':
+			self.connect('power_hover', 'rotor_weight_lift.max_power')
+			self.connect('power_hover', 'motor_weight_lift.max_power')  	 # assume max power output = power in hover
+			self.connect('power_forward', 'rotor_weight_cruise.max_power')
+			self.connect('power_forward', 'motor_weight_cruise.max_power')   # assume max power output = power in cruise
 
 		# 3. Structure weight
 		# includes fuselage, landing gear, wing, and tails
+		if eVTOL_config == 'multirotor': input_list_struct = ['eVTOL|W_takeoff']
+		elif eVTOL_config == 'lift+cruise': input_list_struct = ['eVTOL|W_takeoff', 'eVTOL|S_wing']
 		self.add_subsystem('structure_weight',
 							StructureWeight(params=params),
-							promotes_inputs=['eVTOL|W_takeoff', 'eVTOL|S_wing'],
+							promotes_inputs=input_list_struct,
 							promotes_outputs=['Weights|*'])
 
 		# 4. Equipment weight
@@ -128,9 +134,6 @@ class MTOWEstimation(om.Group):
 							om.ExecComp(W_residual_eqn, units='kg'),
 							promotes_inputs=input_list,
 							promotes_outputs=['W_residual'])
-		# for wingless multirotor, set 0 weight for wing
-		if eVTOL_config == 'multirotor':
-			self.set_input_defaults('Weights|Wing', 0.0)
 
 		# If nonlinear solver to be used
 		if use_solver:

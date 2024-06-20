@@ -40,11 +40,17 @@ class StructureWeight(om.Group):
 		pass
 
 		# Sum up
+		if params['evtol_config'] == 'multirotor':
+			input_names_list = ['Weights|Fuselage', 'Weights|Landing_gear']
+			sfs = [1., 1.,]
+		elif params['evtol_config'] == 'lift+cruise':
+			input_names_list = ['Weights|Fuselage', 'Weights|Landing_gear', 'Weights|Wing']	
+			sfs = [1., 1., 1.]
 		adder = om.AddSubtractComp()
 		adder.add_equation('Weights|Structure',
-							input_names=['Weights|Fuselage', 'Weights|Landing_gear', 'Weights|Wing'],
+							input_names=input_names_list,
 							units='kg',
-							scaling_factors=[1., 1., 1.])
+							scaling_factors=sfs)
 		self.add_subsystem('structure_sum_weight',
 							adder,
 							promotes_inputs=['Weights|*'],
