@@ -174,6 +174,45 @@ class RotorInflow(om.ImplicitComponent):
 		partials['Rotor|lambda', 'Rotor|Ct'] = 1 / ( 2 * np.sqrt(mu**2 + lmbd**2) )
 		partials['Rotor|lambda', 'Rotor|lambda'] = - (Ct*lmbd) / (2 * np.sqrt((mu**2 + lmbd**2)**3)) - 1
 
+class RotorRevolutionFromAdvanceRatio(om.ExplicitComponent):
+	"""
+	Computes the rotor revolution (omega) given the advance ratio
+		omega = V cos(alpha) / (mu * r)
+	Inputs:
+		Rotor|radius	: rotor radius [m]
+		Rotor|alpha		: rotor tilt angle [rad]
+		Rotor|mu 	 	: rotor's advance ratio
+		v_inf			: freestream velocity [m/s]
+	Outputs:
+		Rotor|omega 	: rotor's angular velocity [rad/s]
+	"""
+	def setup(self):
+		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
+		self.add_input('Rotor|alpha', units='rad', desc='Rotor tilt angle')
+		self.add_input('Rotor|mu', desc='Advance ratio of rotor')
+		self.add_input('v_inf', units='m/s', desc='Freestream velocity')
+		self.add_output('Rotor|omega', units='rad/s', desc='Rotor angular velocity')
+		self.declare_partials('*', '*')
+
+	def compute(self, inputs, outputs):
+		v_inf = inputs['v_inf']
+		a = inputs['Rotor|alpha']
+		r = inputs['Rotor|radius']
+		mu = inputs['Rotor|mu']
+		
+		outputs['Rotor|omega'] = v_inf * np.cos(a) / (mu * r)
+
+	def compute_partials(self, inputs, partials):
+		v_inf = inputs['v_inf']
+		a = inputs['Rotor|alpha']
+		r = inputs['Rotor|radius']
+		mu = inputs['Rotor|mu']
+
+		partials['Rotor|omega', 'v_inf'] = np.cos(a) / (mu * r)
+		partials['Rotor|omega', 'Rotor|alpha'] = - v_inf * np.sin(a) / (mu * r) 
+		partials['Rotor|omega', 'Rotor|mu'] = - v_inf * np.cos(a) / (mu**2 * r)
+		partials['Rotor|omega', 'Rotor|radius'] = - v_inf * np.cos(a) / (mu * r**2)
+
 class PropellerRevolutionFromAdvanceRatio(om.ExplicitComponent):
 	"""
 	Computes the propeller revolution (omega) given the advance ratio
