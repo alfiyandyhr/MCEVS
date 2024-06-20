@@ -1,8 +1,8 @@
 import numpy as np
 import openmdao.api as om
 
-from AVTOL.Weights.Powerplant.Rotor import RotorWeight
-from AVTOL.Weights.Powerplant.Motor import MotorWeight
+from MCEVS.Weights.Powerplant.Rotor import RotorWeight
+from MCEVS.Weights.Powerplant.Motor import MotorWeight
 
 class PowerplantWeight(om.Group):
 	"""

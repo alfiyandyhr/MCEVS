@@ -1,8 +1,8 @@
 import numpy as np
 import openmdao.api as om
 
-from AVTOL.Powers.Hover import PowerHover
-from AVTOL.Powers.Cruise import PowerForwardWithWing
+from MCEVS.Powers.Hover import PowerHover
+from MCEVS.Powers.Cruise import PowerForwardWithWing
 
 class EnergyConsumption(om.Group):
 	"""

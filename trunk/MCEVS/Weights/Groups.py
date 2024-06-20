@@ -1,11 +1,11 @@
 import numpy as np
 import openmdao.api as om
 
-from AVTOL.Energy.Energy import EnergyConsumption
+from MCEVS.Energy.Energy import EnergyConsumption
 
-from AVTOL.Weights.Powerplant.Groups import PowerplantWeight
-from AVTOL.Weights.Structure.Groups import StructureWeight
-from AVTOL.Weights.Equipment.Groups import EquipmentWeight
+from MCEVS.Weights.Powerplant.Groups import PowerplantWeight
+from MCEVS.Weights.Structure.Groups import StructureWeight
+from MCEVS.Weights.Equipment.Groups import EquipmentWeight
 
 
 # --- Total weight (MTOW) estimation --- #

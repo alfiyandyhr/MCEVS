@@ -1,7 +1,7 @@
 import numpy as np
 import openmdao.api as om
 
-from AVTOL.Utils.Functions import SoftMax
+from MCEVS.Utils.Functions import SoftMax
 
 class PowerForwardComp(om.ExplicitComponent):
 	"""

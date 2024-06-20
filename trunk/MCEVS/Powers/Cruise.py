@@ -1,20 +1,20 @@
 import numpy as np
 import openmdao.api as om
 
-from AVTOL.Aerodynamics.Empirical import MultirotorParasiteDrag
-from AVTOL.Aerodynamics.Empirical import WingedParasiteDrag
-from AVTOL.Aerodynamics.Parabolic import WingedCruiseDrag
+from MCEVS.Aerodynamics.Empirical import MultirotorParasiteDrag
+from MCEVS.Aerodynamics.Empirical import WingedParasiteDrag
+from MCEVS.Aerodynamics.Parabolic import WingedCruiseDrag
 
-from AVTOL.Aerodynamics.Rotor import ThrustOfEachRotor
-from AVTOL.Aerodynamics.Rotor import PropellerRevolutionFromAdvanceRatio
-from AVTOL.Aerodynamics.Rotor import RotorAdvanceRatio
-from AVTOL.Aerodynamics.Rotor import ThrustCoefficient
-from AVTOL.Aerodynamics.Rotor import RotorInflow
-from AVTOL.Aerodynamics.Rotor import InducedVelocity
+from MCEVS.Aerodynamics.Rotor import ThrustOfEachRotor
+from MCEVS.Aerodynamics.Rotor import PropellerRevolutionFromAdvanceRatio
+from MCEVS.Aerodynamics.Rotor import RotorAdvanceRatio
+from MCEVS.Aerodynamics.Rotor import ThrustCoefficient
+from MCEVS.Aerodynamics.Rotor import RotorInflow
+from MCEVS.Aerodynamics.Rotor import InducedVelocity
 
-from AVTOL.Powers.Rotor import RotorProfilePower
-from AVTOL.Powers.Rotor import InducedPowerFactor
-from AVTOL.Powers.Rotor import PowerForwardComp
+from MCEVS.Powers.Rotor import RotorProfilePower
+from MCEVS.Powers.Rotor import InducedPowerFactor
+from MCEVS.Powers.Rotor import PowerForwardComp
 
 
 class PowerForwardEdgewise(om.Group):
