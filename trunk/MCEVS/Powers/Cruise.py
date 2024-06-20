@@ -5,7 +5,10 @@ from MCEVS.Aerodynamics.Empirical import MultirotorParasiteDrag
 from MCEVS.Aerodynamics.Empirical import WingedParasiteDrag
 from MCEVS.Aerodynamics.Parabolic import WingedCruiseDrag
 
+from MCEVS.Stability.Trim import MultiRotorTrim
+
 from MCEVS.Aerodynamics.Rotor import ThrustOfEachRotor
+from MCEVS.Aerodynamics.Rotor import RotorRevolutionFromAdvanceRatio
 from MCEVS.Aerodynamics.Rotor import PropellerRevolutionFromAdvanceRatio
 from MCEVS.Aerodynamics.Rotor import RotorAdvanceRatio
 from MCEVS.Aerodynamics.Rotor import ThrustCoefficient
@@ -74,20 +77,19 @@ class PowerForwardEdgewise(om.Group):
 		# Step 5: Calculate rotor omega given the advance ratio mu
 		self.add_subsystem('rotor_revolution',
 							RotorRevolutionFromAdvanceRatio(),
-							promotes_inputs=['Rotor|radius', 'Rotor|*', ('v_inf', 'eVTOL|Cruise_speed')],
+							promotes_inputs=['Rotor|*', ('v_inf', 'eVTOL|Cruise_speed')],
 							promotes_outputs=['Rotor|omega'])
-		self.set_input_defaults('Rotor|mu', 0.15)
 
 		# Step 6: Calculate the thrust coefficient Ct
 		self.add_subsystem('Ct',
 							ThrustCoefficient(rho_air=rho_air),
-							promotes_inputs=['Rotor|radius', 'Rotor|*'],
+							promotes_inputs=['Rotor|*'],
 							promotes_outputs=['Rotor|Ct'])
 
 		# Step 7: Calculate profile power
 		self.add_subsystem('profile_power',
-							ProfilePower(rho_air=rho_air, sigma=rotor_sigma),
-							promotes_inputs=['Rotor|radius', 'Rotor|*'],
+							RotorProfilePower(rho_air=rho_air, sigma=rotor_sigma),
+							promotes_inputs=['Rotor|*'],
 							promotes_outputs=['Rotor|Profile_power'])
 
 		# Step 8: Calculate induced power
@@ -97,11 +99,11 @@ class PowerForwardEdgewise(om.Group):
 							promotes_outputs=['Rotor|lambda'])
 		self.add_subsystem('v_induced',
 							InducedVelocity(),
-							promotes_inputs=['Rotor|radius', 'Rotor|*', ('v_inf', 'eVTOL|Cruise_speed')],
+							promotes_inputs=['Rotor|*', ('v_inf', 'eVTOL|Cruise_speed')],
 							promotes_outputs=['v_induced'])
 		self.add_subsystem('kappa',
 							InducedPowerFactor(hover_FM=hover_FM, rho_air=rho_air),
-							promotes_inputs=['Rotor|radius', 'Rotor|*'],
+							promotes_inputs=['Rotor|*'],
 							promotes_outputs=['Rotor|kappa'])
 
 		# Step 9: Calculate total power required
