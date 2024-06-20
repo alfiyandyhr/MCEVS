@@ -1,11 +1,11 @@
 from setuptools import setup
 
 setup(
-	name = "AVTOL",
+	name = "MCEVS",
 	version = "0.0.1",
-	description = "AVTOL: Alfi eVTOL; Multi-configurational eVTOL Sizing Codes",
+	description = "MCEVS: Alfi eVTOL; Multi-configurational eVTOL Sizing Codes",
 	license="",
-	packages=["AVTOL"],
+	packages=["MCEVS"],
 	package_dir={"" : "trunk"},
 	install_requires=["numpy", "openmdao>=3.16.0", "matplotlib"]
 	)
