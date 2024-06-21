@@ -1,13 +1,13 @@
 import numpy as np
 import openmdao.api as om
 
-from MCEVS.Weights.Powerplant.Rotor import RotorWeight
-from MCEVS.Weights.Powerplant.Motor import MotorWeight
+from MCEVS.Weights.Propulsion.Rotor import RotorWeight
+from MCEVS.Weights.Propulsion.Motor import MotorWeight
 
-class PowerplantWeight(om.Group):
+class PropulsionWeight(om.Group):
 	"""
-	Calculates powerplant weight
-		W_powerplant = W_rotors + W_motors
+	Calculates propulsion weight
+		W_propulsion = W_rotors + W_motors
 	"""
 	def initialize(self):
 		self.options.declare('params', types=dict, desc='A dictionary that includes important parameters')
@@ -62,21 +62,21 @@ class PowerplantWeight(om.Group):
 								input_names=['W_motors_lift', 'W_motors_cruise'],
 								units='kg',
 								scaling_factors=[1., 1.])
-			self.add_subsystem('powerplant_weight',
+			self.add_subsystem('propulsion_weight',
 								adder,
 								promotes_inputs=['*'],
 								promotes_outputs=[('W_rotors', 'Weights|Rotors'), ('W_motors', 'Weights|Motors')])
 
 		# Sum up
 		adder = om.AddSubtractComp()
-		adder.add_equation('Weights|Powerplant',
+		adder.add_equation('Weights|Propulsion',
 							input_names=['Weights|Rotors', 'Weights|Motors'],
 							units='kg',
 							scaling_factors=[1., 1.])
-		self.add_subsystem('powerplant_sum_weight',
+		self.add_subsystem('propulsion_sum_weight',
 							adder,
 							promotes_inputs=['Weights|*'],
-							promotes_outputs=['Weights|Powerplant'])
+							promotes_outputs=['Weights|Propulsion'])
 
 
 

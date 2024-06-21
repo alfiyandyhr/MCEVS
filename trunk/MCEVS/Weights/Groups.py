@@ -3,7 +3,7 @@ import openmdao.api as om
 
 from MCEVS.Energy.Energy import EnergyConsumption
 
-from MCEVS.Weights.Powerplant.Groups import PowerplantWeight
+from MCEVS.Weights.Propulsion.Groups import PropulsionWeight
 from MCEVS.Weights.Structure.Groups import StructureWeight
 from MCEVS.Weights.Equipment.Groups import EquipmentWeight
 
@@ -81,10 +81,10 @@ class MTOWEstimation(om.Group):
 							promotes_inputs=[('energy_req', 'energy_cnsmp')],
 							promotes_outputs=[('W_battery', 'Weights|Battery')])
 
-		# 2. Powerplant weight
+		# 2. Propulsion weight
 		# includes the weight of rotors, motors, and ESCs
-		self.add_subsystem('powerplant_weight',
-							PowerplantWeight(params=params),
+		self.add_subsystem('propulsion_weight',
+							PropulsionWeight(params=params),
 							promotes_inputs=['*'],
 							promotes_outputs=['*'])
 		if eVTOL_config == 'multirotor':
@@ -115,9 +115,9 @@ class MTOWEstimation(om.Group):
 
 		# 4. Weight residuals
 		
-		# W_residual = W_total - W_payload - W_battery - W_powerplant - W_structure - W_equipment
+		# W_residual = W_total - W_payload - W_battery - W_propulsion - W_structure - W_equipment
 		# where:
-		# W_powerplant = W_rotors + W_motors
+		# W_propulsion = W_rotors + W_motors
 		# W_structure = W_fuselage + W_landing_gear + W_wing
 		# W_equipment = W_avionics + W_flight_control + W_anti_icing + W_furnishings
 
@@ -125,11 +125,11 @@ class MTOWEstimation(om.Group):
 		input_list = [('W_total', 'eVTOL|W_takeoff'),
 					  ('W_payload', 'payload_weight'),
 					  ('W_battery', 'Weights|Battery'),
-					  ('W_powerplant', 'Weights|Powerplant'),
+					  ('W_propulsion', 'Weights|Propulsion'),
 					  ('W_structure', 'Weights|Structure'),
 					  ('W_equipment', 'Weights|Equipment')]
 
-		W_residual_eqn = 'W_residual = W_total - W_payload - W_battery - W_powerplant - W_structure - W_equipment'
+		W_residual_eqn = 'W_residual = W_total - W_payload - W_battery - W_propulsion - W_structure - W_equipment'
 		self.add_subsystem('w_residual_comp',
 							om.ExecComp(W_residual_eqn, units='kg'),
 							promotes_inputs=input_list,
