@@ -73,13 +73,14 @@ if __name__ == '__main__':
 	# --- Mission requirements --- #
 	n_missions		= 20
 	payload_weight	= 400.0 # kg
-	flight_ranges 	= np.linspace(1000, 50000, n_missions) # m
+	flight_ranges 	= np.linspace(1000, 47000, n_missions) # m
 	hover_times 	= n_missions * [240.0] # s
 
 	# --- MTOW Estimation for Wingless Multirotor --- #
 	mtow_list1 = np.zeros(n_missions)
 
 	for i in range(n_missions):
+		print(i)
 		prob = om.Problem()
 		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 		indeps.add_output('payload_weight', payload_weight, units='kg')
@@ -103,6 +104,7 @@ if __name__ == '__main__':
 	mtow_list2 = np.zeros(n_missions)
 
 	for i in range(n_missions):
+		print(i)
 		prob = om.Problem()
 		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 		indeps.add_output('payload_weight', payload_weight, units='kg')
@@ -132,20 +134,6 @@ if __name__ == '__main__':
 	plt.legend(loc='upper left')
 	plt.grid(True)
 	plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 		
