@@ -11,8 +11,9 @@ class AvionicsWeight(om.ExplicitComponent):
 	Notes:
 		> This equation has not been checked against old-established literatures
 	Source:
-		Kadhiresan 2019, Conceptual Design and Mission Analysis for eVTOL Urban Air Mobility Flight Vehicle Configurations
-	"""
+		1. Kadhiresan, A. R., and Duffy, M. J., “Conceptual Design and Mission Analysis for EVTOL Urban Air Mobility Flight Vehicle Configurations,”
+		   presented at the AIAA Aviation 2019 Forum, Dallas, Texas, 2019. https://doi.org/10.2514/6.2019-2873
+  	"""
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
 		self.add_output('Weights|Avionics', units='kg', desc='Weight of all avionics systems')
