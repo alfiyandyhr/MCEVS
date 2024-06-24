@@ -71,16 +71,15 @@ if __name__ == '__main__':
 	evtol2_params['gravitational_accel'] 	= 9.81 # kg/m**3
 
 	# --- Mission requirements --- #
-	n_missions		= 20
+	n_missions		= 1#20
 	payload_weight	= 400.0 # kg
-	flight_ranges 	= np.linspace(1000, 47000, n_missions) # m
+	flight_ranges 	= [5000.0]#np.linspace(1000, 47000, n_missions) # m
 	hover_times 	= n_missions * [240.0] # s
 
 	# --- MTOW Estimation for Wingless Multirotor --- #
 	mtow_list1 = np.zeros(n_missions)
 
 	for i in range(n_missions):
-		print(i)
 		prob = om.Problem()
 		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 		indeps.add_output('payload_weight', payload_weight, units='kg')
@@ -100,40 +99,42 @@ if __name__ == '__main__':
 		# prob.check_partials(compact_print=True, show_only_incorrect=True)
 		mtow_list1[i] = prob.get_val('eVTOL|W_takeoff')[0]
 
-	# --- MTOW Estimation for Lift+Cruise --- #
-	mtow_list2 = np.zeros(n_missions)
+	print(prob.get_val('eVTOL|W_takeoff'))
+	print(prob.get_val('Weights|MotorControllers'))
+	print(prob.get_val('W_residual'))
+	# # --- MTOW Estimation for Lift+Cruise --- #
+	# mtow_list2 = np.zeros(n_missions)
 
-	for i in range(n_missions):
-		print(i)
-		prob = om.Problem()
-		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
-		indeps.add_output('payload_weight', payload_weight, units='kg')
-		indeps.add_output('flight_distance', flight_ranges[i], units='m')
-		indeps.add_output('hover_time', hover_times[i], units='s')
-		indeps.add_output('eVTOL|Cruise_speed', evtol2_cruise_speed, units='m/s')
-		indeps.add_output('Rotor|radius_lift', evtol2_r_rotor_lift, units='m')
-		indeps.add_output('Rotor|radius_cruise', evtol2_r_rotor_cruise, units='m')
-		indeps.add_output('eVTOL|S_wing', evtol2_wing_area, units='m**2')
-		indeps.add_output('Rotor|J', evtol2_rotor_J)
+	# for i in range(n_missions):
+	# 	prob = om.Problem()
+	# 	indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
+	# 	indeps.add_output('payload_weight', payload_weight, units='kg')
+	# 	indeps.add_output('flight_distance', flight_ranges[i], units='m')
+	# 	indeps.add_output('hover_time', hover_times[i], units='s')
+	# 	indeps.add_output('eVTOL|Cruise_speed', evtol2_cruise_speed, units='m/s')
+	# 	indeps.add_output('Rotor|radius_lift', evtol2_r_rotor_lift, units='m')
+	# 	indeps.add_output('Rotor|radius_cruise', evtol2_r_rotor_cruise, units='m')
+	# 	indeps.add_output('eVTOL|S_wing', evtol2_wing_area, units='m**2')
+	# 	indeps.add_output('Rotor|J', evtol2_rotor_J)
 		
-		prob.model.add_subsystem('mtow_estimation',
-								  MTOWEstimation(evtol_options=evtol2_params, use_solver=True),
-								  promotes_inputs=['*'],
-								  promotes_outputs=['*'])
+	# 	prob.model.add_subsystem('mtow_estimation',
+	# 							  MTOWEstimation(evtol_options=evtol2_params, use_solver=True),
+	# 							  promotes_inputs=['*'],
+	# 							  promotes_outputs=['*'])
 
-		prob.setup(check=False)
-		prob.run_model()
-		# prob.check_partials(compact_print=True, show_only_incorrect=True)
-		mtow_list2[i] = prob.get_val('eVTOL|W_takeoff')[0]
+	# 	prob.setup(check=False)
+	# 	prob.run_model()
+	# 	# prob.check_partials(compact_print=True, show_only_incorrect=True)
+	# 	mtow_list2[i] = prob.get_val('eVTOL|W_takeoff')[0]
 
-	plt.plot(flight_ranges/1000.0, mtow_list1, label='Wingless Multirotor')
-	plt.plot(flight_ranges/1000.0, mtow_list2, label='Winged Lift+Cruise')
-	plt.xlabel('Mission range [km]')
-	plt.ylabel('Maximum Takeoff Weight [kg]')
-	plt.title('MTOW vs mission range')
-	plt.legend(loc='upper left')
-	plt.grid(True)
-	plt.show()
+	# plt.plot(flight_ranges/1000.0, mtow_list1, label='Wingless Multirotor')
+	# plt.plot(flight_ranges/1000.0, mtow_list2, label='Winged Lift+Cruise')
+	# plt.xlabel('Mission range [km]')
+	# plt.ylabel('Maximum Takeoff Weight [kg]')
+	# plt.title('MTOW vs mission range')
+	# plt.legend(loc='upper left')
+	# plt.grid(True)
+	# plt.show()
 
 
 		
