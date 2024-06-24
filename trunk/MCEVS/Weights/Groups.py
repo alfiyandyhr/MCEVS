@@ -89,12 +89,15 @@ class MTOWEstimation(om.Group):
 							promotes_outputs=['*'])
 		if eVTOL_config == 'multirotor':
 			self.connect('power_hover', 'rotor_weight.max_power')
-			self.connect('power_hover', 'motor_weight.max_power')  			 # assume max power output = power in hover
+			self.connect('power_hover', 'motor_weight.max_power')  					# assume max power output = power in hover
+			self.connect('power_hover', 'controller_weight.max_power') 				# assume max power output = power in hover
 		elif eVTOL_config == 'lift+cruise':
 			self.connect('power_hover', 'rotor_weight_lift.max_power')
-			self.connect('power_hover', 'motor_weight_lift.max_power')  	 # assume max power output = power in hover
+			self.connect('power_hover', 'motor_weight_lift.max_power')				# assume max power output = power in hover
+			self.connect('power_hover', 'controller_weight_lift.max_power')			# assume max power output = power in hover
 			self.connect('power_forward', 'rotor_weight_cruise.max_power')
-			self.connect('power_forward', 'motor_weight_cruise.max_power')   # assume max power output = power in cruise
+			self.connect('power_forward', 'motor_weight_cruise.max_power')   		# assume max power output = power in cruise
+			self.connect('power_forward', 'controller_weight_cruise.max_power')		# assume max power output = power in cruise
 
 		# 3. Structure weight
 		# includes fuselage, landing gear, wing, and tails
@@ -117,7 +120,7 @@ class MTOWEstimation(om.Group):
 		
 		# W_residual = W_total - W_payload - W_battery - W_propulsion - W_structure - W_equipment
 		# where:
-		# W_propulsion = W_rotors + W_motors
+		# W_propulsion = W_rotors + W_motors + W_controllers
 		# W_structure = W_fuselage + W_landing_gear + W_wing
 		# W_equipment = W_avionics + W_flight_control + W_anti_icing + W_furnishings
 
