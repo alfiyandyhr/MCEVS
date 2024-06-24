@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
 	# --- Mission requirements --- #
 	payload_weight	= 400.0 # kg
-	flight_range	= 50000.0 # m
+	flight_range	= 40000.0 # m
 	hover_time	 	= 240.0 # s
 	# ============================================ #
 
@@ -51,9 +51,9 @@ if __name__ == '__main__':
 
 	# Design variables (and their initial gueses)
 	indeps.add_output('eVTOL|W_takeoff', 1000.0, units='kg')
-	indeps.add_output('eVTOL|Cruise_speed', 40.0, units='m/s')
+	indeps.add_output('eVTOL|Cruise_speed', 50.0, units='m/s')
 	indeps.add_output('Rotor|radius_lift', 1.2, units='m')
-	indeps.add_output('Rotor|mu', 0.4, units=None)
+	indeps.add_output('Rotor|mu', 0.3, units=None)
 
 	# eVTOL MTOW Estimation model
 	prob.model.add_subsystem('evtol_weight_model',
@@ -63,25 +63,26 @@ if __name__ == '__main__':
 
 	# --- Optimization problem --- #
 	# Design variables and their lower/upper bounds
-	prob.model.add_design_var('eVTOL|W_takeoff', lower=500.0, upper=2500.0, ref=1500.0, units='kg')
-	prob.model.add_design_var('eVTOL|Cruise_speed', lower=20.0, upper=50.0, ref=40.0, units='m/s')
-	prob.model.add_design_var('Rotor|radius_lift', lower=0.5, upper=1.5, ref=1.0, units='m')
+	prob.model.add_design_var('eVTOL|W_takeoff', lower=500.0, upper=2500.0, units='kg')
+	prob.model.add_design_var('eVTOL|Cruise_speed', lower=20.0, upper=50.0, units='m/s')
+	prob.model.add_design_var('Rotor|radius_lift', lower=0.5, upper=1.5, units='m')
 	prob.model.add_design_var('Rotor|mu', lower=0.01, upper=0.5)
 
 	# Constraints
 	prob.model.add_constraint('W_residual', lower=0.0, upper=0.0)
-	prob.model.add_constraint('disk_loading_hover', upper=900.0, ref=100.0, units='N/m**2')
-	prob.model.add_constraint('disk_loading_cruise', upper=900.0, ref=100.0, units='N/m**2')
+	prob.model.add_constraint('disk_loading_hover', upper=900.0, units='N/m**2')
+	prob.model.add_constraint('disk_loading_cruise', upper=900.0, units='N/m**2')
 	# in cruise. CT / solidity <= 0.14 to avoid too high blade loading
-	prob.model.add_constraint('Rotor|Ct', lower=0.0, upper=0.14 * evtol_params['rotor_lift_solidity'], ref=0.01)
+	# prob.model.add_constraint('Rotor|Ct', lower=0.0, upper=0.14 * evtol_params['rotor_lift_solidity'], ref=0.01)
+	# prob.model.add_constraint('Rotor|Ct', lower=0.0, upper=1.0 * evtol_params['rotor_lift_solidity'], ref=0.01)
 
 	# Objective
-	prob.model.add_objective('eVTOL|W_takeoff', ref=1000.0)
+	prob.model.add_objective('eVTOL|W_takeoff')
 
 	# Optimizer settings
 	prob.driver = om.ScipyOptimizeDriver()
 	prob.driver.options['optimizer'] = 'SLSQP'
-	prob.driver.options['tol'] = 1e-8
+	prob.driver.options['tol'] = 1e-6
 	prob.driver.options['disp'] = True
 
 	# Run optimization
@@ -95,6 +96,7 @@ if __name__ == '__main__':
 	W_battery = prob.get_val('Weights|Battery', 'kg')
 	W_rotors = prob.get_val('Weights|Rotors', 'kg')
 	W_motors = prob.get_val('Weights|Motors', 'kg')
+	W_controllers = prob.get_val('Weights|MotorControllers', 'kg')
 	W_fuselage = prob.get_val('Weights|Fuselage', 'kg')
 	W_landing_gear = prob.get_val('Weights|Landing_gear', 'kg')
 	W_avionics = prob.get_val('Weights|Avionics', 'kg')
@@ -121,6 +123,7 @@ if __name__ == '__main__':
 	print('  battery      :', list(W_battery))
 	print('  rotors       :', list(W_rotors))
 	print('  motors 	  :', list(W_motors))
+	print('  controllers  :', list(W_controllers))
 	print('  fuselage 	  :', list(W_fuselage))
 	print('  landing_gear :', list(W_landing_gear))
 	print('  avionics     :', list(W_avionics))
