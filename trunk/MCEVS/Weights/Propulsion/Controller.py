@@ -30,14 +30,14 @@ class MotorControllerWeight(om.ExplicitComponent):
 		p_max = inputs['max_power']/1000.0 # in [kW]
 
 		# Calculating W_controllers
-		W_controller = 2.20462 * (49.9/398 * (p_max/N_motor - 2.0) + 0.1) * 0.453592
+		W_controller = 49.9/398 * (p_max/N_motor - 2.0) + 0.1
 		W_controllers = N_motor * W_controller
 
 		outputs['Weights|MotorControllers'] = W_controllers # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		N_motor = self.options['N_motor']
-		partials['Weights|MotorControllers', 'max_power'] = 2.20462 * (49.9/398 * 1/1000 * 1/N_motor) * 0.453592
+		partials['Weights|MotorControllers', 'max_power'] = 49.9/398 * 1/1000 * 1/N_motor
 
 
 
