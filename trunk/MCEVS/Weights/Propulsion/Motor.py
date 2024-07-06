@@ -1,7 +1,7 @@
 import numpy as np
 import openmdao.api as om
 
-class MotorWeight(om.ExplicitComponent):
+class MotorWeightSimple(om.ExplicitComponent):
 	"""
 	Computes motor weight
 	Parameters:
@@ -14,7 +14,8 @@ class MotorWeight(om.ExplicitComponent):
 		> An empirical equation based on power density regression on DC electric motors
 		> It is suggested to renew the equation as more data become available
 	Source:
-		Roskam, J. Airplane Design - Part V: Component Weight Estimation. Lawrence, Kansas: Analysis and Research Corporation, 2003.
+		Ugwueze, O., et al., “Investigation of a Mission-Based Sizing Method for Electric VTOL Aircraft Preliminary Design,”
+		presented at the AIAA SCITECH 2022 Forum, San Diego, CA & Virtual, 2022. https://doi.org/10.2514/6.2022-1931
 	"""
 	def initialize(self):
 		self.options.declare('N_motor', types=int, desc='Number of motors')
@@ -36,6 +37,43 @@ class MotorWeight(om.ExplicitComponent):
 
 	def compute_partials(self, inputs, partials):
 		partials['Weights|Motors', 'max_power'] = 0.188/1000.0
+
+class MotorWeight(om.ExplicitComponent):
+	"""
+	Computes motor weight
+	Parameters:
+		N_motor	: number of motors
+	Inputs:
+		max_torque : maximum torque, i.e., torque during hover [Nm]
+	Outputs:
+		Weights|Motors : weight of all motors [kg]
+	Notes:
+	Source:
+		1. Kadhiresan, A. R., and Duffy, M. J., “Conceptual Design and Mission Analysis for EVTOL Urban Air Mobility Flight Vehicle Configurations,”
+		   presented at the AIAA Aviation 2019 Forum, Dallas, Texas, 2019. https://doi.org/10.2514/6.2019-2873
+  		2. Duffy, M., Sevier, A. E., Hupp, R., Perdomo, E., and Wakayama, S., “Propulsion Scaling Methods in the Era of Electric Flight,”
+  		   presented at the 2018 AIAA/IEEE Electric Aircraft Technologies Symposium, Cincinnati, Ohio, 2018. https://doi.org/10.2514/6.2018-4978
+	"""
+	def initialize(self):
+		self.options.declare('N_motor', types=int, desc='Number of motors')
+
+	def setup(self):
+		self.add_input('max_torque', units='N*m', desc='Maximum torque')
+		self.add_output('Weights|Motors', units='kg', desc='Weight of all motors')
+		self.declare_partials('Weights|Motors', 'max_torque')
+
+	def compute(self, inputs, outputs):
+		N_motor = self.options['N_motor']
+		tau_max = inputs['max_torque'] # in [N*m]
+
+		# Calculating W_motors
+		W_motor = 58/990 * (tau_max - 10.0) + 2.0
+		W_motors = N_motor * W_motor
+
+		outputs['Weights|Motors'] = W_motors # in [kg]
+
+	def compute_partials(self, inputs, partials):
+		partials['Weights|Motors', 'max_torque'] = 58/990
 
 
 

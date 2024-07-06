@@ -2,7 +2,7 @@ import numpy as np
 import openmdao.api as om
 
 from MCEVS.Weights.Propulsion.Rotor import RotorWeight
-from MCEVS.Weights.Propulsion.Motor import MotorWeight
+from MCEVS.Weights.Propulsion.Motor import MotorWeightSimple
 from MCEVS.Weights.Propulsion.Controller import MotorControllerWeight
 
 class PropulsionWeight(om.Group):
@@ -31,7 +31,7 @@ class PropulsionWeight(om.Group):
 								promotes_inputs=[('Rotor|radius', 'Rotor|radius_lift')],
 								promotes_outputs=['Weights|Rotors'])
 			self.add_subsystem('motor_weight',
-								MotorWeight(N_motor=N_rotors_lift), # one rotor typically has one motor
+								MotorWeightSimple(N_motor=N_rotors_lift), # one rotor typically has one motor
 								promotes_outputs=['Weights|Motors'])
 			self.add_subsystem('controller_weight',
 								MotorControllerWeight(N_motor=N_rotors_lift),
@@ -44,7 +44,7 @@ class PropulsionWeight(om.Group):
 								promotes_inputs=[('Rotor|radius', 'Rotor|radius_lift')],
 								promotes_outputs=[('Weights|Rotors', 'W_rotors_lift')])
 			self.add_subsystem('motor_weight_lift',
-								MotorWeight(N_motor=N_rotors_lift), # one rotor typically has one motor
+								MotorWeightSimple(N_motor=N_rotors_lift), # one rotor typically has one motor
 								promotes_outputs=[('Weights|Motors', 'W_motors_lift')])
 			self.add_subsystem('controller_weight_lift',
 								MotorControllerWeight(N_motor=N_rotors_lift),
@@ -56,7 +56,7 @@ class PropulsionWeight(om.Group):
 								promotes_inputs=[('Rotor|radius', 'Rotor|radius_cruise')],
 								promotes_outputs=[('Weights|Rotors', 'W_rotors_cruise')])
 			self.add_subsystem('motor_weight_cruise',
-								MotorWeight(N_motor=N_rotors_cruise), # one rotor typically has one motor
+								MotorWeightSimple(N_motor=N_rotors_cruise), # one rotor typically has one motor
 								promotes_outputs=[('Weights|Motors', 'W_motors_cruise')])
 			self.add_subsystem('controller_weight_cruise',
 								MotorControllerWeight(N_motor=N_rotors_cruise),
