@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
 	# --- Mission requirements --- #
 	payload_weight	= 400.0 # kg
-	flight_range	= 40000.0 # m
+	flight_range	= 30000.0 # m
 	hover_time	 	= 240.0 # s
 	# ============================================ #
 
@@ -50,41 +50,45 @@ if __name__ == '__main__':
 	indeps.add_output('hover_time', hover_time, units='s')
 
 	# Design variables (and their initial gueses)
-	indeps.add_output('eVTOL|W_takeoff', 1000.0, units='kg')
-	indeps.add_output('eVTOL|Cruise_speed', 50.0, units='m/s')
-	indeps.add_output('Rotor|radius_lift', 1.2, units='m')
+	# indeps.add_output('eVTOL|W_takeoff', 1058.6687, units='kg')
+	indeps.add_output('eVTOL|Cruise_speed', 30.0, units='m/s')
+	indeps.add_output('Rotor|radius_lift', 1.0, units='m')
 	indeps.add_output('Rotor|mu', 0.3, units=None)
 
 	# eVTOL MTOW Estimation model
 	prob.model.add_subsystem('evtol_weight_model',
-							  MTOWEstimation(evtol_options=evtol_params, use_solver=False),
+							  MTOWEstimation(evtol_options=evtol_params, use_solver=True),
 							  promotes_inputs=['*'],
 							  promotes_outputs=['*'])
 
 	# --- Optimization problem --- #
 	# Design variables and their lower/upper bounds
-	prob.model.add_design_var('eVTOL|W_takeoff', lower=500.0, upper=2500.0, units='kg')
-	prob.model.add_design_var('eVTOL|Cruise_speed', lower=20.0, upper=50.0, units='m/s')
+	# prob.model.add_design_var('eVTOL|W_takeoff', lower=500.0, upper=2500.0, units='kg')
+	prob.model.add_design_var('eVTOL|Cruise_speed', lower=20.0, upper=60.0, units='m/s')
 	prob.model.add_design_var('Rotor|radius_lift', lower=0.5, upper=1.5, units='m')
 	prob.model.add_design_var('Rotor|mu', lower=0.01, upper=0.5)
 
 	# Constraints
-	prob.model.add_constraint('W_residual', lower=0.0, upper=0.0)
-	prob.model.add_constraint('disk_loading_hover', upper=900.0, units='N/m**2')
-	prob.model.add_constraint('disk_loading_cruise', upper=900.0, units='N/m**2')
+	# prob.model.add_constraint('W_residual', lower=0.0, upper=0.0)
+	prob.model.add_constraint('disk_loading_hover', upper=600.0, units='N/m**2')
+	prob.model.add_constraint('disk_loading_cruise', upper=600.0, units='N/m**2')
 	# in cruise. CT / solidity <= 0.14 to avoid too high blade loading
-	# prob.model.add_constraint('Rotor|Ct', lower=0.0, upper=0.14 * evtol_params['rotor_lift_solidity'], ref=0.01)
-	# prob.model.add_constraint('Rotor|Ct', lower=0.0, upper=1.0 * evtol_params['rotor_lift_solidity'], ref=0.01)
+	prob.model.add_constraint('Rotor|Ct', lower=0.0, upper=0.14 * evtol_params['rotor_lift_solidity'])
 
 	# Objective
 	prob.model.add_objective('eVTOL|W_takeoff')
 
 	# Optimizer settings
-	prob.driver = om.ScipyOptimizeDriver()
-	prob.driver.options['optimizer'] = 'SLSQP'
-	prob.driver.options['tol'] = 1e-6
-	prob.driver.options['disp'] = True
-
+	prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-8, disp=True)
+	prob.driver.recording_options['includes'] = ['*']
+	prob.driver.recording_options['record_objectives'] = True
+	prob.driver.recording_options['record_constraints'] = True
+	prob.driver.recording_options['record_desvars'] = True
+	prob.driver.recording_options['record_inputs'] = True
+	prob.driver.recording_options['record_outputs'] = True
+	prob.driver.recording_options['record_residuals'] = True
+	prob.driver.add_recorder(om.SqliteRecorder("multirotor_opt_cases.sql"))
+	
 	# Run optimization
 	prob.setup(check=False)
 	prob.run_driver()
@@ -131,22 +135,12 @@ if __name__ == '__main__':
 	print('  anti_icing   :', list(W_anti_icing))
 	print('  furnishings  :', list(W_furnishings))
 	print('Performances')
-	print('  power in hover: [W] :', list(prob.get_val('power_hover', 'W')))
-	print('  power in cruise: [W]:', list(prob.get_val('power_forward', 'W')))
+	print('  power in hover [W] :', list(prob.get_val('power_hover', 'W')))
+	print('  power in cruise [W]:', list(prob.get_val('power_forward', 'W')))
+	print('  disk loading rotor_lift [N/m**2]:', list(prob.get_val('disk_loading_hover', 'N/m**2')))
+	print('  disk loading rotor_cruise [N/m**2]:', list(prob.get_val('disk_loading_cruise', 'N/m**2')))
+	print('  thrust coefficient/solidity:', list(prob.get_val('Rotor|Ct')/evtol_params['rotor_lift_solidity']))
 	print('Sanity check: W_residual [kg]:', list(prob.get_val('W_residual', 'kg')), ' = 0?')
 	print('--------------------------------------------')
 		
-
-
-
-
-
-
-
-
-
-
-
-
-
 
