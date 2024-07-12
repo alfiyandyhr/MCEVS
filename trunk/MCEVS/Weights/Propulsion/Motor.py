@@ -1,7 +1,7 @@
 import numpy as np
 import openmdao.api as om
 
-class MotorWeightSimple(om.ExplicitComponent):
+class MotorWeight(om.ExplicitComponent):
 	"""
 	Computes motor weight
 	Parameters:
@@ -13,6 +13,41 @@ class MotorWeightSimple(om.ExplicitComponent):
 	Notes:
 		> An empirical equation based on power density regression on DC electric motors
 		> It is suggested to renew the equation as more data become available
+	Source:
+		MCEVS/data/motors/motor_data.xlsx
+	"""
+	def initialize(self):
+		self.options.declare('N_motor', types=int, desc='Number of motors')
+
+	def setup(self):
+		self.add_input('max_power', units='W', desc='Maximum power')
+		self.add_output('Weights|Motors', units='kg', desc='Weight of all motors')
+		self.declare_partials('Weights|Motors', 'max_power')
+
+	def compute(self, inputs, outputs):
+		N_motor = self.options['N_motor']
+		p_max = inputs['max_power']/1000.0 # in [kW]
+
+		# Calculating W_motors
+		W_motor = 0.2213 * p_max/N_motor
+		W_motors = N_motor * W_motor
+
+		outputs['Weights|Motors'] = W_motors # in [kg]
+
+	def compute_partials(self, inputs, partials):
+		partials['Weights|Motors', 'max_power'] = 0.2213/1000.0
+
+class MotorWeightV1(om.ExplicitComponent):
+	"""
+	Computes motor weight
+	Parameters:
+		N_motor	: number of motors
+	Inputs:
+		max_power : maximum power, i.e., power during climb [W]
+	Outputs:
+		Weights|Motors : weight of all motors [kg]
+	Notes:
+		> An empirical equation based on power density regression on DC electric motors
 	Source:
 		Ugwueze, O., et al., “Investigation of a Mission-Based Sizing Method for Electric VTOL Aircraft Preliminary Design,”
 		presented at the AIAA SCITECH 2022 Forum, San Diego, CA & Virtual, 2022. https://doi.org/10.2514/6.2022-1931
@@ -38,7 +73,7 @@ class MotorWeightSimple(om.ExplicitComponent):
 	def compute_partials(self, inputs, partials):
 		partials['Weights|Motors', 'max_power'] = 0.188/1000.0
 
-class MotorWeight(om.ExplicitComponent):
+class MotorWeightV2(om.ExplicitComponent):
 	"""
 	Computes motor weight
 	Parameters:
