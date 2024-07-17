@@ -29,13 +29,13 @@ class MotorWeight(om.ExplicitComponent):
 		p_max = inputs['max_power']/1000.0 # in [kW]
 
 		# Calculating W_motors
-		W_motor = 0.2213 * p_max/N_motor
+		W_motor = 0.2138 * p_max/N_motor
 		W_motors = N_motor * W_motor
 
 		outputs['Weights|Motors'] = W_motors # in [kg]
 
 	def compute_partials(self, inputs, partials):
-		partials['Weights|Motors', 'max_power'] = 0.2213/1000.0
+		partials['Weights|Motors', 'max_power'] = 0.2138/1000.0
 
 class MotorWeightV1(om.ExplicitComponent):
 	"""
