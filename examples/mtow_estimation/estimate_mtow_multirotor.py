@@ -29,6 +29,7 @@ if __name__ == '__main__':
 	# Constants
 	evtol_params['rho_air'] 				= 1.225 # kg/m**3
 	evtol_params['gravitational_accel'] 	= 9.81 # kg/m**3
+	evtol_params['technology_factor']		= 0.8 # composite reduces 20% of weight
 
 	# --- Mission requirements --- #
 	payload_weight	= 400.0 # kg

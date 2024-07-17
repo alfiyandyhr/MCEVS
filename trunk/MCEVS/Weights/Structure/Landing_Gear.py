@@ -7,6 +7,7 @@ class LandingGearWeight(om.ExplicitComponent):
 	Parameters:
 		l_sm 	: shock strut length for main gear [m]
 		n_ult	: design ultimate load factor for landing (=5.7)
+		tf 		: technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
 		eVTOL|W_takeoff : total take-off weight [kg]
 	Outputs:
@@ -23,6 +24,7 @@ class LandingGearWeight(om.ExplicitComponent):
 	def initialize(self):
 		self.options.declare('l_sm', types=float, desc='Main landing gear strut length')
 		self.options.declare('n_ult', types=float, default=5.7, desc='Design ultimate load factor for landing')
+		self.options.declare('tf', types=float, default=0.8, desc='Technology factor')
 
 	def setup(self):
 		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
@@ -32,6 +34,7 @@ class LandingGearWeight(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		l_sm = self.options['l_sm']
 		n_ult = self.options['n_ult']
+		tf = self.options['tf']
 		W_takeoff = inputs['eVTOL|W_takeoff']
 
 		# Calculating W_landing_gear
@@ -41,12 +44,13 @@ class LandingGearWeight(om.ExplicitComponent):
 
 		W_landing_gear = 0.054 * l_sm**0.501 * (W_takeoff*n_ult)**0.684 * kg_to_lb * m_to_ft * lb_to_kg
 
-		outputs['Weights|Landing_gear'] = W_landing_gear # in [kg]
+		outputs['Weights|Landing_gear'] = tf * W_landing_gear # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		l_sm = self.options['l_sm']
 		n_ult = self.options['n_ult']
 		W_takeoff = inputs['eVTOL|W_takeoff']
+		tf = self.options['tf']
 
 		# Calculating dWlg_dWtakeoff
 		kg_to_lb = 2.20462**0.684
@@ -55,7 +59,7 @@ class LandingGearWeight(om.ExplicitComponent):
 
 		dWlg_dWtakeoff = 0.054 * l_sm**0.501 * 0.684 * W_takeoff**(-0.316) * n_ult**0.684 * kg_to_lb * m_to_ft * lb_to_kg
 
-		partials['Weights|Landing_gear', 'eVTOL|W_takeoff'] = dWlg_dWtakeoff
+		partials['Weights|Landing_gear', 'eVTOL|W_takeoff'] = tf * dWlg_dWtakeoff
 
 
 

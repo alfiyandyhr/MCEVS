@@ -7,6 +7,7 @@ class RotorWeight(om.ExplicitComponent):
 	Parameters:
 		N_rotor	: number of rotors
 		N_bl	: number of blades per rotor
+		tf 		: technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
 		Rotor|radius 	: rotor radius [m]
 		max_power		: maximum power, i.e., power during climb [W]
@@ -23,6 +24,7 @@ class RotorWeight(om.ExplicitComponent):
 	def initialize(self):
 		self.options.declare('N_rotor', types=int, desc='Number of rotors')
 		self.options.declare('N_bl', default=4, types=int, desc='Number of blades per rotor')
+		self.options.declare('tf', types=float, default=0.8, desc='Technology factor')
 
 	def setup(self):
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
@@ -36,6 +38,7 @@ class RotorWeight(om.ExplicitComponent):
 		N_bl = self.options['N_bl']
 		r = inputs['Rotor|radius']	# in [m]
 		p_max = inputs['max_power']	# in [W]
+		tf = self.options['tf']
 
 		k_prop = 0.144 # for piston engines; 0.108 for turboprops
 
@@ -47,13 +50,14 @@ class RotorWeight(om.ExplicitComponent):
 		W_rotor = k_prop * (2*r * (p_max/N_rotor) * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 		W_rotors = N_rotor * W_rotor
 
-		outputs['Weights|Rotors'] = W_rotors # in [kg]
+		outputs['Weights|Rotors'] = tf * W_rotors # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		N_rotor = self.options['N_rotor']
 		N_bl = self.options['N_bl']
 		r = inputs['Rotor|radius']	# in [m]
 		p_max = inputs['max_power']	# in [W]
+		tf = self.options['tf']
 
 		k_prop = 0.144 # for piston engines; 0.108 for turboprops
 
@@ -65,8 +69,8 @@ class RotorWeight(om.ExplicitComponent):
 		dWrotors_dr = N_rotor * k_prop * 0.782 * r**(-0.218) * (2 * (p_max/N_rotor) * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 		dWrotors_dp = N_rotor * k_prop * 0.782 * p_max**(-0.218) * (2*r / N_rotor * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 
-		partials['Weights|Rotors', 'Rotor|radius'] = dWrotors_dr
-		partials['Weights|Rotors', 'max_power'] = dWrotors_dp
+		partials['Weights|Rotors', 'Rotor|radius'] = tf * dWrotors_dr
+		partials['Weights|Rotors', 'max_power'] = tf * dWrotors_dp
 
 
 
