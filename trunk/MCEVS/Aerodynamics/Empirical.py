@@ -195,11 +195,14 @@ class WingedParasiteDrag(om.ExplicitComponent):
 		f = 1.6 * (W_takeoff/1000)**(2/3) * kg_to_lb * ft2_to_m2
 		df_dW = 1.6 * (2/3) * W_takeoff**(-1/3) * (1/1000)**(2/3) * kg_to_lb * ft2_to_m2
 		S_ref = S_wing
+		CD0 = f/S_ref
 
 		partials['Aero|Cd0', 'eVTOL|W_takeoff'] = 1/S_ref * df_dW
 		partials['Aero|Cd0', 'eVTOL|Cruise_speed'] = 0
+		partials['Aero|Cd0', 'eVTOL|S_wing'] = -f/(S_ref**2)
 		partials['Aero|Parasite_drag', 'eVTOL|W_takeoff'] = 0.5 * rho_air * v**2 * df_dW
 		partials['Aero|Parasite_drag', 'eVTOL|Cruise_speed'] = rho_air * v * f
+		partials['Aero|Parasite_drag', 'eVTOL|S_wing'] = 0
 
 
 

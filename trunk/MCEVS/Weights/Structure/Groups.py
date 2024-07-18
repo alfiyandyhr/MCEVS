@@ -32,8 +32,8 @@ class StructureWeight(om.Group):
 		# wing is possessed by lift+cruise, tiltrotor, and tiltiwing configurations
 		if params['evtol_config'] == 'lift+cruise':
 			self.add_subsystem('wing_weight',
-								WingWeight(wing_AR=params['wing_AR'],n_ult=params['n_ult_wing']),
-								promotes_inputs=['eVTOL|W_takeoff', 'eVTOL|S_wing'],
+								WingWeight(n_ult=params['n_ult_wing']),
+								promotes_inputs=['eVTOL|W_takeoff', 'eVTOL|S_wing', 'eVTOL|AR_wing'],
 								promotes_outputs=['Weights|Wing'])
 
 		# Tails weight

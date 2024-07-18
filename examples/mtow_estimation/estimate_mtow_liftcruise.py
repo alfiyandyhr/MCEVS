@@ -18,7 +18,6 @@ if __name__ == '__main__':
 	evtol_params['hover_FM'] 				= 0.75
 	# Wing parameters
 	# evtol_params['Cd0'] = 0.0397
-	evtol_params['wing_AR'] 				= 10.0
 	evtol_params['n_ult_wing']				= 3.0
 	# Fuselage parameters
 	evtol_params['n_pax']					= 4 # number of passengers (including pilot)
@@ -46,6 +45,7 @@ if __name__ == '__main__':
 	# --- Design variable values --- #
 	cruise_speed	= 30.0 # m/s
 	wing_area		= 8.0 # m**2
+	wing_AR 		= 10.0
 	r_rotor_lift	= 1.0 # m
 	r_rotor_cruise	= 1.0 # m
 	rotor_J		 	= 1.0
@@ -59,6 +59,7 @@ if __name__ == '__main__':
 	indeps.add_output('hover_time', hover_time, units='s')
 	indeps.add_output('eVTOL|Cruise_speed', cruise_speed, units='m/s')
 	indeps.add_output('eVTOL|S_wing', wing_area, units='m**2')
+	indeps.add_output('eVTOL|AR_wing', wing_AR, units=None)
 	indeps.add_output('Rotor|radius_lift', r_rotor_lift, units='m')
 	indeps.add_output('Rotor|radius_cruise', r_rotor_cruise, units='m')
 	indeps.add_output('Rotor|J', rotor_J, units=None)
@@ -71,7 +72,9 @@ if __name__ == '__main__':
 	prob.setup(check=False)
 	prob.run_model()
 	# prob.check_partials(compact_print=True, show_only_incorrect=True)
-	# mtow_list1[i = prob.get_val('eVTOL|W_takeoff')[0]
+	# mtow_list1[i] = prob.get_val('eVTOL|W_takeoff')[0]
+
+	# print('energy_cnsmp =', prob.get_val('energy_cnsmp','W*h'))
 
 	# get weights
 	W_takeoff = prob.get_val('eVTOL|W_takeoff', 'kg')
@@ -102,6 +105,7 @@ if __name__ == '__main__':
 	print('  cruising rotor radius [m] :', list(prob.get_val('Rotor|radius_cruise', 'm')))
 	print('  cruise speed [m/s]       :', list(prob.get_val('eVTOL|Cruise_speed', 'm/s')))
 	print('  wing area [m**2] :', list(prob.get_val('eVTOL|S_wing', 'm**2')))
+	print('  wing aspect ratio :', list(prob.get_val('eVTOL|AR_wing')))
 	print('  prop advance ratio J:', list(prob.get_val('Rotor|J')))
 	print('Component weights [kg]')
 	print('  total weight :', list(W_takeoff))

@@ -20,12 +20,13 @@ class MTOWEstimation(om.Group):
 		flight_distance
 		hover_time
 		payload_weight
-	(UAV design variables)
+	(eVTOL design variables)
 		eVTOL|W_takeoff 		: total take-off weight [kg]
 		eVTOL|Cruise_speed 		: cruising speed of the eVTOL [m/s]
 		Rotor|radius_lift		: Lifting rotor radius
 		Rotor|radius_cruise 	: Cruising rotor radius 	(for lift+cruise only)
 		eVTOL|S_wing			: Wing area 				(for lift+cruise only)
+		eVTOL|AR_wing			: wing aspect ratio 		(for lift+cruise only)
 		Rotor|mu 				: Rotor advance ratio		(for multirotor only)
 		Rotor|J 				: Propeller advance ratio	(for lift+cruise only)
 
@@ -102,7 +103,7 @@ class MTOWEstimation(om.Group):
 		# 3. Structure weight
 		# includes fuselage, landing gear, wing, and tails
 		if eVTOL_config == 'multirotor': input_list_struct = ['eVTOL|W_takeoff']
-		elif eVTOL_config == 'lift+cruise': input_list_struct = ['eVTOL|W_takeoff', 'eVTOL|S_wing']
+		elif eVTOL_config == 'lift+cruise': input_list_struct = ['eVTOL|W_takeoff', 'eVTOL|S_wing', 'eVTOL|AR_wing']
 		self.add_subsystem('structure_weight',
 							StructureWeight(params=params),
 							promotes_inputs=input_list_struct,

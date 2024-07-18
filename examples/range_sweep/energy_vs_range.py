@@ -38,7 +38,6 @@ if __name__ == '__main__':
 	evtol2_params['hover_FM'] 				= 0.75
 	# Wing parameters
 	# evtol2_params['Cd0'] = 0.0397
-	evtol2_params['wing_AR'] 				= 10.0
 	# Battery parameters
 	evtol2_params['battery_rho'] 			= 250.0 # Wh/kg
 	evtol2_params['battery_eff'] 			= 0.85
@@ -49,6 +48,7 @@ if __name__ == '__main__':
 	evtol2_r_rotor_cruise 	= 1.0 # m
 	evtol2_cruise_speed 	= 30.0 # m/s
 	evtol2_wing_area 		= 8.0 # m**2
+	evtol2_wing_AR 			= 10.0
 	evtol2_rotor_J 			= 1.0
 
 	# Constants
@@ -101,6 +101,7 @@ if __name__ == '__main__':
 		indeps.add_output('Rotor|radius_lift', evtol2_r_rotor_lift, units='m')
 		indeps.add_output('Rotor|radius_cruise', evtol2_r_rotor_cruise, units='m')
 		indeps.add_output('eVTOL|S_wing', evtol2_wing_area, units='m**2')
+		indeps.add_output('eVTOL|AR_wing', evtol2_wing_AR)
 		indeps.add_output('Rotor|J', evtol2_rotor_J)
 		
 		prob.model.add_subsystem('energy_model',
@@ -112,7 +113,6 @@ if __name__ == '__main__':
 		prob.run_model()
 		energy_list2[i] = prob.get_val('energy_cnsmp', 'kW*h')[0]
 
-	
 	plt.plot(flight_ranges1/1000.0, energy_list1, label='Wingless Multirotor')
 	plt.plot(flight_ranges2/1000.0, energy_list2, label='Winged Lift+Cruise')
 	plt.xlabel('Mission range [km]')

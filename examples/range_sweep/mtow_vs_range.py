@@ -44,7 +44,6 @@ if __name__ == '__main__':
 	evtol2_params['hover_FM'] 				= 0.75
 	# Wing parameters
 	# evtol2_params['Cd0'] = 0.0397
-	evtol2_params['wing_AR'] 				= 10.0
 	evtol2_params['n_ult_wing']				= 3.0
 	# Fuselage parameters
 	evtol2_params['n_pax']					= 4 # number of passengers (including pilot)
@@ -62,6 +61,7 @@ if __name__ == '__main__':
 	evtol2_r_rotor_cruise 	= 1.0 # m
 	evtol2_cruise_speed 	= 50.0 # m/s
 	evtol2_wing_area 		= 8.0 # m**2
+	evtol2_wing_AR  		= 10.0
 	evtol2_rotor_J 			= 1.0
 
 	# Constants
@@ -72,10 +72,10 @@ if __name__ == '__main__':
 	# --- Mission requirements --- #
 	payload_weight	= 400.0 # kg
 	n_missions1		= 20
-	flight_ranges1 	= np.linspace(1000, 39000, n_missions1) # m
+	flight_ranges1 	= np.linspace(1000, 42000, n_missions1) # m
 	hover_times1 	= n_missions1 * [240.0] # s
-	n_missions2		= 60
-	flight_ranges2 	= np.linspace(1000, 132000, n_missions2) # m
+	n_missions2		= 80
+	flight_ranges2 	= np.linspace(1000, 168000, n_missions2) # m
 	hover_times2 	= n_missions2 * [240.0] # s
 
 	# --- MTOW Estimation for Wingless Multirotor --- #
@@ -119,6 +119,7 @@ if __name__ == '__main__':
 		indeps.add_output('Rotor|radius_lift', evtol2_r_rotor_lift, units='m')
 		indeps.add_output('Rotor|radius_cruise', evtol2_r_rotor_cruise, units='m')
 		indeps.add_output('eVTOL|S_wing', evtol2_wing_area, units='m**2')
+		indeps.add_output('eVTOL|AR_wing', evtol2_wing_AR)
 		indeps.add_output('Rotor|J', evtol2_rotor_J)
 		
 		prob.model.add_subsystem('mtow_estimation',

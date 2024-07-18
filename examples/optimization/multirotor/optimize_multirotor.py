@@ -1,4 +1,4 @@
-import numpy as np
+# import numpy a30np
 import openmdao.api as om
 
 from MCEVS.Weights.Groups import MTOWEstimation
@@ -73,7 +73,7 @@ if __name__ == '__main__':
 	prob.model.add_constraint('disk_loading_hover', upper=600.0, units='N/m**2')
 	prob.model.add_constraint('disk_loading_cruise', upper=600.0, units='N/m**2')
 	# in cruise. CT / solidity <= 0.14 to avoid too high blade loading
-	prob.model.add_constraint('Rotor|Ct', lower=0.0, upper=0.14 * evtol_params['rotor_lift_solidity'])
+	prob.model.add_constraint('Rotor|Ct', lower=0.0, upper=0.30 * evtol_params['rotor_lift_solidity'])
 
 	# Objective
 	prob.model.add_objective('eVTOL|W_takeoff')

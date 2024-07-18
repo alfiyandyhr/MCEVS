@@ -18,6 +18,7 @@ class EnergyConsumption(om.Group):
 		Rotor|radius_lift	: lifting rotor radius [m]
 		Rotor|radius_cruise	: cruising rotor radius [m] 		(for lift+cruise only)
 		eVTOL|S_wing 		: wing area [m**2]					(for lift+cruise only)
+		eVTOL|AR_wing		: wing aspect ratio 				(for lift+cruise only)
 		Rotor|mu 			: rotor advance ratio				(for multirotor only)
 		Rotor|J 			: propeller advance ratio			(for lift+cruise only)
 	Outputs:
@@ -49,7 +50,6 @@ class EnergyConsumption(om.Group):
 		elif eVTOL_config == 'lift+cruise':
 			N_rotors_cruise = params['N_rotors_cruise']		# number of cruising rotors
 			# Cd0 = params['Cd0'] 							# minimum drag of the drag polar
-			wing_AR = params['wing_AR']						# wing aspect ratio
 			# wing_e = params['wing_e']						# Oswald efficiency
 			prop_sigma = params['rotor_cruise_solidity']	# solidty of cruising rotors
 			AoA = params['AoA_cruise'] 						# angle of attack during cruise
@@ -75,7 +75,7 @@ class EnergyConsumption(om.Group):
 		elif eVTOL_config == 'lift+cruise':
 			input_list = ['eVTOL|*', 'Rotor|J', ('Rotor|radius', 'Rotor|radius_cruise')]
 			self.add_subsystem('power_forward_wing',
-								PowerForwardWithWing(N_rotor=N_rotors_cruise, hover_FM=hover_FM, wing_AR=wing_AR, rotor_sigma=prop_sigma, g=g, AoA=AoA),
+								PowerForwardWithWing(N_rotor=N_rotors_cruise, hover_FM=hover_FM, rotor_sigma=prop_sigma, g=g, AoA=AoA),
 								promotes_inputs=input_list,
 								promotes_outputs=['*'])
 

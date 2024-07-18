@@ -18,7 +18,6 @@ if __name__ == '__main__':
 	evtol_params['hover_FM'] 				= 0.75
 	# Wing parameters
 	# evtol_params['Cd0'] = 0.0397
-	evtol_params['wing_AR'] 				= 10.0
 	evtol_params['n_ult_wing']				= 3.0
 	# Fuselage parameters
 	evtol_params['n_pax']					= 4 # number of passengers (including pilot)
@@ -59,6 +58,7 @@ if __name__ == '__main__':
 	# indeps.add_output('eVTOL|W_takeoff', 1000.0, units='kg')
 	indeps.add_output('eVTOL|Cruise_speed', 30.0, units='m/s')
 	indeps.add_output('eVTOL|S_wing', 8.0, units='m**2')
+	indeps.add_output('eVTOL|AR_wing', 10.0)
 	indeps.add_output('Rotor|radius_lift', 1.0, units='m')
 	indeps.add_output('Rotor|radius_cruise', 1.0, units='m')
 	indeps.add_output('Rotor|J', 1.0, units=None)
@@ -74,6 +74,7 @@ if __name__ == '__main__':
 	# prob.model.add_design_var('eVTOL|W_takeoff', lower=500.0, upper=2500.0, units='kg')
 	prob.model.add_design_var('eVTOL|Cruise_speed', lower=20.0, upper=60.0, units='m/s')
 	prob.model.add_design_var('eVTOL|S_wing', lower=4.0, upper=12.0, units='m**2')
+	prob.model.add_design_var('eVTOL|AR_wing', lower=6.0, upper=12.0)
 	prob.model.add_design_var('Rotor|radius_lift', lower=0.5, upper=1.5, units='m')
 	prob.model.add_design_var('Rotor|radius_cruise', lower=0.5, upper=1.5, units='m')
 	prob.model.add_design_var('Rotor|J', lower=0.01, upper=1.3)

@@ -119,13 +119,13 @@ class PowerForwardWithWing(om.Group):
 		N_rotor				: number or rotors
 		hover_FM			: hover figure of merit
 		rho_air				: air density [kg/m**3]
-		wing_AR				: wing aspect ratio
 		rotor_sigma 		: rotor's solidity
 		g 					: gravitational acceleration [m/s**2]
 		AoA 				: aircraft's angle of attack [deg]
 	Inputs:
 		eVTOL|W_takeoff 	: total take-off weight [kg]
 		eVTOL|S_wing 		: wing area [m**2]
+		eVTOL|AR_wing		: wing aspect ratio 
 		eVTOL|Cruise_speed	: cruising speed of the eVTOL [m/s]
 		Rotor|radius		: rotor radius [m]
 		Rotor|J				: propeller's advance ratio
@@ -138,7 +138,6 @@ class PowerForwardWithWing(om.Group):
 		self.options.declare('N_rotor', types=int, desc='Number of cruising rotors')
 		self.options.declare('hover_FM', types=float, desc='Hover figure of merit')
 		self.options.declare('rho_air', default=1.225, desc='Air density')
-		self.options.declare('wing_AR', types=float, desc='Wing aspect ratio')
 		self.options.declare('rotor_sigma', types=float, desc='Rotor solidity')
 		self.options.declare('g', default=9.81, desc='Gravitational acceleration')
 		self.options.declare('AoA', desc='Aircraft angle of attack')
@@ -147,7 +146,6 @@ class PowerForwardWithWing(om.Group):
 		N_rotor = self.options['N_rotor']
 		hover_FM = self.options['hover_FM']
 		rho_air = self.options['rho_air']
-		wing_AR = self.options['wing_AR']
 		rotor_sigma = self.options['rotor_sigma']
 		g = self.options['g']
 		AoA = self.options['AoA']
@@ -168,7 +166,7 @@ class PowerForwardWithWing(om.Group):
 							promotes_outputs=['Aero|Cd0', 'Aero|Parasite_drag'])
 
 		self.add_subsystem('total_drag',
-							WingedCruiseDrag(rho_air=rho_air, wing_AR=wing_AR),
+							WingedCruiseDrag(rho_air=rho_air),
 							promotes_inputs=[('Aero|Lift', 'lift'), 'eVTOL|*', 'Aero|Cd0'],
 							promotes_outputs=['Aero|Drag', 'Aero|CL_cruise'])
 
