@@ -40,32 +40,32 @@ class HoverClimbConstantSpeed():
 
 	def _calc_time(self, t_list):
 		t0 = t_list[-1]
-		t_next = np.linspace(t0, t0+self.duration, self.n_discrete+1)[1:]
+		t_next = np.linspace(t0, t0+self.duration, self.n_discrete+1)
 		return t_next
 
 	def _calc_position(self, x_list, y_list, t_next):
-		x0, y0 = x_list[-1], y_list[-1]
+		x0, y0, t0 = x_list[-1], y_list[-1], t_next[0]
 		# Position under constant speed
-		x_next = x0 + 0.0 * t_next
-		y_next = y0 + self.speed * t_next
+		x_next = x0 + 0.0 * (t_next - t0)
+		y_next = y0 + self.speed * (t_next - t0)
 		x_list = np.concatenate((x_list, x_next))
 		y_list = np.concatenate((y_list, y_next))
 		return x_list, y_list
 
 	def _calc_velocity(self, vx_list, vy_list, t_next):
-		vx0, vy0 = vx_list[-1], self.speed
+		vx0, vy0, t0 = vx_list[-1], self.speed, t_next[0]
 		# Velocity under zero acceleration
-		vx_next = vx0 + 0.0 * t_next
-		vy_next = vy0 + 0.0 * t_next
+		vx_next = vx0 + 0.0 * (t_next - t0)
+		vy_next = vy0 + 0.0 * (t_next - t0)
 		vx_list = np.concatenate((vx_list, vx_next))
 		vy_list = np.concatenate((vy_list, vy_next))
 		return vx_list, vy_list
 
 	def _calc_acceleration(self, ax_list, ay_list, t_next):
-		ax0, ay0 = ax_list[-1], ay_list[-1]
+		ax0, ay0, t0 = ax_list[-1], ay_list[-1], t_next[0]
 		# Zero acceleration
-		ax_next = 0.0 * t_next
-		ay_next = 0.0 * t_next
+		ax_next = np.zeros_like(t_next)
+		ay_next = np.zeros_like(t_next)
 		ax_list = np.concatenate((ax_list, ax_next))
 		ay_list = np.concatenate((ay_list, ay_next))
 		return ax_list, ay_list
