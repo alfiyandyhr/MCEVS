@@ -1,5 +1,7 @@
 from MCEVS.Missions.Segments.HoverClimb.Constant_Speed import HoverClimbConstantSpeed
+from MCEVS.Missions.Segments.HoverClimb.Constant_Acceleration import HoverClimbConstantAcceleration
 from MCEVS.Missions.Segments.Cruise.Constant_Speed import CruiseConstantSpeed
+from MCEVS.Missions.Segments.HoverDescent.Constant_Deceleration import HoverDescentConstantDeceleration
 from MCEVS.Missions.Segments.HoverDescent.Constant_Speed import HoverDescentConstantSpeed
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,15 +14,15 @@ class Mission(object):
 		super(Mission, self).__init__()
 		self.curr_id = 0
 		self.segments = []
-		self.x = np.array([0])
-		self.y = np.array([0])
-		self.vx = np.array([0])
-		self.vy = np.array([0])
-		self.ax = np.array([0])
-		self.ay = np.array([0])
-		self.t = np.array([0])
+		self.x = np.array([0.0])
+		self.y = np.array([0.0])
+		self.vx = np.array([0.0])
+		self.vy = np.array([0.0])
+		self.ax = np.array([0.0])
+		self.ay = np.array([0.0])
+		self.t = np.array([0.0])
 
-	def add_segment(self, name:str, kind:str, **kwargs):
+	def add_segment(self, name:str, kind:str, n_discrete=10, **kwargs):
 		"""
 		Adding a segment sequentially
 		name : name of the segment up to the user
@@ -36,19 +38,19 @@ class Mission(object):
 		self.curr_id += 1
 
 		if kind == 'HoverClimbConstantSpeed':
-			self.segments.append(HoverClimbConstantSpeed(id=self.curr_id, name=name, kwargs=kwargs))
+			self.segments.append(HoverClimbConstantSpeed(id=self.curr_id, name=name, n_discrete=n_discrete, kwargs=kwargs))
 
-		elif kind == "TransitionClimb":
-			self.segments.append('TransitionClimb')
+		elif kind == "HoverClimbConstantAcceleration":
+			self.segments.append(HoverClimbConstantAcceleration(id=self.curr_id, name=name, initial_speed=self.vy[-1], n_discrete=n_discrete, kwargs=kwargs))
 
 		elif kind == 'CruiseConstantSpeed':
-			self.segments.append(CruiseConstantSpeed(id=self.curr_id, name=name, kwargs=kwargs))
+			self.segments.append(CruiseConstantSpeed(id=self.curr_id, name=name, n_discrete=n_discrete, kwargs=kwargs))
 
-		elif kind == 'TransitionDescent':
-			self.segments.append('TransitionDescent')
+		elif kind == 'HoverDescentConstantDeceleration':
+			self.segments.append(HoverDescentConstantDeceleration(id=self.curr_id, name=name, initial_speed=kwargs['initial_speed'], n_discrete=n_discrete, kwargs=kwargs))
 
 		elif kind == 'HoverDescentConstantSpeed':
-			self.segments.append(HoverDescentConstantSpeed(id=self.curr_id, name=name, kwargs=kwargs))
+			self.segments.append(HoverDescentConstantSpeed(id=self.curr_id, name=name, n_discrete=n_discrete, kwargs=kwargs))
 
 		elif kind == 'HoverStay':
 			self.segments.append('HoverStay')
@@ -64,6 +66,16 @@ class Mission(object):
 		# Update the time list
 		self.t = np.concatenate((self.t, t_next))
 
+		# Delete first point
+		if self.curr_id == 1:
+			self.x = self.x[1:]
+			self.y = self.y[1:]
+			self.vx = self.vx[1:]
+			self.vy = self.vy[1:]
+			self.ax = self.ax[1:]
+			self.ay = self.ay[1:]
+			self.t = self.t[1:]
+
 	def print(self):
 		print('Mission Info')
 		print(f'\tNumber of segment(s) = {len(self.segments)}')
@@ -72,16 +84,16 @@ class Mission(object):
 			print(segment._info())
 
 	def visualize(self):
-		# # Plot position
-		# plt.plot(self.x, self.y, '-o')
-		# plt.xlabel('Position in x (m)')
-		# plt.ylabel('Position in y (m)')
-		# plt.title('Mission position x vs y')
-		# plt.grid()
-		# plt.show()
+		# Plot position
+		plt.plot(self.x, self.y, '-o')
+		plt.xlabel('Position in x (m)')
+		plt.ylabel('Position in y (m)')
+		plt.title('Mission position x vs y')
+		plt.grid()
+		plt.show()
 
 		# Plot bulk
-		fig, axs = plt.subplots(nrows=3, ncols=2, sharex=True)
+		fig, axs = plt.subplots(nrows=3, ncols=2, sharex=False)
 		axs[0,0].plot(self.t, self.x, '-o')
 		axs[0,0].set_ylabel('Position in x (m)')
 		axs[0,0].set_xlabel('Time (s)')
