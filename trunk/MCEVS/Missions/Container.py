@@ -1,8 +1,11 @@
 from MCEVS.Missions.Segments.HoverClimb.Constant_Speed import HoverClimbConstantSpeed
 from MCEVS.Missions.Segments.HoverClimb.Constant_Acceleration import HoverClimbConstantAcceleration
+from MCEVS.Missions.Segments.Climb.Constant_Vy_Constant_Ax import ClimbConstantVyConstantAx
 from MCEVS.Missions.Segments.Cruise.Constant_Speed import CruiseConstantSpeed
+from MCEVS.Missions.Segments.Descent.Constant_Vy_Constant_Ax import DescentConstantVyConstantAx
 from MCEVS.Missions.Segments.HoverDescent.Constant_Deceleration import HoverDescentConstantDeceleration
 from MCEVS.Missions.Segments.HoverDescent.Constant_Speed import HoverDescentConstantSpeed
+from MCEVS.Missions.Segments.Hover.Stay import HoverStay
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -43,8 +46,14 @@ class Mission(object):
 		elif kind == "HoverClimbConstantAcceleration":
 			self.segments.append(HoverClimbConstantAcceleration(id=self.curr_id, name=name, initial_speed=self.vy[-1], n_discrete=n_discrete, kwargs=kwargs))
 
+		elif kind == "ClimbConstantVyConstantAx":
+			self.segments.append(ClimbConstantVyConstantAx(id=self.curr_id, name=name, initial_speed_X=self.vx[-1], n_discrete=n_discrete, kwargs=kwargs))
+
 		elif kind == 'CruiseConstantSpeed':
 			self.segments.append(CruiseConstantSpeed(id=self.curr_id, name=name, n_discrete=n_discrete, kwargs=kwargs))
+
+		elif kind == "DescentConstantVyConstantAx":
+			self.segments.append(DescentConstantVyConstantAx(id=self.curr_id, name=name, initial_speed_X=self.vx[-1], n_discrete=n_discrete, kwargs=kwargs))
 
 		elif kind == 'HoverDescentConstantDeceleration':
 			self.segments.append(HoverDescentConstantDeceleration(id=self.curr_id, name=name, initial_speed=kwargs['initial_speed'], n_discrete=n_discrete, kwargs=kwargs))
@@ -53,7 +62,7 @@ class Mission(object):
 			self.segments.append(HoverDescentConstantSpeed(id=self.curr_id, name=name, n_discrete=n_discrete, kwargs=kwargs))
 
 		elif kind == 'HoverStay':
-			self.segments.append('HoverStay')
+			self.segments.append(HoverStay(id=self.curr_id, name=name, n_discrete=n_discrete, kwargs=kwargs))
 
 		self.segments[self.curr_id-1]._initialize()
 
@@ -84,39 +93,36 @@ class Mission(object):
 			print(segment._info())
 
 	def visualize(self):
+
 		# Plot position
-		plt.plot(self.x, self.y, '-o')
-		plt.xlabel('Position in x (m)')
-		plt.ylabel('Position in y (m)')
-		plt.title('Mission position x vs y')
+		plt.plot(self.x/1000.0, self.y, '-o')
+		plt.xlabel('Distance ($km$) in X-dir')
+		plt.ylabel('AGL Altitude ($m$) in Y-dir')
+		plt.title('Aircraft position y vs x')
 		plt.grid()
 		plt.show()
 
 		# Plot bulk
 		fig, axs = plt.subplots(nrows=3, ncols=2, sharex=False)
-		axs[0,0].plot(self.t, self.x, '-o')
-		axs[0,0].set_ylabel('Position in x (m)')
-		axs[0,0].set_xlabel('Time (s)')
+		axs[0,0].plot(self.t/60.0, self.x/1000.0, '-o')
+		axs[0,0].set_ylabel('Distance ($km$) in X-dir')
 		axs[0,0].grid()
-		axs[0,1].plot(self.t, self.y, '-o')
-		axs[0,1].set_ylabel('Position in y (m)')
-		axs[0,1].set_xlabel('Time (s)')
+		axs[0,1].plot(self.t/60.0, self.y, '-o')
+		axs[0,1].set_ylabel('AGL Altitude ($m$) in Y-dir')
 		axs[0,1].grid()
-		axs[1,0].plot(self.t, self.vx, '-o')
-		axs[1,0].set_ylabel('Velocity x-dir (m/s)')
-		axs[1,0].set_xlabel('Time (s)')
+		axs[1,0].plot(self.t/60.0, self.vx*3.6, '-o')
+		axs[1,0].set_ylabel('Velocity x-dir ($km/h$)')
 		axs[1,0].grid()
-		axs[1,1].plot(self.t, self.vy, '-o')
-		axs[1,1].set_ylabel('Velocity y-dir (m/s)')
-		axs[1,1].set_xlabel('Time (s)')
+		axs[1,1].plot(self.t/60.0, self.vy, '-o')
+		axs[1,1].set_ylabel('Velocity y-dir ($m/s$)')
 		axs[1,1].grid()
-		axs[2,0].plot(self.t, self.ax, '-o')
-		axs[2,0].set_ylabel('Acceleration x-dir (m/s2)')
-		axs[2,0].set_xlabel('Time (s)')
+		axs[2,0].plot(self.t/60.0, self.ax, '-o')
+		axs[2,0].set_ylabel('Acceleration x-dir ($m/s^2$)')
+		axs[2,0].set_xlabel('Time ($min$)')
 		axs[2,0].grid()
-		axs[2,1].plot(self.t, self.ay, '-o')
-		axs[2,1].set_ylabel('Acceleration y-dir (m/s2)')
-		axs[2,1].set_xlabel('Time (s)')
+		axs[2,1].plot(self.t/60.0, self.ay, '-o')
+		axs[2,1].set_ylabel('Acceleration y-dir ($m/s^2$)')
+		axs[2,1].set_xlabel('Time ($min$)')
 		axs[2,1].grid()
 		plt.show()
 
