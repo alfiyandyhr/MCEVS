@@ -1,6 +1,6 @@
 from MCEVS.Missions.Container import Mission
 
-def UberMissionRequirement(v_stall=40.0):
+def UberMissionProfile(v_stall=40.0):
 	mission_range = 96560.6 # m
 	cruise_speed = 67.056 # m/s
 
@@ -54,7 +54,7 @@ def UberMissionRequirement(v_stall=40.0):
 
 	return mission
 
-def SimpleMissionRequirement(mission_range, cruise_speed):
+def SimplifiedUberMissionProfile(mission_range, cruise_speed):
 
 	# Accel + Climb
 	AC_duration = 304.8/2.54 # s
@@ -82,10 +82,33 @@ def SimpleMissionRequirement(mission_range, cruise_speed):
 
 	return mission
 
+def StandardMissionProfile(mission_range, cruise_speed):
 
+	# Constant climb
+	C_distance_X = (cruise_speed/2) * (304.8/2.54)
 
+	# Constant descent
+	D_distance_X = (cruise_speed/2) * (304.8/1.524)
 
+	cruise_range = mission_range - (C_distance_X + D_distance_X)
 
+	mission = Mission()
+	mission.add_segment(name='Hover Climb', kind='HoverClimbConstantSpeed', speed=2.54, distance=152.4, n_discrete=10)
+	mission.add_segment(name='Constant Climb', kind='ClimbConstantVyConstantVx', speed_Y=2.54, distance_Y=304.8, speed_X=cruise_speed/2, n_discrete=10)
+	mission.add_segment(name='Cruise', kind='CruiseConstantSpeed', speed=cruise_speed, distance=cruise_range, n_discrete=5)
+	mission.add_segment(name='Constant Descent', kind='DescentConstantVyConstantVx', speed_Y=1.524, distance_Y=304.8, speed_X=cruise_speed/2, n_discrete=10)
+	mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', speed=1.524, distance=152.4, n_discrete=10)
+
+	return mission
+
+def ConstantHoverAndCruiseMissionProfile(mission_range, cruise_speed):
+
+	mission = Mission()
+	mission.add_segment(name='Hover Climb', kind='HoverClimbConstantSpeed', speed=2.54, distance=152.4, n_discrete=10)
+	mission.add_segment(name='Cruise', kind='CruiseConstantSpeed', speed=cruise_speed, distance=mission_range, n_discrete=5)
+	mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', speed=1.524, distance=152.4, n_discrete=10)
+
+	return mission
 
 
 
