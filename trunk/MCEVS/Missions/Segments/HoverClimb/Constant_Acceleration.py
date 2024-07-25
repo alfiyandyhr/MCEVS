@@ -58,36 +58,34 @@ class HoverClimbConstantAcceleration():
 			raise NameError("Need to define at least two of the followings: Final_Speed, Distance, Duration, Acceleration")
 
 	def _calc_time(self, t_list):
-		t0 = t_list[-1]
+		t0 = t_list[-1][-1]
 		t_next = np.linspace(t0, t0+self.duration, self.n_discrete+1)
 		return t_next
 
 	def _calc_position(self, x_list, y_list, t_next):
-		x0, y0, t0 = x_list[-1], y_list[-1], t_next[0]
+		x0, y0, t0 = x_list[-1][-1], y_list[-1][-1], t_next[0]
 		# Position under constant acceleration
 		x_next = x0 + np.zeros_like(t_next)
 		y_next = y0 + self.initial_speed * (t_next - t0) + 0.5 * self.acceleration * (t_next - t0)**2
-		x_list = np.concatenate((x_list, x_next))
-		y_list = np.concatenate((y_list, y_next))
+		x_list.append(x_next)
+		y_list.append(y_next)
 		return x_list, y_list
 
 	def _calc_velocity(self, vx_list, vy_list, t_next):
-		vx0, vy0, t0 = vx_list[-1], vy_list[-1], t_next[0]
+		vx0, vy0, t0 = vx_list[-1][-1], vy_list[-1][-1], t_next[0]
 		# Velocity under constant acceleration in y
 		vx_next = vx0 + np.zeros_like(t_next)
 		vy_next = vy0 + self.acceleration * (t_next - t0)
-		vx_list = np.concatenate((vx_list, vx_next))
-		vy_list = np.concatenate((vy_list, vy_next))
+		vx_list.append(vx_next)
+		vy_list.append(vy_next)
 		return vx_list, vy_list
 
 	def _calc_acceleration(self, ax_list, ay_list, t_next):
-		ay_list[-1] = self.acceleration
-		ax0, ay0, t0 = ax_list[-1], ay_list[-1], t_next[0]
 		# Zero acceleration in x, and constant acceleration in y
 		ax_next = np.zeros_like(t_next)
 		ay_next = self.acceleration * np.ones_like(t_next)
-		ax_list = np.concatenate((ax_list, ax_next))
-		ay_list = np.concatenate((ay_list, ay_next))
+		ax_list.append(ax_next)
+		ay_list.append(ay_next)
 		return ax_list, ay_list
 
 	def _info(self):
