@@ -44,22 +44,30 @@ class LiftPlusCruiseEVTOL(object):
 		elif kind == 'wing':
 			self.wing = Wing(kwargs)
 			self.wing._initialize()
+			if self.weight.max_takeoff is not None:
+				self.wing._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 		elif kind == 'fuselage':
 			self.fuselage = Fuselage(kwargs)
 			self.fuselage._initialize()
+			if self.weight.max_takeoff is not None:
+				self.fuselage._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 		elif kind == 'landing_gear':
 			self.landing_gear = LandingGear(kwargs)
 			self.landing_gear._initialize()
+			if self.weight.max_takeoff is not None:
+				self.landing_gear._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 		elif kind == 'lift_rotor':
 			self.lift_rotor = LiftRotor(kwargs)
 			self.lift_rotor._initialize()
+			self.lift_rotor._calculate_weight_given_max_power(183068.9599)
 
 		elif kind == 'propeller':
 			self.propeller = Propeller(kwargs)
 			self.propeller._initialize()
+			self.propeller._calculate_weight_given_max_power(35669.31421)
 
 	def print_info(self):
 		print('Vehicle type: Lift+Cruise eVTOL')
@@ -105,14 +113,19 @@ class MultirotorEVTOL(object):
 		elif kind == 'fuselage':
 			self.fuselage = Fuselage(kwargs)
 			self.fuselage._initialize()
+			if self.weight.max_takeoff is not None:
+				self.fuselage._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 		elif kind == 'landing_gear':
 			self.landing_gear = LandingGear(kwargs)
 			self.landing_gear._initialize()
+			if self.weight.max_takeoff is not None:
+				self.landing_gear._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 		elif kind == 'lift_rotor':
 			self.lift_rotor = LiftRotor(kwargs)
 			self.lift_rotor._initialize()
+			self.lift_rotor._calculate_weight_given_max_power(151102.2955)
 
 	def print_info(self):
 		print('Vehicle type: Multirotor eVTOL')
