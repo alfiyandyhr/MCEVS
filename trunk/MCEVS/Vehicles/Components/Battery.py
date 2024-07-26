@@ -5,6 +5,7 @@ class Battery(object):
 	def __init__(self, kwargs:dict):
 		super(Battery, self).__init__()
 		self.kwargs = kwargs
+		self.name = 'battery'
 		self.density = None
 		self.efficiency = None
 		self.max_discharge = None
