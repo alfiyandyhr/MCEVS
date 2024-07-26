@@ -12,7 +12,7 @@ class LiftRotor(object):
 		self.radius = None
 
 		# Weight and performance
-		self.mass_properties = None
+		self.weight = None
 		self.performance = None
 	
 	def _initialize(self):
@@ -51,7 +51,7 @@ class Propeller(object):
 		self.radius = None
 
 		# Weight and performance
-		self.mass_properties = None
+		self.weight = None
 		self.performance = None
 	
 	def _initialize(self):

@@ -19,7 +19,7 @@ class Wing(object):
 		self.ultimate_load_factor = None
 
 		# Weight and performance
-		self.mass_properties = None
+		self.weight = None
 		self.performance = None
 	
 	def _initialize(self):

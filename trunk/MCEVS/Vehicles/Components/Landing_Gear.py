@@ -7,7 +7,7 @@ class LandingGear(object):
 		self.kwargs = kwargs
 		self.strut_length = None
 		self.ultimate_load_factor = None
-		self.mass_properties = None
+		self.weight = None
 	
 	def _initialize(self):
 		for item in list(self.kwargs):

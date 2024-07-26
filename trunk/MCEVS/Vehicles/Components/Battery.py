@@ -10,7 +10,7 @@ class Battery(object):
 		self.max_discharge = None
 
 		# Weight and performance
-		self.mass_properties = None
+		self.weight = None
 		self.performance = None
 	
 	def _initialize(self):

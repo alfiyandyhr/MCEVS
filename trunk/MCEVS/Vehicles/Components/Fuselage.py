@@ -7,7 +7,7 @@ class Fuselage(object):
 		self.kwargs = kwargs
 		self.length = None
 		self.max_perimeter = None
-		self.mass_properties = None
+		self.weight = None
 	
 	def _initialize(self):
 		for item in list(self.kwargs):
