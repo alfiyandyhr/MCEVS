@@ -34,10 +34,14 @@ class Mission(object):
 		kind : kind of the segment;
 			   available:
 			   		"HoverClimbConstantSpeed",
-			   		"TransitionClimb",
+			   		"HoverClimbConstatAcceleration",
+			   		"ClimbConstantVyConstantVx",
+			   		"ClimbConstantVyConstantAx",
 			   		"CruiseConstantSpeed",
-			   		"TransitionDescent",
-			   		"HoverDescent",
+			   		"DescentConstantVyConstantVx",
+			   		"DescentConstantVyConstantAx",
+			   		"HoverDescentConstantDeceleration",
+			   		"HoverDescentConstantSpeed",
 			   		"HoverStay"
 		"""
 		self.curr_id += 1
