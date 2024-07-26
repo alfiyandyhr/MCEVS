@@ -9,6 +9,3 @@ v = 67.1 # m/s
 
 mission = ConstantHoverAndCruiseMissionProfile(mission_range=x, cruise_speed=v)
 # plot_mission_parameters(mission, print_info=True)
-
-
-print(mission.segments[3])
