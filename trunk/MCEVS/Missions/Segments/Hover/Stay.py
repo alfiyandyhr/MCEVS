@@ -10,6 +10,7 @@ class HoverStay():
 		super(HoverStay, self).__init__()
 		self.id = id 					# segment id
 		self.name = name 				# segment name
+		self.kind = 'HoverStay'			# segment kind
 		self.n_discrete = n_discrete	# mission discretization
 		self.kwargs = kwargs
 		self.duration = None

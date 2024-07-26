@@ -14,9 +14,10 @@ class ClimbConstantVyConstantAx():
 	"""
 	def __init__(self, id:int, name:str, initial_speed_X:float, kwargs:dict, n_discrete=10):
 		super(ClimbConstantVyConstantAx, self).__init__()
-		self.id = id 					# segment id
-		self.name = name 				# segment name
-		self.n_discrete = n_discrete	# mission discretization
+		self.id = id 								# segment id
+		self.name = name 							# segment name
+		self.kind = 'ClimbConstantVyConstantAx'		# segment kind
+		self.n_discrete = n_discrete				# mission discretization
 		self.kwargs = kwargs
 
 		self.speed_Y = None

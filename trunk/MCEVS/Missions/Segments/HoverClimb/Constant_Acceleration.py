@@ -11,9 +11,10 @@ class HoverClimbConstantAcceleration():
 	"""
 	def __init__(self, id:int, name:str, initial_speed:float, kwargs:dict, n_discrete=10):
 		super(HoverClimbConstantAcceleration, self).__init__()
-		self.id = id 					# segment id
-		self.name = name 				# segment name
-		self.n_discrete = n_discrete	# mission discretization
+		self.id = id 									# segment id
+		self.name = name 								# segment name
+		self.kind = 'HoverClimbConstantAcceleration'	# segment kind
+		self.n_discrete = n_discrete					# mission discretization
 		self.kwargs = kwargs
 		self.initial_speed = initial_speed
 		self.final_speed = None
