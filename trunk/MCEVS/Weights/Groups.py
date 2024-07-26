@@ -12,7 +12,7 @@ from MCEVS.Weights.Equipment.Groups import EquipmentWeight
 
 class MTOWEstimation(om.Group):
 	"""
-	Computes UAV total weight estimation given the design variables and mission requirement.
+	Computes eVTOL total weight estimation given the design variables and mission requirement.
 	Must be used with an optimizer (or a nonlinear solver) to converge the weight residual.
 
 	Inputs:
