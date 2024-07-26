@@ -40,3 +40,6 @@ class VehicleWeight(object):
 
 	def is_being_sized(self):
 		pass
+
+
+
