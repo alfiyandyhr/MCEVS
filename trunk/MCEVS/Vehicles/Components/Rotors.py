@@ -15,7 +15,7 @@ class LiftRotor(object):
 
 		# Weight and performance
 		self.weight = None
-		self.performance = None
+		self.figure_of_merit = None
 	
 		# Use of new material that reduces weight?
 		self.technology_factor = None
@@ -30,6 +30,8 @@ class LiftRotor(object):
 				self.solidity = float(self.kwargs[item])
 			elif item == 'radius':
 				self.radius = float(self.kwargs[item])
+			elif item == 'figure_of_merit':
+				self.figure_of_merit = float(self.kwargs[item])
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
 
@@ -45,7 +47,8 @@ class LiftRotor(object):
 		info += f'\t\tNumber of rotor(s) = {self.n_rotor}\n'
 		info += f'\t\tNumber of blade(s) per rotor = {self.n_blade}\n'
 		info += f'\t\tSolidity = {self.solidity}\n'
-		info += f'\t\tRadius = {self.radius} m'
+		info += f'\t\tRadius = {self.radius} m\n'
+		info += f'\t\tFigure of Merit = {self.figure_of_merit}'
 		return info
 
 	def print_info(self):
@@ -54,6 +57,7 @@ class LiftRotor(object):
 		print(f'\tNumber of blade(s) per rotor = {self.n_blade}')
 		print(f'\tSolidity = {self.solidity}')
 		print(f'\tRadius = {self.radius} m')
+		print(f'\tFigure of Merit = {self.figure_of_merit}')
 
 class Propeller(object):
 	"""
@@ -72,7 +76,7 @@ class Propeller(object):
 
 		# Weight and performance
 		self.weight = None
-		self.performance = None
+		self.figure_of_merit = None
 	
 		# Use of new material that reduces weight?
 		self.technology_factor = None	
@@ -87,6 +91,8 @@ class Propeller(object):
 				self.solidity = float(self.kwargs[item])
 			elif item == 'radius':
 				self.radius = float(self.kwargs[item])
+			elif item == 'figure_of_merit':
+				self.figure_of_merit = float(self.kwargs[item])
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
 
@@ -100,15 +106,19 @@ class Propeller(object):
 	def _info(self):
 		info = '\tComponent name: Propeller\n'
 		info += f'\t\tNumber of propeller(s) = {self.n_propeller}\n'
+		info += f'\t\tNumber of blade(s) per propeller = {self.n_blade}\n'
 		info += f'\t\tSolidity = {self.solidity}\n'
-		info += f'\t\tRadius = {self.radius} m'
+		info += f'\t\tRadius = {self.radius} m\n'
+		info += f'\t\tFigure of Merit = {self.figure_of_merit}'
 		return info
 
 	def print_info(self):
 		print('Component name: Propeller')
 		print(f'\tNumber of propeller(s) = {self.n_propeller} m')
+		print(f'\tNumber of blade(s) per propeller = {self.n_blade}')
 		print(f'\tSolidity = {self.solidity} m')
 		print(f'\tRadius = {self.radius} m')
+		print(f'\tFigure of Merit = {self.figure_of_merit}')
 
 
 
