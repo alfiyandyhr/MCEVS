@@ -17,11 +17,11 @@ design_var2 = {'wing_area': 8.0, 'wing_AR': 10.0,
 			  'r_lift_rotor': 1.0, 'r_propeller': 1.0,
 			  'cruise_speed': cruise_speed, 'propeller_J': 1.0}
 
-# vehicle1 = StandardMultirotorEVTOL(design_var1)
-# vehicle1.weight.max_takeoff = 1500.0
+# vehicle1 = StandardMultirotorEVTOL(design_var1, mtow=901.620703)
 
-vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2)
-vehicle2.weight.max_takeoff = 1500.0
+vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, mtow=973.353766)
 
 analysis = PowerAnalysis(vehicle2, mission)
 results = analysis.evaluate()
+
+print(results)
