@@ -4,7 +4,7 @@ import openmdao.api as om
 from MCEVS.Analyses.Powers.Hover import PowerHover
 from MCEVS.Analyses.Powers.Cruise import PowerForwardEdgewise, PowerForwardWithWing
 
-class EnergyConsumption(om.Group):
+class EnergyAnalysis(om.Group):
 	"""
 	Computes the energy consumption of an eVTOL given the vehicle specifications and mission requirements.
 	It also computes disk loading in hover and cruise.
