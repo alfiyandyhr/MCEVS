@@ -1,23 +1,23 @@
 import numpy as np
 import openmdao.api as om
 
-from MCEVS.Aerodynamics.Empirical import MultirotorParasiteDrag
-from MCEVS.Aerodynamics.Empirical import WingedParasiteDrag
-from MCEVS.Aerodynamics.Parabolic import WingedCruiseDrag
+from MCEVS.Analyses.Aerodynamics.Empirical import MultirotorParasiteDrag
+from MCEVS.Analyses.Aerodynamics.Empirical import WingedParasiteDrag
+from MCEVS.Analyses.Aerodynamics.Parabolic import WingedCruiseDrag
 
-from MCEVS.Stability.Trim import MultiRotorTrim
+from MCEVS.Analyses.Stability.Trim import MultiRotorTrim
 
-from MCEVS.Aerodynamics.Rotor import ThrustOfEachRotor
-from MCEVS.Aerodynamics.Rotor import RotorRevolutionFromAdvanceRatio
-from MCEVS.Aerodynamics.Rotor import PropellerRevolutionFromAdvanceRatio
-from MCEVS.Aerodynamics.Rotor import RotorAdvanceRatio
-from MCEVS.Aerodynamics.Rotor import ThrustCoefficient
-from MCEVS.Aerodynamics.Rotor import RotorInflow
-from MCEVS.Aerodynamics.Rotor import InducedVelocity
+from MCEVS.Analyses.Aerodynamics.Rotor import ThrustOfEachRotor
+from MCEVS.Analyses.Aerodynamics.Rotor import RotorRevolutionFromAdvanceRatio
+from MCEVS.Analyses.Aerodynamics.Rotor import PropellerRevolutionFromAdvanceRatio
+from MCEVS.Analyses.Aerodynamics.Rotor import RotorAdvanceRatio
+from MCEVS.Analyses.Aerodynamics.Rotor import ThrustCoefficient
+from MCEVS.Analyses.Aerodynamics.Rotor import RotorInflow
+from MCEVS.Analyses.Aerodynamics.Rotor import InducedVelocity
 
-from MCEVS.Powers.Rotor import RotorProfilePower
-from MCEVS.Powers.Rotor import InducedPowerFactor
-from MCEVS.Powers.Rotor import PowerForwardComp
+from MCEVS.Analyses.Powers.Rotor import RotorProfilePower
+from MCEVS.Analyses.Powers.Rotor import InducedPowerFactor
+from MCEVS.Analyses.Powers.Rotor import PowerForwardComp
 
 
 class PowerForwardEdgewise(om.Group):

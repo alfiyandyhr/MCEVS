@@ -1,11 +1,11 @@
 import numpy as np
 import openmdao.api as om
 
-from MCEVS.Energy.Energy import EnergyConsumption
+from MCEVS.Analyses.Energy.Energy import EnergyConsumption
 
-from MCEVS.Weights.Propulsion.Groups import PropulsionWeight
-from MCEVS.Weights.Structure.Groups import StructureWeight
-from MCEVS.Weights.Equipment.Groups import EquipmentWeight
+from MCEVS.Analyses.Weights.Propulsion.Groups import PropulsionWeight
+from MCEVS.Analyses.Weights.Structure.Groups import StructureWeight
+from MCEVS.Analyses.Weights.Equipment.Groups import EquipmentWeight
 
 
 # --- Total weight (MTOW) estimation --- #

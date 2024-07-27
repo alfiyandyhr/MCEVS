@@ -1,5 +1,5 @@
 import openmdao.api as om
-from MCEVS.Weights.Groups import MTOWEstimation
+from MCEVS.Analyses.Weights.Groups import MTOWEstimation
 
 def size_vehicle(vehicle:object, mission:object):
 	"""

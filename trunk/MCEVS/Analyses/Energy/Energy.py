@@ -1,8 +1,8 @@
 import numpy as np
 import openmdao.api as om
 
-from MCEVS.Powers.Hover import PowerHover
-from MCEVS.Powers.Cruise import PowerForwardEdgewise, PowerForwardWithWing
+from MCEVS.Analyses.Powers.Hover import PowerHover
+from MCEVS.Analyses.Powers.Cruise import PowerForwardEdgewise, PowerForwardWithWing
 
 class EnergyConsumption(om.Group):
 	"""
