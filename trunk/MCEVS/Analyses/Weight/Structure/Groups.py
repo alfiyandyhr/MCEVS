@@ -1,9 +1,9 @@
 import numpy as np
 import openmdao.api as om
 
-from MCEVS.Analyses.Weights.Structure.Fuselage import FuselageWeight
-from MCEVS.Analyses.Weights.Structure.Landing_Gear import LandingGearWeight
-from MCEVS.Analyses.Weights.Structure.Wing import WingWeight
+from MCEVS.Analyses.Weight.Structure.Fuselage import FuselageWeight
+from MCEVS.Analyses.Weight.Structure.Landing_Gear import LandingGearWeight
+from MCEVS.Analyses.Weight.Structure.Wing import WingWeight
 
 class StructureWeight(om.Group):
 	"""

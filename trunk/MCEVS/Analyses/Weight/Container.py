@@ -1,3 +1,12 @@
+import numpy as np
+import openmdao.api as om
+
+from MCEVS.Analyses.Energy.Container import EnergyConsumption
+
+from MCEVS.Analyses.Weight.Propulsion.Groups import PropulsionWeight
+from MCEVS.Analyses.Weight.Structure.Groups import StructureWeight
+from MCEVS.Analyses.Weight.Equipment.Groups import EquipmentWeight
+
 class VehicleWeight(object):
 	"""
 	docstring for VehicleWeight
@@ -40,6 +49,239 @@ class VehicleWeight(object):
 
 	def is_being_sized(self):
 		pass
+
+class WeightAnalysis(object):
+	"""
+	docstring for WeightAnalysis
+	"""
+	def __init__(self, vehicle:object, mission:object, constants:object, sizing_mode=True):
+		super(WeightAnalysis, self).__init__()
+		self.vehicle = vehicle
+		self.mission = mission
+		self.constants = constants
+		self.sizing_mode = sizing_mode
+
+	def evaluate(self):
+
+		# --- Design parameters --- #
+
+		if self.vehicle.configuration == 'Multirotor':
+			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			rotor_advance_ratio 	= self.vehicle.lift_rotor.advance_ratio
+
+		elif self.vehicle.configuration == 'LiftPlusCruise':
+			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			r_propeller 			= self.vehicle.propeller.radius 		# m
+			wing_area 				= self.vehicle.wing.area 				# m**2
+			wing_aspect_ratio 		= self.vehicle.wing.aspect_ratio
+			propeller_advance_ratio = self.vehicle.propeller.advance_ratio
+
+		for segment in self.mission.segments:
+			if segment.kind == 'CruiseConstantSpeed':
+				cruise_speed = segment.speed 			# m/s
+
+		# --- OpenMDAO probolem --- #
+		prob = om.Problem()
+		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
+
+		indeps.add_output('Mission|cruise_speed', cruise_speed, units='m/s')
+
+		if self.vehicle.configuration == 'Multirotor':
+			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|advance_ratio', rotor_advance_ratio)
+
+		elif self.vehicle.configuration == 'LiftPlusCruise':
+			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('Propeller|radius', r_propeller, units='m')
+			indeps.add_output('Wing|area', wing_area, units='m**2')
+			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
+			indeps.add_output('Propeller|advance_ratio', propeller_advance_ratio)
+		
+		prob.model.add_subsystem('energy_model',
+								  MTOWEstimation(mission=self.mission,
+								  				 vehicle=self.vehicle,
+								  				 constants=self.constants,
+								  				 sizing_mode=self.sizing_mode),
+								  promotes_inputs=['*'],
+								  promotes_outputs=['*'])
+
+		prob.setup(check=False)
+		prob.run_model()
+
+		return prob
+
+class MTOWEstimation(om.Group):
+	"""
+	Computes eVTOL total weight estimation given the design variables and mission requirement.
+	Must be used with an optimizer (or a nonlinear solver) to converge the weight residual.
+
+	Inputs:
+	(mission requirements)
+		Mission object 			: an object containing mission profile information
+	(vehicle definition)
+		Vehicle object 			: an object that defines the vehicle
+	(atmospheric condition)
+		Constants object 		: an object containing constant values
+	(eVTOL design variables)
+		Weight|takeoff 			: total take-off weight [kg]
+		Mission|cruise_speed 	: cruising speed of the eVTOL [m/s]
+		LiftRotor|radius		: Lifting rotor radius
+		Propeller|radius 		: Cruising rotor radius 	(for lift+cruise only)
+		Wing|area				: Wing area 				(for lift+cruise only)
+		Wing|aspect_ratio		: wing aspect ratio 		(for lift+cruise only)
+		LiftRotor|advance_ratio : Rotor advance ratio		(for multirotor only)
+		Propeller|advance_ratio : Propeller advance ratio	(for lift+cruise only)
+
+	Outputs:
+	(weight of each component)
+		Weight|battery
+		Weight|propulsion
+		Weight|structure
+		Weight|equipment
+	(major performances)
+		power_hover
+		power_cruise
+	(for some constraints)
+		disk_loading_hover
+		disk_loading_cruise
+		Rotor|Ct (in cruise)
+		CL_cruise
+	"""
+
+	def initialize(self):
+		self.options.declare('mission', types=object, desc='Mission object')
+		self.options.declare('vehicle', types=object, desc='Vehicle object')
+		self.options.declare('constants', types=object, desc='Constants object')
+		self.options.declare('sizing_mode', types=bool, desc='Whether to use in a sizing mode')
+
+	def setup(self):
+		
+		# Unpacking option objects
+		mission 	= self.options['mission']
+		vehicle 	= self.options['vehicle']
+		constants 	= self.options['constants']
+		sizing_mode = self.options['sizing_mode']
+
+		# Unpacking battery parameters
+		battery_rho 			= vehicle.battery.density
+		battery_eff 			= vehicle.battery.efficiency
+		battery_max_discharge 	= vehicle.battery.max_discharge
+
+		# --- Calculate total energy consumptions to fly the mission --- #
+		self.add_subsystem('energy',
+							EnergyConsumption(mission=mission,
+											  vehicle=vehicle,
+											  constants=constants),
+							promotes_inputs=['*'],
+							promotes_outputs=['*'])
+
+		# --- Calculate weight estimation of each component --- #
+
+		# 1. Battery weight
+		# battery weight is computed taking into account loss in efficiency,
+		# avionics power, and its maximum discharge rate
+		battery_weight_comp = om.ExecComp('W_battery = energy_req / (battery_rho * battery_eff * battery_max_discharge)',
+										   W_battery={'units': 'kg'},
+										   energy_req={'units': 'W * h'},
+										   battery_rho={'units': 'W * h / kg', 'val': battery_rho},
+										   battery_eff={'val': battery_eff},
+										   battery_max_discharge={'val': battery_max_discharge})
+		self.add_subsystem('battery_weight',
+							battery_weight_comp,
+							promotes_inputs=[('energy_req', 'energy_cnsmp')],
+							promotes_outputs=[('W_battery', 'Weight|battery')])
+
+		# 2. Propulsion weight
+		# includes the weight of rotors, motors, and controllers
+
+		# self.add_subsystem('propulsion_weight',
+		# 					PropulsionWeight(params=params),
+		# 					promotes_inputs=['*'],
+		# 					promotes_outputs=['*'])
+		# if eVTOL_config == 'multirotor':
+		# 	self.connect('power_hover', 'rotor_weight.max_power')
+		# 	self.connect('power_hover', 'motor_weight.max_power')  					# assume max power output = power in hover
+		# 	self.connect('power_hover', 'controller_weight.max_power') 				# assume max power output = power in hover
+		# elif eVTOL_config == 'lift+cruise':
+		# 	self.connect('power_hover', 'rotor_weight_lift.max_power')
+		# 	self.connect('power_hover', 'motor_weight_lift.max_power')				# assume max power output = power in hover
+		# 	self.connect('power_hover', 'controller_weight_lift.max_power')			# assume max power output = power in hover
+		# 	self.connect('power_forward', 'rotor_weight_cruise.max_power')
+		# 	self.connect('power_forward', 'motor_weight_cruise.max_power')   		# assume max power output = power in cruise
+		# 	self.connect('power_forward', 'controller_weight_cruise.max_power')		# assume max power output = power in cruise
+
+		# # 3. Structure weight
+		# # includes fuselage, landing gear, wing, and tails
+		# if eVTOL_config == 'multirotor': input_list_struct = ['Weight|takeoff']
+		# elif eVTOL_config == 'lift+cruise': input_list_struct = ['Weight|takeoff', 'Wing|area', 'Wing|aspect_ratio']
+		# self.add_subsystem('structure_weight',
+		# 					StructureWeight(params=params),
+		# 					promotes_inputs=input_list_struct,
+		# 					promotes_outputs=['Weight|*'])
+
+		# # 4. Equipment weight
+		# # includes avionics, flight control, anti icing, and furnishing
+		# self.add_subsystem('equipment_weight',
+		# 					EquipmentWeight(),
+		# 					promotes_inputs=['Weight|takeoff'],
+		# 					promotes_outputs=['Weight|*'])
+
+
+		# # 4. Weight residuals
+		
+		# # W_residual = W_total - W_payload - W_battery - W_propulsion - W_structure - W_equipment
+		# # where:
+		# # W_propulsion = W_rotors + W_motors + W_controllers
+		# # W_structure = W_fuselage + W_landing_gear + W_wing
+		# # W_equipment = W_avionics + W_flight_control + W_anti_icing + W_furnishings
+
+		# # W_residual should then be driven to 0 by a nonlinear solver or treated as an optimization constraint
+		# input_list = [('W_total', 'Weight|takeoff'),
+		# 			  ('W_payload', 'payload_weight'),
+		# 			  ('W_battery', 'Weight|battery'),
+		# 			  ('W_propulsion', 'Weight|propulsion'),
+		# 			  ('W_structure', 'Weight|structure'),
+		# 			  ('W_equipment', 'Weight|equipment')]
+
+		# W_residual_eqn = 'W_residual = W_total - W_payload - W_battery - W_propulsion - W_structure - W_equipment'
+		# self.add_subsystem('w_residual_comp',
+		# 					om.ExecComp(W_residual_eqn, units='kg'),
+		# 					promotes_inputs=input_list,
+		# 					promotes_outputs=['W_residual'])
+
+		# # If nonlinear solver to be used
+		# if use_solver:
+		# 	# This drives W_residual = 0 by varying W_total. LB and UB of W_total should be given.
+		# 	residual_balance = om.BalanceComp('W_total',
+		# 									   units='kg',
+		# 									   eq_units='kg',
+		# 									   lower=500.0,
+		# 									   upper=2500.0,
+		# 									   val=1500.0,
+		# 									   rhs_val=0.0,
+		# 									   use_mult=False)
+		# 	self.add_subsystem('weight_balance',
+		# 						residual_balance,
+		# 						promotes_inputs=[('lhs:W_total', 'W_residual')],
+		# 						promotes_outputs=[('W_total', 'Weight|takeoff')])
+
+		# 	# self.connect('weight_balance.W_total', 'w_residual_comp.W_total')
+		# 	# self.connect('w_residual_comp.W_residual', 'weight_balance.lhs:W_total')
+
+		# 	self.set_input_defaults('weight_balance.rhs:W_total', 0.0)
+
+		# 	# Add solvers for implicit relations
+		# 	self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=50, iprint=0, rtol=1e-10)
+		# 	self.nonlinear_solver.options['err_on_non_converge'] = True
+		# 	self.nonlinear_solver.options['reraise_child_analysiserror'] = True
+		# 	self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
+		# 	self.nonlinear_solver.linesearch.options['maxiter'] = 10
+		# 	self.nonlinear_solver.linesearch.options['iprint'] = 0
+		# 	self.linear_solver = om.DirectSolver(assemble_jac=True)
+
+
+
+
 
 
 

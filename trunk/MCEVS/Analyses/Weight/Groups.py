@@ -3,9 +3,9 @@ import openmdao.api as om
 
 from MCEVS.Analyses.Energy.Energy import EnergyConsumption
 
-from MCEVS.Analyses.Weights.Propulsion.Groups import PropulsionWeight
-from MCEVS.Analyses.Weights.Structure.Groups import StructureWeight
-from MCEVS.Analyses.Weights.Equipment.Groups import EquipmentWeight
+from MCEVS.Analyses.Weight.Propulsion.Groups import PropulsionWeight
+from MCEVS.Analyses.Weight.Structure.Groups import StructureWeight
+from MCEVS.Analyses.Weight.Equipment.Groups import EquipmentWeight
 
 
 # --- Total weight (MTOW) estimation --- #

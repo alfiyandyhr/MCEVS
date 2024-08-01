@@ -1,10 +1,10 @@
 import numpy as np
 import openmdao.api as om
 
-from MCEVS.Analyses.Weights.Equipment.Avionics import AvionicsWeight
-from MCEVS.Analyses.Weights.Equipment.Flight_Control import FlightControlWeight
-from MCEVS.Analyses.Weights.Equipment.Anti_Icing import AntiIcingSystemWeight
-from MCEVS.Analyses.Weights.Equipment.Furnishings import FurnishingWeight
+from MCEVS.Analyses.Weight.Equipment.Avionics import AvionicsWeight
+from MCEVS.Analyses.Weight.Equipment.Flight_Control import FlightControlWeight
+from MCEVS.Analyses.Weight.Equipment.Anti_Icing import AntiIcingSystemWeight
+from MCEVS.Analyses.Weight.Equipment.Furnishings import FurnishingWeight
 
 class EquipmentWeight(om.Group):
 	"""

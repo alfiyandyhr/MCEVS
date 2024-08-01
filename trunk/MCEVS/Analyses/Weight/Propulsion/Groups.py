@@ -1,9 +1,9 @@
 import numpy as np
 import openmdao.api as om
 
-from MCEVS.Analyses.Weights.Propulsion.Rotor import RotorWeight
-from MCEVS.Analyses.Weights.Propulsion.Motor import MotorWeight
-from MCEVS.Analyses.Weights.Propulsion.Controller import MotorControllerWeight
+from MCEVS.Analyses.Weight.Propulsion.Rotor import RotorWeight
+from MCEVS.Analyses.Weight.Propulsion.Motor import MotorWeight
+from MCEVS.Analyses.Weight.Propulsion.Controller import MotorControllerWeight
 
 class PropulsionWeight(om.Group):
 	"""
