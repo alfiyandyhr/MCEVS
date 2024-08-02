@@ -24,7 +24,7 @@ class Fuselage(object):
 			elif item == 'max_diameter':
 				self.max_diameter = float(self.kwargs[item])
 			elif item == 'number_of_passenger':
-				self.number_of_passenger = float(self.kwargs[item])
+				self.number_of_passenger = int(self.kwargs[item])
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
 
