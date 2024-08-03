@@ -15,8 +15,9 @@ class Mission(object):
 	"""
 	A container for a mission. Users can add segments to this container.
 	"""
-	def __init__(self):
+	def __init__(self, takeoff_altitude=0.0):
 		super(Mission, self).__init__()
+		self.takeoff_altitude = takeoff_altitude # ASL (Above Sea Level)
 		self.curr_id = 0
 		self.segments = []
 		self.x = [np.array([0.0])]
