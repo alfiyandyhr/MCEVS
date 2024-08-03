@@ -4,7 +4,7 @@ from MCEVS.Vehicles.Components.Landing_Gear import LandingGear
 from MCEVS.Vehicles.Components.Rotors import LiftRotor, Propeller
 from MCEVS.Vehicles.Components.Battery import Battery
 
-from MCEVS.Analyses.Weights.Container import VehicleWeight
+from MCEVS.Analyses.Weight.Analysis import VehicleWeight
 
 import numpy as np
 
