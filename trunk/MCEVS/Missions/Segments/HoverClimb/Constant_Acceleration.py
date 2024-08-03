@@ -16,6 +16,8 @@ class HoverClimbConstantAcceleration():
 		self.kind = 'HoverClimbConstantAcceleration'	# segment kind
 		self.n_discrete = n_discrete					# mission discretization
 		self.kwargs = kwargs
+		
+		self.AoA = -90.0 # deg
 		self.initial_speed = initial_speed
 		self.final_speed = None
 		self.acceleration = None
