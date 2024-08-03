@@ -13,13 +13,13 @@ solidity = 1
 hist_array = np.zeros((len(driver_cases),8))
 for i, case in enumerate(driver_cases):
 	cur_case = cr.get_case(case)
-	dv1 = cur_case.get_design_vars()['eVTOL|Cruise_speed'][0]
-	dv2 = cur_case.get_design_vars()['Rotor|radius_lift'][0]
-	dv3 = cur_case.get_design_vars()['Rotor|mu'][0]
-	F = cur_case.get_objectives()["eVTOL|W_takeoff"][0]
-	G1 = cur_case.get_constraints()['disk_loading_hover'][0]
-	G2 = cur_case.get_constraints()['disk_loading_cruise'][0]
-	G3 = cur_case.get_constraints()['Rotor|Ct'][0]/solidity
+	dv1 = cur_case.get_design_vars()['Mission|cruise_speed'][0]
+	dv2 = cur_case.get_design_vars()['LiftRotor|radius'][0]
+	dv3 = cur_case.get_design_vars()['LiftRotor|advance_ratio'][0]
+	F = cur_case.get_objectives()["Weight|takeoff"][0]
+	G1 = cur_case.get_constraints()['DiskLoading|LiftRotor|segment_1'][0]
+	G2 = cur_case.get_constraints()['DiskLoading|LiftRotor|segment_2'][0]
+	G3 = cur_case.get_constraints()['LiftRotor|thrust_coefficient'][0]/solidity
 	CV = max(G1-600, 0) + max(G2-600, 0) + max(G3-0.14, 0)
 	cur_arr = np.array([dv1, dv2, dv3, F, G1, G2, G3, CV])
 	hist_array[i] = cur_arr
@@ -37,7 +37,7 @@ if plot_F:
 	plt.show()
 
 if plot_all:
-	ylabels = ['Cruise speed [m/s]', 'Rotor radius lift [m]', 'Rotor advance ratio',
+	ylabels = ['Cruise speed [m/s]', 'Lift rotor radius [m]', 'Lift rotor advance ratio',
 			   'Disk loading hover [N/m2]', 'Disk loading cruise [N/m2]', 'Ct/solidity']
 	fig, axs= plt.subplots(nrows=2, ncols=3, sharex=False)
 	for i in range(3):
