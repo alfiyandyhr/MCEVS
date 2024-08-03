@@ -15,6 +15,8 @@ class HoverDescentConstantSpeed():
 		self.kind = 'HoverDescentConstantSpeed'		# segment kind
 		self.n_discrete = n_discrete				# mission discretization
 		self.kwargs = kwargs
+
+		self.AoA = 90.0 # deg
 		self.speed = None
 		self.distance = None
 		self.duration = None
