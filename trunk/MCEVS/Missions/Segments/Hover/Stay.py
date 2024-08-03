@@ -13,6 +13,7 @@ class HoverStay():
 		self.kind = 'HoverStay'			# segment kind
 		self.n_discrete = n_discrete	# mission discretization
 		self.kwargs = kwargs
+		self.AoA = 0.0 # deg
 		self.duration = None
 
 	def _initialize(self):
