@@ -18,6 +18,7 @@ class ClimbConstantVyConstantVx():
 		self.n_discrete = n_discrete				# mission discretization
 		self.kwargs = kwargs
 
+		self.AoA = None
 		self.speed_Y = None
 		self.distance_Y = None
 		self.speed_X = None
