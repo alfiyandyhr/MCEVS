@@ -15,6 +15,8 @@ class CruiseConstantSpeed():
 		self.kind = 'CruiseConstantSpeed'	# segment kind
 		self.n_discrete = n_discrete		# mission discretization
 		self.kwargs = kwargs
+
+		self.AoA = 0.0
 		self.speed = None
 		self.distance = None
 		self.duration = None
@@ -28,6 +30,8 @@ class CruiseConstantSpeed():
 				self.distance = float(self.kwargs[item])
 			elif item == 'duration':
 				self.duration = float(self.kwargs[item])
+			elif item == 'AoA':
+				self.AoA = float(self.kwargs[item])
 		
 		try:
 			if self.speed is None:
