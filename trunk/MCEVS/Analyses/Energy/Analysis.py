@@ -1,134 +1,149 @@
 import numpy as np
 import openmdao.api as om
+from MCEVS.Analyses.Power.Analysis import PowerRequirement
 
-from MCEVS.Analyses.Powers.Hover import PowerHover
-from MCEVS.Analyses.Powers.Cruise import PowerForwardEdgewise, PowerForwardWithWing
+class EnergyAnalysis(object):
+	"""
+	docstring for EnergyAnalysis
+	"""
+	def __init__(self, vehicle:object, mission:object, constants:object):
+		super(EnergyAnalysis, self).__init__()
+		self.vehicle = vehicle
+		self.mission = mission
+		self.constants = constants
 
-class EnergyAnalysis(om.Group):
+	def evaluate(self):
+		# print('### --- Solving for energy requirement --- ###')
+
+		# MTOW should be defined if not in sizing mode
+		mtow = self.vehicle.weight.max_takeoff 		# kg
+
+		# --- Design parameters --- #
+
+		if self.vehicle.configuration == 'Multirotor':
+			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			rotor_advance_ratio 	= self.vehicle.lift_rotor.advance_ratio
+
+		elif self.vehicle.configuration == 'LiftPlusCruise':
+			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			r_propeller 			= self.vehicle.propeller.radius 		# m
+			wing_area 				= self.vehicle.wing.area 				# m**2
+			wing_aspect_ratio 		= self.vehicle.wing.aspect_ratio
+			propeller_advance_ratio = self.vehicle.propeller.advance_ratio
+
+		for segment in self.mission.segments:
+			if segment.kind == 'CruiseConstantSpeed':
+				cruise_speed = segment.speed 			# m/s
+
+		# --- OpenMDAO probolem --- #
+		prob = om.Problem()
+		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
+
+		indeps.add_output('Weight|takeoff', mtow, units='kg')
+		indeps.add_output('Mission|cruise_speed', cruise_speed, units='m/s')
+
+		if self.vehicle.configuration == 'Multirotor':
+			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|advance_ratio', rotor_advance_ratio)
+
+		elif self.vehicle.configuration == 'LiftPlusCruise':
+			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('Propeller|radius', r_propeller, units='m')
+			indeps.add_output('Wing|area', wing_area, units='m**2')
+			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
+			indeps.add_output('Propeller|advance_ratio', propeller_advance_ratio)
+		
+		prob.model.add_subsystem('energy_model',
+								  EnergyConsumption(mission=self.mission,
+								  					vehicle=self.vehicle,
+								  					constants=self.constants),
+								  promotes_inputs=['*'],
+								  promotes_outputs=['*'])
+
+		prob.setup(check=False)
+		prob.run_model()
+		
+		# self.total_energy_required = prob.get_val('energy_cnsmp', 'kW*h')[0]
+		return prob
+		# return f'Total energy required is {self.total_energy_required} kWh'
+
+class EnergyConsumption(om.Group):
 	"""
 	Computes the energy consumption of an eVTOL given the vehicle specifications and mission requirements.
 	It also computes disk loading in hover and cruise.
 	Inputs:
 	(mission requirements)
-		mission_range		: mission range [m]
-		hover_time 			: total hover time [s]
+		Mission object 			: an object containing mission profile information
+	(vehicle definition)
+		Vehicle object 			: an object that defines the vehicle
+	(atmospheric condition)
+		Constants object 		: an object containing constant values
 	(eVTOL design variables)
-		eVTOL|W_takeoff 	: total take-off weight [kg]
-		eVTOL|Cruise_speed 	: cruising speed of the eVTOL [m/s]
-		Rotor|radius_lift	: lifting rotor radius [m]
-		Rotor|radius_cruise	: cruising rotor radius [m] 		(for lift+cruise only)
-		eVTOL|S_wing 		: wing area [m**2]					(for lift+cruise only)
-		eVTOL|AR_wing		: wing aspect ratio 				(for lift+cruise only)
-		Rotor|mu 			: rotor advance ratio				(for multirotor only)
-		Rotor|J 			: propeller advance ratio			(for lift+cruise only)
+		Weight|takeoff 			: total take-off weight [kg]
+		Mission|cruise_speed 	: cruising speed of the eVTOL [m/s]
+		LiftRotor|radius		: lifting rotor radius [m]
+		Propeller|radius		: cruising rotor radius [m] 		(for lift+cruise only)
+		Wing|area 				: wing area [m**2]					(for lift+cruise only)
+		Wing|aspect_ratio		: wing aspect ratio 				(for lift+cruise only)
+		Rotor|advance_ratio 	: rotor advance ratio				(for multirotor only)
+		Propeller|advance_ratio	: propeller advance ratio			(for lift+cruise only)
 	Outputs:
 	(major performances)
-		power_hover
-		power_cruise
-	(for some constraints)
-		disk_loading_hover
-		disk_loading_cruise
-		Rotor|Ct (in cruise)
-		CL_cruise
+		Energy|entire_mission
 	"""
 	def initialize(self):
-		self.options.declare('evtol_options', types=dict, desc='Dict containing all option parameters')
+		self.options.declare('mission', types=object, desc='Mission object')
+		self.options.declare('vehicle', types=object, desc='Vehicle object')
+		self.options.declare('constants', types=object, desc='Constants object')
 
 	def setup(self):
-		params = self.options['evtol_options']
 
-		# Unpacking options
-		eVTOL_config = params['evtol_config']
-		N_rotors_lift = params['N_rotors_lift']		# number of lifting rotors
-		rotor_sigma = params['rotor_lift_solidity']	# solidity of lifting rotors 
-		hover_FM = params['hover_FM']				# hover figure of merit
-		rho_air = params['rho_air']					# air density
-		g = params['gravitational_accel']			# gravitational acceleration
+		# Unpacking option objects
+		mission 	= self.options['mission']
+		vehicle 	= self.options['vehicle']
+		constants 	= self.options['constants']
 
-		if eVTOL_config == 'multirotor':
-			pass
-		elif eVTOL_config == 'lift+cruise':
-			N_rotors_cruise = params['N_rotors_cruise']		# number of cruising rotors
-			# Cd0 = params['Cd0'] 							# minimum drag of the drag polar
-			# wing_e = params['wing_e']						# Oswald efficiency
-			prop_sigma = params['rotor_cruise_solidity']	# solidty of cruising rotors
-			AoA = params['AoA_cruise'] 						# angle of attack during cruise
-		else:
-			raise RuntimeError('eVTOL configuration is not available.')
-
-
+		# -------------------------------------------------------------#
 		# --- Calculate power consumptions for each flight segment --- #
-		# power in hover
-		self.add_subsystem('power_hover',
-							PowerHover(N_rotor=N_rotors_lift, hover_FM=hover_FM, rho_air=rho_air, g=g),
-							promotes_inputs=['eVTOL|W_takeoff', ('Rotor|radius', 'Rotor|radius_lift')],
-							promotes_outputs=['power_hover'])
+		# -------------------------------------------------------------#
 
-		# power in cruise
-		if eVTOL_config == 'multirotor':
-			input_list = ['eVTOL|W_takeoff', 'eVTOL|Cruise_speed', 'Rotor|mu', ('Rotor|radius', 'Rotor|radius_lift')]
-			self.add_subsystem('power_forward_edgewise',
-								PowerForwardEdgewise(N_rotor=N_rotors_lift, hover_FM=hover_FM, rotor_sigma=rotor_sigma),
-								promotes_inputs=input_list,
-								promotes_outputs=['*'])
+		self.add_subsystem('power_requirement',
+							PowerRequirement(mission=mission,
+											 vehicle=vehicle,
+											 constants=constants),
+							promotes_inputs=['*'],
+							promotes_outputs=['*'])
 
-		elif eVTOL_config == 'lift+cruise':
-			input_list = ['eVTOL|*', 'Rotor|J', ('Rotor|radius', 'Rotor|radius_cruise')]
-			self.add_subsystem('power_forward_wing',
-								PowerForwardWithWing(N_rotor=N_rotors_cruise, hover_FM=hover_FM, rotor_sigma=prop_sigma, g=g, AoA=AoA),
-								promotes_inputs=input_list,
-								promotes_outputs=['*'])
+		# Segment time
+		indep = self.add_subsystem('segment_time', om.IndepVarComp())
+		for id in range(1,len(mission.segments)+1):
+			indep.add_output(f'segment_time_{id}', val=mission.segments[id-1].duration, units='s')
 
-		# --- Calculate energy consumption --- #
-		# energy = power_hover * hover_time + power_cruise * cruise_time
-		energy_comp = om.ExecComp('energy_cnsmp = (power_hover * hover_time) + (power_forward * flight_distance / speed)',
-								   energy_cnsmp={'units': 'W * s'},
-								   power_hover={'units': 'W'},
-								   power_forward={'units': 'W'},
-								   hover_time={'units': 's'},
-								   flight_distance={'units': 'm'},
-								   speed={'units': 'm/s'})
-		self.add_subsystem('energy', energy_comp,
-							promotes_inputs=['power_hover', 'power_forward', 'hover_time', 'flight_distance', ('speed', 'eVTOL|Cruise_speed')],
-							promotes_outputs=['energy_cnsmp'])
+		# Writing energy equation from power
+		# energy_cnsmp = power_segment_1 * segment_time_1 + ... + power_segment_n * segment_time_n
+		energy_eq 	 = 'energy_cnsmp = '
+		kwargs_power = {}
+		kwargs_time  = {}
+		for i in range(1,len(mission.segments)+1):
+			if i == len(mission.segments):
+				energy_eq += f'power_segment_{i} * segment_time_{i}'
+			else:
+				energy_eq += f'power_segment_{i} * segment_time_{i} + '
+			kwargs_power[f'power_segment_{i}'] = {'units': 'W'}
+			kwargs_time[f'segment_time_{i}'] = {'units': 's'}
 
-		# --- Calculate disk loadings --- #
-		# in hover
-		disk_loading_comp_1 = om.ExecComp('disk_loading = thrust / (pi * r**2)',
-										   disk_loading={'units': 'N/m**2'},
-										   thrust={'units': 'N'},
-										   r={'units': 'm'})
-		self.add_subsystem('disk_loading_hover', disk_loading_comp_1,
-							promotes_inputs=[('r', 'Rotor|radius_lift')],
-							promotes_outputs=[('disk_loading', 'disk_loading_hover')])
-		self.connect('power_hover.thrust_each', 'disk_loading_hover.thrust')
+		# ------------------------------------------------------------#
+		# --- Calculate energy consumptions for the whole mission --- #
+		# ------------------------------------------------------------#
+		energy_comp = om.ExecComp(energy_eq,
+								  energy_cnsmp={'units': 'W * s'},
+								  **kwargs_power, **kwargs_time)
 
-		# in cruise
-		disk_loading_comp_2 = om.ExecComp('disk_loading = thrust / (pi * r**2)',
-										   disk_loading={'units': 'N/m**2'},
-										   thrust={'units': 'N'},
-										   r={'units': 'm'})
-		self.add_subsystem('disk_loading_cruise', disk_loading_comp_2,
-							promotes_outputs=[('disk_loading', 'disk_loading_cruise')])
-		if eVTOL_config == 'multirotor':
-			self.promotes('disk_loading_cruise', inputs=[('r', 'Rotor|radius_lift')])
-		elif eVTOL_config == 'lift+cruise':
-			self.promotes('disk_loading_cruise', inputs=[('r', 'Rotor|radius_cruise')])
-		self.connect('Rotor|Thrust', 'disk_loading_cruise.thrust')
+		self.add_subsystem('energy', energy_comp, promotes_outputs=[('energy_cnsmp','Energy|entire_mission')])
 
-
-		# --- Add nonlinear solvers for implicit equations --- #
-		self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=30, iprint=0, rtol=1e-10)
-		self.nonlinear_solver.options['err_on_non_converge'] = True
-		self.nonlinear_solver.options['reraise_child_analysiserror'] = True
-		self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
-		self.nonlinear_solver.linesearch.options['maxiter'] = 10
-		self.nonlinear_solver.linesearch.options['iprint'] = 0
-		self.linear_solver = om.DirectSolver(assemble_jac=True)
-
-
-
-
+		for i in range(1,len(mission.segments)+1): 
+			self.connect(f'Power|segment_{i}', f'energy.power_segment_{i}')
+			self.connect(f'segment_time.segment_time_{i}', f'energy.segment_time_{i}')
 
 
 
