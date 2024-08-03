@@ -9,9 +9,9 @@ class LandingGearWeight(om.ExplicitComponent):
 		n_ult	: design ultimate load factor for landing (=5.7)
 		tf 		: technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
-		eVTOL|W_takeoff : total take-off weight [kg]
+		Weight|takeoff : total take-off weight [kg]
 	Outputs:
-		Weights|Landing_gear : landing gear weight [kg]
+		Weight|landing_gear : landing gear weight [kg]
 	Notes:
 		> Class II USAF Method for General Aviation airplanes
 		> Used for light and utility type airplanes
@@ -27,15 +27,15 @@ class LandingGearWeight(om.ExplicitComponent):
 		self.options.declare('tf', types=float, default=0.8, desc='Technology factor')
 
 	def setup(self):
-		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
-		self.add_output('Weights|Landing_gear', units='kg', desc='Landing gear weight')
-		self.declare_partials('Weights|Landing_gear', 'eVTOL|W_takeoff')
+		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
+		self.add_output('Weight|landing_gear', units='kg', desc='Landing gear weight')
+		self.declare_partials('Weight|landing_gear', 'Weight|takeoff')
 
 	def compute(self, inputs, outputs):
 		l_sm = self.options['l_sm']
 		n_ult = self.options['n_ult']
 		tf = self.options['tf']
-		W_takeoff = inputs['eVTOL|W_takeoff']
+		W_takeoff = inputs['Weight|takeoff']
 
 		# Calculating W_landing_gear
 		kg_to_lb = 2.20462**0.684
@@ -44,12 +44,12 @@ class LandingGearWeight(om.ExplicitComponent):
 
 		W_landing_gear = 0.054 * l_sm**0.501 * (W_takeoff*n_ult)**0.684 * kg_to_lb * m_to_ft * lb_to_kg
 
-		outputs['Weights|Landing_gear'] = tf * W_landing_gear # in [kg]
+		outputs['Weight|landing_gear'] = tf * W_landing_gear # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		l_sm = self.options['l_sm']
 		n_ult = self.options['n_ult']
-		W_takeoff = inputs['eVTOL|W_takeoff']
+		W_takeoff = inputs['Weight|takeoff']
 		tf = self.options['tf']
 
 		# Calculating dWlg_dWtakeoff
@@ -59,7 +59,7 @@ class LandingGearWeight(om.ExplicitComponent):
 
 		dWlg_dWtakeoff = 0.054 * l_sm**0.501 * 0.684 * W_takeoff**(-0.316) * n_ult**0.684 * kg_to_lb * m_to_ft * lb_to_kg
 
-		partials['Weights|Landing_gear', 'eVTOL|W_takeoff'] = tf * dWlg_dWtakeoff
+		partials['Weight|landing_gear', 'Weight|takeoff'] = tf * dWlg_dWtakeoff
 
 
 
