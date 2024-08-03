@@ -6,13 +6,13 @@ class ThrustCoefficient(om.ExplicitComponent):
 	Computes the thrust coefficient of a rotor
 		Ct = thrust / (rho * S_disk * V_tip**2)
 	Parameter:
-		rho_air 		: air density [kg/m**3]
+		rho_air 						: air density [kg/m**3]
 	Inputs:
-		Rotor|Thrust 	: thrust of a rotor [N]
-		Rotor|radius	: rotor radius [m]
-		Rotor|omega 	: rotor's angular velocity [rad/s]
+		Rotor|thrust 					: thrust of a rotor [N]
+		Rotor|radius					: rotor radius [m]
+		Rotor|omega 					: rotor's angular velocity [rad/s]
 	Outputs:
-		Rotor|Ct 		: rotor's thrust coefficient
+		Rotor|thrust_coefficient 		: rotor's thrust coefficient
 	Source:
 		Johnson, W., “Rotorcraft Aeromechanics,” Cambridge University Press, 2013.
 	"""
@@ -20,15 +20,15 @@ class ThrustCoefficient(om.ExplicitComponent):
 		self.options.declare('rho_air', default=1.225, desc='Air density')
 
 	def setup(self):
-		self.add_input('Rotor|Thrust', units='N', desc='Thrust of a rotor')
+		self.add_input('Rotor|thrust', units='N', desc='Thrust of a rotor')
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
 		self.add_input('Rotor|omega', units='rad/s', desc='Rotor angular velocity')
-		self.add_output('Rotor|Ct', desc='Thrust coefficient')
+		self.add_output('Rotor|thrust_coefficient', desc='Thrust coefficient')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
 		rho_air = self.options['rho_air']
-		thrust = inputs['Rotor|Thrust']
+		thrust = inputs['Rotor|thrust']
 		r = inputs['Rotor|radius']
 		omega = inputs['Rotor|omega']
 
@@ -36,17 +36,17 @@ class ThrustCoefficient(om.ExplicitComponent):
 		Vtip = omega * r
 
 		# Calculate Ct
-		outputs['Rotor|Ct'] = thrust/(rho_air * S_disk * Vtip**2)
+		outputs['Rotor|thrust_coefficient'] = thrust/(rho_air * S_disk * Vtip**2)
 
 	def compute_partials(self, inputs, partials):
 		rho_air = self.options['rho_air']
-		thrust = inputs['Rotor|Thrust']
+		thrust = inputs['Rotor|thrust']
 		r = inputs['Rotor|radius']
 		omega = inputs['Rotor|omega']
 
-		partials['Rotor|Ct', 'Rotor|Thrust'] = 1 / (np.pi * rho_air * omega**2 * r**4)
-		partials['Rotor|Ct', 'Rotor|omega'] = thrust/(np.pi*rho_air*r**4) * (-2/omega**3)
-		partials['Rotor|Ct', 'Rotor|radius'] = thrust/(np.pi*rho_air*omega**2) * (-4/r**5)
+		partials['Rotor|thrust_coefficient', 'Rotor|thrust'] = 1 / (np.pi * rho_air * omega**2 * r**4)
+		partials['Rotor|thrust_coefficient', 'Rotor|omega'] = thrust/(np.pi*rho_air*r**4) * (-2/omega**3)
+		partials['Rotor|thrust_coefficient', 'Rotor|radius'] = thrust/(np.pi*rho_air*omega**2) * (-4/r**5)
 
 class RotorAdvanceRatio(om.ExplicitComponent):
 	"""
@@ -141,7 +141,7 @@ class RotorInflow(om.ImplicitComponent):
 	Inputs:
 		Rotor|mu 	 : rotor's advance ratio
 		Rotor|alpha	 : rotor tilt angle [rad]
-		Rotor|Ct 	 : rotor's thrust coefficient
+		Rotor|thrust_coefficient 	 : rotor's thrust coefficient
 	Outputs:
 		Rotor|lambda : rotor inflow ratio, positive down through disk
 	Source:
@@ -151,14 +151,14 @@ class RotorInflow(om.ImplicitComponent):
 	def setup(self):
 		self.add_input('Rotor|mu', desc='Advance ratio')
 		self.add_input('Rotor|alpha', units='rad', desc='Rotor tilt angle')
-		self.add_input('Rotor|Ct', desc='Thrust coefficient')
+		self.add_input('Rotor|thrust_coefficient', desc='Thrust coefficient')
 		self.add_output('Rotor|lambda', val=0.1, lower=0.0, upper=10.0, desc='Rotor inflow')
 		self.declare_partials('*', '*')
 
 	def apply_nonlinear(self, inputs, outputs, residuals):
 		mu = inputs['Rotor|mu']
 		a = inputs['Rotor|alpha']
-		Ct = inputs['Rotor|Ct']
+		Ct = inputs['Rotor|thrust_coefficient']
 		lmbd = outputs['Rotor|lambda']
 		# Compute residuals
 		residuals['Rotor|lambda'] = mu*np.tan(a) + Ct / (2*np.sqrt((mu**2 + lmbd**2))) - lmbd
@@ -166,12 +166,12 @@ class RotorInflow(om.ImplicitComponent):
 	def linearize(self, inputs, outputs, partials):
 		mu = inputs['Rotor|mu']
 		a = inputs['Rotor|alpha']
-		Ct = inputs['Rotor|Ct']
+		Ct = inputs['Rotor|thrust_coefficient']
 		lmbd = outputs['Rotor|lambda']
 
 		partials['Rotor|lambda', 'Rotor|mu'] = np.tan(a) - (Ct*mu)/(2*np.sqrt((mu**2 + lmbd**2)**3))
 		partials['Rotor|lambda', 'Rotor|alpha'] = mu / (np.cos(a) * np.cos(a))
-		partials['Rotor|lambda', 'Rotor|Ct'] = 1 / ( 2 * np.sqrt(mu**2 + lmbd**2) )
+		partials['Rotor|lambda', 'Rotor|thrust_coefficient'] = 1 / ( 2 * np.sqrt(mu**2 + lmbd**2) )
 		partials['Rotor|lambda', 'Rotor|lambda'] = - (Ct*lmbd) / (2 * np.sqrt((mu**2 + lmbd**2)**3)) - 1
 
 class RotorRevolutionFromAdvanceRatio(om.ExplicitComponent):
@@ -218,35 +218,35 @@ class PropellerRevolutionFromAdvanceRatio(om.ExplicitComponent):
 	Computes the propeller revolution (omega) given the advance ratio
 		J = V / (n D)
 	Inputs:
-		Rotor|radius	: rotor radius [m]
-		Rotor|J 		: propeller's advance ratio
-		v_inf			: freestream velocity [m/s]
+		Propeller|radius			: rotor radius [m]
+		Propeller|advance_ratio 	: propeller's advance ratio
+		v_inf						: freestream velocity [m/s]
 	Outputs:
-		Rotor|omega 	: rotor's angular velocity [rad/s]
+		Propeller|omega				: rotor's angular velocity [rad/s]
 	"""
 	def setup(self):
-		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
-		self.add_input('Rotor|J', desc='Advance ratio of propeller')
+		self.add_input('Propeller|radius', units='m', desc='Propeller radius')
+		self.add_input('Propeller|advance_ratio', desc='Advance ratio of propeller')
 		self.add_input('v_inf', units='m/s', desc='Freestream velocity')
-		self.add_output('Rotor|omega', units='rad/s', desc='Rotor angular velocity')
+		self.add_output('Propeller|omega', units='rad/s', desc='Rotor angular velocity')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
 		v_inf = inputs['v_inf']		# in [m/s]
-		r = inputs['Rotor|radius']	# in [m]
-		J = inputs['Rotor|J']
+		r = inputs['Propeller|radius']	# in [m]
+		J = inputs['Propeller|advance_ratio']
 		n = v_inf / (2 * r * J) 	# revolutions/second
 
-		outputs['Rotor|omega'] = 2 * np.pi * n # in [rad/s]
+		outputs['Propeller|omega'] = 2 * np.pi * n # in [rad/s]
 
 	def compute_partials(self, inputs, partials):
 		v_inf = inputs['v_inf']		# in [m/s]
-		r = inputs['Rotor|radius']	# in [m]
-		J = inputs['Rotor|J']
+		r = inputs['Propeller|radius']	# in [m]
+		J = inputs['Propeller|advance_ratio']
 
-		partials['Rotor|omega', 'v_inf'] = np.pi / (r * J)
-		partials['Rotor|omega', 'Rotor|radius'] = - (np.pi * v_inf) / (r**2 * J)
-		partials['Rotor|omega', 'Rotor|J'] = - (np.pi * v_inf) / (r * J**2)
+		partials['Propeller|omega', 'v_inf'] = np.pi / (r * J)
+		partials['Propeller|omega', 'Propeller|radius'] = - (np.pi * v_inf) / (r**2 * J)
+		partials['Propeller|omega', 'Propeller|advance_ratio'] = - (np.pi * v_inf) / (r * J**2)
 
 class ThrustOfEachRotor(om.ExplicitComponent):
 	"""
@@ -256,17 +256,17 @@ class ThrustOfEachRotor(om.ExplicitComponent):
 	Inputs:
 		Thrust_all		: Thrust required (sum of all rotors) [N]
 	Outputs:
-		Rotor|Thrust 	: Thrust of each rotor [N]
+		Rotor|thrust 	: Thrust of each rotor [N]
 	"""
 	def initialize(self):
 		self.options.declare('N_rotor', types=int, desc='Number of rotors')
 
 	def setup(self):
 		self.add_input('Thrust_all', units='N', desc='Thrust required (sum of all rotors)')
-		self.add_output('Rotor|Thrust', units='N', desc='Thrust required by each rotor')
+		self.add_output('Rotor|thrust', units='N', desc='Thrust required by each rotor')
 		# partial is constant
 		N_rotor = self.options['N_rotor']
-		self.declare_partials('Rotor|Thrust', 'Thrust_all', val=1/N_rotor)
+		self.declare_partials('Rotor|thrust', 'Thrust_all', val=1/N_rotor)
 
 	def compute(self, inputs, outputs):
-		outputs['Rotor|Thrust'] = inputs['Thrust_all'] / self.options['N_rotor']
+		outputs['Rotor|thrust'] = inputs['Thrust_all'] / self.options['N_rotor']
