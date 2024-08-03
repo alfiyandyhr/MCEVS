@@ -7,9 +7,9 @@ class FurnishingWeight(om.ExplicitComponent):
 	Parameters:
 		tf 		: technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
-		eVTOL|W_takeoff : total take-off weight [kg]
+		Weight|takeoff : total take-off weight [kg]
 	Outputs:
-		Weights|Furnishings : weight of all furnishings and equipment [kg]
+		Weight|furnishings : weight of all furnishings and equipment [kg]
 	Notes:
 		> Value for coefficient K
 			low_estimate	: 6.0
@@ -22,13 +22,13 @@ class FurnishingWeight(om.ExplicitComponent):
 		self.options.declare('tf', types=float, default=0.8, desc='Technology factor')
 
 	def setup(self):
-		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
-		self.add_output('Weights|Furnishings', units='kg', desc='Weight of all furnishings')
-		self.declare_partials('Weights|Furnishings', 'eVTOL|W_takeoff')
+		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
+		self.add_output('Weight|furnishings', units='kg', desc='Weight of all furnishings')
+		self.declare_partials('Weight|furnishings', 'Weight|takeoff')
 
 	def compute(self, inputs, outputs):
 		tf = self.options['tf']
-		W_takeoff = inputs['eVTOL|W_takeoff'] # in [kg]
+		W_takeoff = inputs['Weight|takeoff'] # in [kg]
 
 		# Calculating W_furnishings
 		kg_to_lb = 2.20462**1.3
@@ -40,11 +40,11 @@ class FurnishingWeight(om.ExplicitComponent):
 
 		W_furnishings = K_avg * (W_takeoff/1000.0)**1.3 * kg_to_lb * lb_to_kg
 
-		outputs['Weights|Furnishings'] = tf * W_furnishings # in [kg]
+		outputs['Weight|furnishings'] = tf * W_furnishings # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		W_takeoff = inputs['eVTOL|W_takeoff'] # in [kg]
+		W_takeoff = inputs['Weight|takeoff'] # in [kg]
 
 		# Calculating dWfurn_dWtakeoff
 		kg_to_lb = 2.20462**1.3
@@ -55,4 +55,4 @@ class FurnishingWeight(om.ExplicitComponent):
 		K_high = 23.0
 
 		dWfurn_dWtakeoff = K_avg * 1.3 * W_takeoff**0.3 * (1/1000.0)**1.3 * kg_to_lb * lb_to_kg
-		partials['Weights|Furnishings', 'eVTOL|W_takeoff'] = tf * dWfurn_dWtakeoff
+		partials['Weight|furnishings', 'Weight|takeoff'] = tf * dWfurn_dWtakeoff

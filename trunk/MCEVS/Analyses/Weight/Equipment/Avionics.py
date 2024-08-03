@@ -7,9 +7,9 @@ class AvionicsWeight(om.ExplicitComponent):
 	Parameters:
 		tf 		: technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
-		eVTOL|W_takeoff : total take-off weight [kg]
+		Weight|takeoff : total take-off weight [kg]
 	Outputs:
-		Weights|Avionics : weight of all avionics systems [kg]
+		Weight|avionics : weight of all avionics systems [kg]
 	Notes:
 		> This equation has not been checked against old-established literatures
 	Source:
@@ -20,21 +20,21 @@ class AvionicsWeight(om.ExplicitComponent):
 		self.options.declare('tf', types=float, default=0.8, desc='Technology factor')
 
 	def setup(self):
-		self.add_input('eVTOL|W_takeoff', units='kg', desc='Total take-off weight')
-		self.add_output('Weights|Avionics', units='kg', desc='Weight of all avionics systems')
-		self.declare_partials('Weights|Avionics', 'eVTOL|W_takeoff')
+		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
+		self.add_output('Weight|avionics', units='kg', desc='Weight of all avionics systems')
+		self.declare_partials('Weight|avionics', 'Weight|takeoff')
 
 	def compute(self, inputs, outputs):
 		tf = self.options['tf']
-		W_takeoff = inputs['eVTOL|W_takeoff'] # in [kg]
+		W_takeoff = inputs['Weight|takeoff'] # in [kg]
 
 		# Calculating W_avionics
 		W_avionics = 0.0268 * W_takeoff
 
-		outputs['Weights|Avionics'] = tf * W_avionics # in [kg]
+		outputs['Weight|avionics'] = tf * W_avionics # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		partials['Weights|Avionics', 'eVTOL|W_takeoff'] = tf * 0.0268
+		partials['Weight|avionics', 'Weight|takeoff'] = tf * 0.0268
 
 
