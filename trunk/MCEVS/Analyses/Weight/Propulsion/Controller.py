@@ -9,7 +9,7 @@ class MotorControllerWeight(om.ExplicitComponent):
 	Inputs:
 		max_power : maximum power, i.e., power during climb [W]
 	Outputs:
-		Weights|MotorControllers : weight of all motor controllers [kg]
+		Weight|controllers : weight of all motor controllers [kg]
 	Notes:
 	Sources:
 		1. Kadhiresan, A. R., and Duffy, M. J., “Conceptual Design and Mission Analysis for EVTOL Urban Air Mobility Flight Vehicle Configurations,”
@@ -22,8 +22,8 @@ class MotorControllerWeight(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('max_power', units='W', desc='Maximum power')
-		self.add_output('Weights|MotorControllers', units='kg', desc='Weight of all motor controllers')
-		self.declare_partials('Weights|MotorControllers', 'max_power')
+		self.add_output('Weight|controllers', units='kg', desc='Weight of all motor controllers')
+		self.declare_partials('Weight|controllers', 'max_power')
 
 	def compute(self, inputs, outputs):
 		N_motor = self.options['N_motor']
@@ -33,11 +33,11 @@ class MotorControllerWeight(om.ExplicitComponent):
 		W_controller = 49.9/398 * (p_max/N_motor - 2.0) + 0.1
 		W_controllers = N_motor * W_controller
 
-		outputs['Weights|MotorControllers'] = W_controllers # in [kg]
+		outputs['Weight|controllers'] = W_controllers # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		N_motor = self.options['N_motor']
-		partials['Weights|MotorControllers', 'max_power'] = 49.9/398 * 1/1000 * 1/N_motor
+		partials['Weight|controllers', 'max_power'] = 49.9/398 * 1/1000 * 1/N_motor
 
 
 
