@@ -44,11 +44,13 @@ class DesignProblem(object):
 		"""
 		if self.algorithm == 'gradient-based':
 			# Run !!!
-			run_gradient_based_optimization(self)
+			result = run_gradient_based_optimization(self)
 
 		elif self.algorithm == 'gradient-free':
 			# Run !!!
-			run_gradient_free_optimization(self)
+			result = run_gradient_free_optimization(self)
+
+		return result
 
 	def add_objective(self, name):
 		"""

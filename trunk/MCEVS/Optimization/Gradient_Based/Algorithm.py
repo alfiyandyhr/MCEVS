@@ -42,7 +42,7 @@ def run_gradient_based_optimization(DesignProblem:object):
 								  promotes_outputs=['*'])
 
 	# Optimizer settings
-	prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-8, disp=True)
+	prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
 	prob.driver.recording_options['includes'] = ['*']
 	prob.driver.recording_options['record_objectives'] = True
 	prob.driver.recording_options['record_constraints'] = True
