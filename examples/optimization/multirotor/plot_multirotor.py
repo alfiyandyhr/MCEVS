@@ -58,6 +58,3 @@ if plot_all:
 
 
 
-
-
-
