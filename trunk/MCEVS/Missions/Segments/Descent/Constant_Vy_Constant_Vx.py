@@ -23,7 +23,9 @@ class DescentConstantVyConstantVx():
 		self.distance_Y = None
 		self.speed_X = None
 		self.distance_X = None
+		self.speed = None
 		self.duration = None
+		self.gamma = None
 
 		self.distance = None # Euclidean distance
 
@@ -37,6 +39,8 @@ class DescentConstantVyConstantVx():
 				self.speed_X = float(self.kwargs[item])
 			elif item == 'distance_X':
 				self.distance_X = float(self.kwargs[item])
+			elif item == 'speed':
+				self.speed = float(self.kwargs[item])
 			elif item == 'duration':
 				self.duration = float(self.kwargs[item])
 		
@@ -48,15 +52,21 @@ class DescentConstantVyConstantVx():
 			if self.distance_Y is None:
 				self.distance_Y = self.speed_Y * self.duration
 
-			if self.distance_X is None:
+			if self.distance_X is None and self.speed_X is None:
+				self.speed_X = np.sqrt(self.speed**2 - self.speed_Y**2)
 				self.distance_X = self.speed_X * self.duration
-			if self.speed_X is None:
-				self.speed_X = self.distance_X / self.speed_X
+			if self.distance_X is None and self.speed is None:
+				self.distance_X = self.speed_X * self.duration
+				self.speed = np.sqrt(self.speed_X**2 + self.speed_Y**2)
+			if self.speed_X is None and self.speed is None:
+				self.speed_X = self.distance_X / self.duration
+				self.speed = np.sqrt(self.speed_X**2 + self.speed_Y**2)
 				
 		except:
-			raise NameError("Need to define at least two of the followings: speed_Y, distance_Y, duration; Must also define at least speed_X or distance_X;")
+			raise NameError("Need to define at least two of the followings: speed_Y, distance_Y, duration; Must also define at least one of the following speed_X, distance_X, speed;")
 
 		self.distance = np.sqrt(self.distance_X**2 + self.distance_Y**2)
+		self.gamma = np.arctan(self.speed_Y/self.speed_X)
 
 	def _calc_time(self, t_list):
 		t0 = t_list[-1][-1]
