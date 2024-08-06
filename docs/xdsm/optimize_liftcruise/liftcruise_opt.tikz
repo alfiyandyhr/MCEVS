@@ -1,0 +1,371 @@
+
+%%% Preamble Requirements %%%
+% \usepackage{geometry}
+% \usepackage{amsfonts}
+% \usepackage{amsmath}
+% \usepackage{amssymb}
+% \usepackage{tikz}
+
+% Optional packages such as sfmath set through python interface
+% \usepackage{sfmath}
+
+% \usetikzlibrary{arrows,chains,positioning,scopes,shapes.geometric,shapes.misc,shadows}
+
+%%% End Preamble Requirements %%%
+
+\input{"/opt/anaconda3/envs/mdolab/lib/python3.11/site-packages/pyxdsm/diagram_styles"}
+\begin{tikzpicture}
+
+\matrix[MatrixSetup]{
+%Row 0
+&
+\node [DataIO] (output_opt) {$v_{cruise}^{init}, S_{wing}^{init}, AR_{wing}^{init}, r_{rotor}^{init}, r_{prop}^{init}, J_{prop}^{init}$};&
+&
+\node [DataIO] (output_D1) {$\rho_{air}, g$};&
+&
+\node [DataIO] (output_D3) {$\rho_{air}, g, v_{climb}, N_{rotor}, FM$};&
+\node [DataIO] (output_D4) {$AoA_{cruise}, N_{prop}, \sigma_{prop}$};&
+\node [DataIO] (output_D5) {$\rho_{air}, g, v_{descent}, N_{rotor}, FM$};&
+\node [DataIO] (output_D6) {$t_{climb}, R_{cruise}, t_{descent}$};&
+\node [DataIO] (output_D7) {$\rho_{batt}, \eta_{batt}, \eta_{max}$};&
+\node [DataIO] (output_D8) {$N_{rotor}, N_{prop}, N_{blade}, tf$};&
+\node [DataIO] (output_D9) {$n_{pax}, l_{fuse}, p_{max}, l_{sm}, n_{ult}, tf$};&
+\node [DataIO] (output_D10) {$tf$};&
+\node [DataIO] (output_D11) {$W_{payload}$};&
+\\
+%Row 1
+\node [DataIO] (left_output_opt) {$v_{cruise}^*, S_{wing}^*, AR_{wing}^*, r_{rotor}, r_{prop}, J_{prop}$};&
+\node [Optimization] (opt) {$\text{Optimizer}$};&
+&
+\node [DataInter] (opt-D1) {$S_{wing}, AR_{wing}, v_{cruise}$};&
+&
+\node [DataInter] (opt-D3) {$r_{rotor}$};&
+\node [DataInter] (opt-D4) {$r_{prop}, J_{prop}, v_{cruise}$};&
+\node [DataInter] (opt-D5) {$r_{rotor}$};&
+\node [DataInter] (opt-D6) {$v_{cruise}$};&
+&
+\node [DataInter] (opt-D8) {$r_{rotor}, r_{prop}$};&
+\node [DataInter] (opt-D9) {$S_{wing}, AR_{wing}$};&
+&
+&
+\\
+%Row 2
+\node [DataIO] (left_output_solver) {$W_{takeoff}^*$};&
+\node [DataInter] (solver-opt) {$W_{takeoff}$};&
+\node [MDA] (solver) {$\text{Newton Solver}$};&
+\node [DataInter] (solver-D1) {$W_{takeoff}$};&
+&
+\node [DataInter] (solver-D3) {$W_{takeoff}$};&
+\node [DataInter] (solver-D4) {$W_{takeoff}$};&
+\node [DataInter] (solver-D5) {$W_{takeoff}$};&
+&
+&
+&
+\node [DataInter] (solver-D9) {$W_{takeoff}$};&
+\node [DataInter] (solver-D10) {$W_{takeoff}$};&
+\node [DataInter] (solver-D11) {$W_{takeoff}$};&
+\\
+%Row 3
+\node [DataIO] (left_output_D1) {$CL_{cruise}^*$};&
+\node [DataInter] (D1-opt) {$CL_{cruise}$};&
+&
+\node [Function] (D1) {$\text{Aerodynamics}$};&
+\node [DataInter] (D1-D2) {$Drag$};&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+\\
+%Row 4
+&
+&
+&
+&
+\node [Function] (D2) {$\text{Trim}$};&
+&
+\node [DataInter] (D2-D4) {$Thrust$};&
+&
+&
+&
+&
+&
+&
+&
+\\
+%Row 5
+\node [DataIO] (left_output_D3) {$DL_{climb}^*$};&
+\node [DataInter] (D3-opt) {$DL_{climb}$};&
+&
+&
+&
+\node [Function] (D3) {$\text{Climb Power}$};&
+&
+&
+\node [DataInter] (D3-D6) {$P_{climb}$};&
+&
+\node [DataInter] (D3-D8) {$P_{climb}$};&
+&
+&
+&
+\\
+%Row 6
+\node [DataIO] (left_output_D4) {$DL_{cruise}^*, C_{T}/\sigma_{prop}^*$};&
+\node [DataInter] (D4-opt) {$DL_{cruise}, C_{T}/\sigma_{prop}$};&
+&
+&
+&
+&
+\node [Function] (D4) {$\text{Cruise Power}$};&
+&
+\node [DataInter] (D4-D6) {$P_{cruise}$};&
+&
+\node [DataInter] (D4-D8) {$P_{cruise}$};&
+&
+&
+&
+\\
+%Row 7
+\node [DataIO] (left_output_D5) {$DL_{descent}^*$};&
+\node [DataInter] (D5-opt) {$DL_{descent}$};&
+&
+&
+&
+&
+&
+\node [Function] (D5) {$\text{Descent Power}$};&
+\node [DataInter] (D5-D6) {$P_{descent}$};&
+&
+\node [DataInter] (D5-D8) {$P_{descent}$};&
+&
+&
+&
+\\
+%Row 8
+&
+&
+&
+&
+&
+&
+&
+&
+\node [Function] (D6) {$\text{Energy}$};&
+\node [DataInter] (D6-D7) {$Energy_{total}$};&
+&
+&
+&
+&
+\\
+%Row 9
+&
+&
+&
+&
+&
+&
+&
+&
+&
+\node [Function] (D7) {$\text{Battery Weight}$};&
+&
+&
+&
+\node [DataInter] (D7-D11) {$W_{battery}$};&
+\\
+%Row 10
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+\node [Function] (D8) {$\text{Propulsion Weight}$};&
+&
+&
+\node [DataInter] (D8-D11) {$W_{propulsion}$};&
+\\
+%Row 11
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+\node [Function] (D9) {$\text{Structure Weight}$};&
+&
+\node [DataInter] (D9-D11) {$W_{structure}$};&
+\\
+%Row 12
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+\node [Function] (D10) {$\text{Equipment Weight}$};&
+\node [DataInter] (D10-D11) {$W_{equipment}$};&
+\\
+%Row 13
+&
+&
+\node [DataInter] (D11-solver) {$W_{residual}$};&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+\node [Function] (D11) {$\text{Residual Weight}$};&
+\\
+%Row 14
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+&
+\\
+};
+
+% XDSM process chains
+{ [start chain=process]
+ \begin{pgfonlayer}{process} 
+\chainin (opt);
+\chainin (D1) [join=by ProcessHVA];
+\chainin (D2) [join=by ProcessHVA];
+\chainin (D3) [join=by ProcessHVA];
+\chainin (D4) [join=by ProcessHVA];
+\chainin (D5) [join=by ProcessHVA];
+\chainin (D6) [join=by ProcessHVA];
+\chainin (D7) [join=by ProcessHVA];
+\chainin (D8) [join=by ProcessHVA];
+\chainin (D9) [join=by ProcessHVA];
+\chainin (D10) [join=by ProcessHVA];
+\chainin (D11) [join=by ProcessHVA];
+\chainin (solver) [join=by ProcessHVA];
+\chainin (opt) [join=by ProcessHVA];
+\end{pgfonlayer}
+}
+
+\begin{pgfonlayer}{data}
+\path
+% Horizontal edges
+(solver) edge [DataLine] (solver-D3)
+(opt) edge [DataLine] (opt-D3)
+(D3) edge [DataLine] (D3-D6)
+(D3) edge [DataLine] (D3-opt)
+(solver) edge [DataLine] (solver-D1)
+(opt) edge [DataLine] (opt-D1)
+(D1) edge [DataLine] (D1-opt)
+(D1) edge [DataLine] (D1-D2)
+(D2) edge [DataLine] (D2-D4)
+(opt) edge [DataLine] (opt-D4)
+(D4) edge [DataLine] (D4-D6)
+(D4) edge [DataLine] (D4-opt)
+(solver) edge [DataLine] (solver-D4)
+(opt) edge [DataLine] (opt-D5)
+(solver) edge [DataLine] (solver-D5)
+(opt) edge [DataLine] (opt-D6)
+(D5) edge [DataLine] (D5-D6)
+(D5) edge [DataLine] (D5-opt)
+(D6) edge [DataLine] (D6-D7)
+(opt) edge [DataLine] (opt-D8)
+(D3) edge [DataLine] (D3-D8)
+(D4) edge [DataLine] (D4-D8)
+(D5) edge [DataLine] (D5-D8)
+(solver) edge [DataLine] (solver-D9)
+(opt) edge [DataLine] (opt-D9)
+(solver) edge [DataLine] (solver-D10)
+(solver) edge [DataLine] (solver-D11)
+(D7) edge [DataLine] (D7-D11)
+(D8) edge [DataLine] (D8-D11)
+(D9) edge [DataLine] (D9-D11)
+(D10) edge [DataLine] (D10-D11)
+(D11) edge [DataLine] (D11-solver)
+(solver) edge [DataLine] (solver-opt)
+(opt) edge [DataLine] (left_output_opt)
+(solver) edge [DataLine] (left_output_solver)
+(D3) edge [DataLine] (left_output_D3)
+(D1) edge [DataLine] (left_output_D1)
+(D4) edge [DataLine] (left_output_D4)
+(D5) edge [DataLine] (left_output_D5)
+% Vertical edges
+(solver-D3) edge [DataLine] (D3)
+(opt-D3) edge [DataLine] (D3)
+(D3-D6) edge [DataLine] (D6)
+(D3-opt) edge [DataLine] (opt)
+(solver-D1) edge [DataLine] (D1)
+(opt-D1) edge [DataLine] (D1)
+(D1-opt) edge [DataLine] (opt)
+(D1-D2) edge [DataLine] (D2)
+(D2-D4) edge [DataLine] (D4)
+(opt-D4) edge [DataLine] (D4)
+(D4-D6) edge [DataLine] (D6)
+(D4-opt) edge [DataLine] (opt)
+(solver-D4) edge [DataLine] (D4)
+(opt-D5) edge [DataLine] (D5)
+(solver-D5) edge [DataLine] (D5)
+(opt-D6) edge [DataLine] (D6)
+(D5-D6) edge [DataLine] (D6)
+(D5-opt) edge [DataLine] (opt)
+(D6-D7) edge [DataLine] (D7)
+(opt-D8) edge [DataLine] (D8)
+(D3-D8) edge [DataLine] (D8)
+(D4-D8) edge [DataLine] (D8)
+(D5-D8) edge [DataLine] (D8)
+(solver-D9) edge [DataLine] (D9)
+(opt-D9) edge [DataLine] (D9)
+(solver-D10) edge [DataLine] (D10)
+(solver-D11) edge [DataLine] (D11)
+(D7-D11) edge [DataLine] (D11)
+(D8-D11) edge [DataLine] (D11)
+(D9-D11) edge [DataLine] (D11)
+(D10-D11) edge [DataLine] (D11)
+(D11-solver) edge [DataLine] (solver)
+(solver-opt) edge [DataLine] (opt)
+(opt) edge [DataLine] (output_opt)
+(D1) edge [DataLine] (output_D1)
+(D3) edge [DataLine] (output_D3)
+(D4) edge [DataLine] (output_D4)
+(D5) edge [DataLine] (output_D5)
+(D6) edge [DataLine] (output_D6)
+(D7) edge [DataLine] (output_D7)
+(D8) edge [DataLine] (output_D8)
+(D9) edge [DataLine] (output_D9)
+(D10) edge [DataLine] (output_D10)
+(D11) edge [DataLine] (output_D11);
+\end{pgfonlayer}
+
+\end{tikzpicture}
