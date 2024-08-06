@@ -105,6 +105,7 @@ class WeightAnalysis(object):
 								  promotes_outputs=['*'])
 
 		prob.setup(check=False)
+		# prob.check_partials(compact_print=True)
 		prob.run_model()
 
 		return prob
