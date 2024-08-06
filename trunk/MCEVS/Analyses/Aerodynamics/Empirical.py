@@ -8,7 +8,7 @@ class CylindricalBodyDrag(om.ExplicitComponent):
 		rho_air				: air density [kg/m**3]
 	Inputs:
 		Rotor|radius			: rotor radius [m]
-		Mission|cruise_speed 	: cruising speed of the eVTOL [m/s]
+		Aero|speed 				: air speed of the eVTOL [m/s]
 		Body|sin_beta 			: body/fuselage tilt angle
 	Outputs:
 		Aero|total_drag 		: aerodynamic drag [N]
@@ -24,7 +24,7 @@ class CylindricalBodyDrag(om.ExplicitComponent):
 		
 	def setup(self):
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
-		self.add_input('Mission|cruise_speed', units='m/s', desc='Cruise speed')
+		self.add_input('Aero|speed', units='m/s', desc='Air speed')
 		self.add_input('Body|sin_beta', desc='sin(beta), beta: incidence angle of body')
 		self.add_output('Aero|total_drag', units='N', desc='Drag of the body')
 		self.declare_partials('*', '*')
@@ -32,7 +32,7 @@ class CylindricalBodyDrag(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		rho_air = self.options['rho_air']
 		r = inputs['Rotor|radius']
-		v = inputs['Mission|cruise_speed']
+		v = inputs['Aero|speed']
 		sin_beta = inputs['Body|sin_beta']
 
 		S_body = 1.682 * r**2 				# body area
@@ -43,7 +43,7 @@ class CylindricalBodyDrag(om.ExplicitComponent):
 	def compute_partials(self, inputs, partials):
 		rho_air = self.options['rho_air']
 		r = inputs['Rotor|radius']
-		v = inputs['Mission|cruise_speed']
+		v = inputs['Aero|speed']
 		sin_beta = inputs['Body|sin_beta']
 
 		S_body = 1.682 * r**2 				# body area
@@ -52,7 +52,7 @@ class CylindricalBodyDrag(om.ExplicitComponent):
 		dCD_dsinB = 0.2 * 3 * sin_beta**2
 
 		partials['Aero|total_drag', 'Rotor|radius'] = 0.5 * rho_air * v * v * CD_body * dS_dr
-		partials['Aero|total_drag', 'Mission|cruise_speed'] = rho_air * v * S_body * CD_body
+		partials['Aero|total_drag', 'Aero|speed'] = rho_air * v * S_body * CD_body
 		partials['Aero|total_drag', 'Body|sin_beta'] = 0.5 * rho_air * v * v * S_body * dCD_dsinB
 
 class MultirotorParasiteDrag(om.ExplicitComponent):
@@ -63,7 +63,7 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 		rho_air				: air density [kg/m**3]
 	Inputs:
 		Weight|takeoff 			: total take-off weight [kg]
-		Mission|cruise_speed 	: cruising speed of the eVTOL [m/s]
+		Aero|speed 	: cruising speed of the eVTOL [m/s]
 		Rotor|radius			: rotor radius [m]
 	Outputs:
 		Aero|Cd0				: parasite drag coefficient
@@ -84,7 +84,7 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 	def setup(self):
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
-		self.add_input('Mission|cruise_speed', units='m/s', desc='Cruise speed')
+		self.add_input('Aero|speed', units='m/s', desc='Air speed')
 		self.add_output('Aero|Cd0', desc='Parasite drag coefficient')
 		self.add_output('Aero|total_drag', units='N', desc='Drag of a multirotor body')
 		self.declare_partials('*', '*')
@@ -94,7 +94,7 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 		N_rotor = self.options['N_rotor']
 		r = inputs['Rotor|radius']				# in [m]
 		W_takeoff = inputs['Weight|takeoff']	# in [kg]
-		v = inputs['Mission|cruise_speed']		# in [m/s**2]
+		v = inputs['Aero|speed']		# in [m/s**2]
 
 		# Equivalent flat plate area "f"
 		kg_to_lb = 2.20462**0.8903
@@ -114,7 +114,7 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 		N_rotor = self.options['N_rotor']
 		r = inputs['Rotor|radius']				# in [m]
 		W_takeoff = inputs['Weight|takeoff']	# in [kg]
-		v = inputs['Mission|cruise_speed']		# in [m/s**2]
+		v = inputs['Aero|speed']		# in [m/s**2]
 
 		# Equivalent flat plate area "f"
 		kg_to_lb = 2.20462**0.8903
@@ -125,10 +125,10 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 
 		partials['Aero|Cd0', 'Rotor|radius'] = f/(N_rotor * np.pi) * (-2/r**3)
 		partials['Aero|Cd0', 'Weight|takeoff'] = 1/(N_rotor * np.pi * r**2) * df_dW
-		partials['Aero|Cd0', 'Mission|cruise_speed'] = 0
+		partials['Aero|Cd0', 'Aero|speed'] = 0
 		partials['Aero|total_drag', 'Rotor|radius'] = 0.0
 		partials['Aero|total_drag', 'Weight|takeoff'] = 0.5 * rho_air * v**2 * df_dW
-		partials['Aero|total_drag', 'Mission|cruise_speed'] = rho_air * v * f
+		partials['Aero|total_drag', 'Aero|speed'] = rho_air * v * f
 
 
 class WingedParasiteDrag(om.ExplicitComponent):
@@ -137,9 +137,9 @@ class WingedParasiteDrag(om.ExplicitComponent):
 	Parameters:
 		rho_air				: air density [kg/m**3]
 	Inputs:
-		Weight|takeoff 			: total take-off weight [kg]
-		Mission|cruise_speed 	: cruising speed of the eVTOL [m/s]
-		Wing|area 				: wing area [m**2]
+		Weight|takeoff 		: total take-off weight [kg]
+		Aero|speed 			: air speed of the eVTOL [m/s]
+		Wing|area 			: wing area [m**2]
 	Outputs:
 		Aero|Cd0			: parasite drag coefficient
 		Aero|parasite_drag	: parasite drag [N]
@@ -157,7 +157,7 @@ class WingedParasiteDrag(om.ExplicitComponent):
 		
 	def setup(self):
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
-		self.add_input('Mission|cruise_speed', units='m/s', desc='Cruise speed')
+		self.add_input('Aero|speed', units='m/s', desc='Air speed')
 		self.add_input('Wing|area', units='m**2', desc='Wing reference area')
 		self.add_output('Aero|Cd0', desc='Parasite drag coefficient')
 		self.add_output('Aero|parasite_drag', units='N', desc='Parasite drag of a winged config')
@@ -166,7 +166,7 @@ class WingedParasiteDrag(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		rho_air = self.options['rho_air']
 		W_takeoff = inputs['Weight|takeoff']	# in [kg]
-		v = inputs['Mission|cruise_speed']		# in [m/s**2]
+		v = inputs['Aero|speed']		# in [m/s**2]
 		S_wing = inputs['Wing|area']			# in [m**2]
 
 		# Equivalent flat plate area "f"
@@ -185,7 +185,7 @@ class WingedParasiteDrag(om.ExplicitComponent):
 	def compute_partials(self, inputs, partials):
 		rho_air = self.options['rho_air']
 		W_takeoff = inputs['Weight|takeoff']	# in [kg]
-		v = inputs['Mission|cruise_speed']		# in [m/s**2]
+		v = inputs['Aero|speed']		# in [m/s**2]
 		S_wing = inputs['Wing|area']			# in [m**2]
 
 		# Equivalent flat plate area "f"
@@ -198,10 +198,10 @@ class WingedParasiteDrag(om.ExplicitComponent):
 		CD0 = f/S_ref
 
 		partials['Aero|Cd0', 'Weight|takeoff'] = 1/S_ref * df_dW
-		partials['Aero|Cd0', 'Mission|cruise_speed'] = 0
+		partials['Aero|Cd0', 'Aero|speed'] = 0
 		partials['Aero|Cd0', 'Wing|area'] = -f/(S_ref**2)
 		partials['Aero|parasite_drag', 'Weight|takeoff'] = 0.5 * rho_air * v**2 * df_dW
-		partials['Aero|parasite_drag', 'Mission|cruise_speed'] = rho_air * v * f
+		partials['Aero|parasite_drag', 'Aero|speed'] = rho_air * v * f
 		partials['Aero|parasite_drag', 'Wing|area'] = 0
 
 
