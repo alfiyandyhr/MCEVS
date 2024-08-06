@@ -3,6 +3,70 @@ import openmdao.api as om
 
 from MCEVS.Utils.Functions import SoftMax
 
+class PowerForwardComp(om.ExplicitComponent):
+	"""
+	Computes power required for forward flight
+	Parameters:
+		N_rotor	: number or rotors
+	Inputs:
+		Rotor|thrust		: thrust of a rotor [N]
+		Rotor|profile_power	: profile power of a rotor [W]
+		Rotor|alpha			: rotor tilt angle [rad]
+		Rotor|kappa			: induced power factor
+		v_inf 				: freestream velocity [m/s]
+		v_induced 			: induced velocity by a rotor [m/s]
+	Outputs:
+		Power|forward 		: required power for forward flight [W]
+	Notes:
+		> Composed of three components:
+			1. Profile power
+				Power intrinsic to overcome the drag due to the rotation of its blades
+			2. Induced power
+				Power to propel the air and convert it into thrust
+			3. Parasite power
+				Power required to overcome the overall drag
+	"""
+	def initialize(self):
+		self.options.declare('N_rotor', types=int, desc='Number of rotors')
+
+	def setup(self):
+		self.add_input('Rotor|thrust', units='N', desc='Thrust of each rotor')
+		self.add_input('Rotor|profile_power', units='W', desc='Profile power of each rotor, P0')
+		self.add_input('Rotor|alpha', units='rad', desc='Rotor tilt angle: 90 for being a propeller, 0 for hover')
+		self.add_input('Rotor|kappa', desc='Induced power factor')
+		self.add_input('v_inf', units='m/s', desc='Freestream velocity')
+		self.add_input('v_induced', units='m/s', desc='Induced velocity')
+		self.add_output('Power|forward', units='W', desc='Power required for forward flight (sum of all rotors)')
+		self.declare_partials('*', '*')
+
+	def compute(self, inputs, outputs):
+		N_rotor = self.options['N_rotor']
+		P0 = inputs['Rotor|profile_power']
+		T_rotor = inputs['Rotor|thrust']
+		a = inputs['Rotor|alpha']
+		k = inputs['Rotor|kappa']
+		v_inf = inputs['v_inf']
+		v_ind = inputs['v_induced']
+
+		power_fwd_each = P0 + T_rotor * (k*v_ind + v_inf*np.sin(a))
+		outputs['Power|forward'] = N_rotor * power_fwd_each
+
+	def compute_partials(self, inputs, partials):
+		N_rotor = self.options['N_rotor']
+		P0 = inputs['Rotor|profile_power']
+		T_rotor = inputs['Rotor|thrust']
+		a = inputs['Rotor|alpha']
+		k = inputs['Rotor|kappa']
+		v_inf = inputs['v_inf']
+		v_ind = inputs['v_induced']
+
+		partials['Power|forward', 'Rotor|thrust'] = N_rotor * (k*v_ind + v_inf*np.sin(a))
+		partials['Power|forward', 'Rotor|profile_power'] = N_rotor
+		partials['Power|forward', 'Rotor|alpha'] = N_rotor * T_rotor * v_inf*np.cos(a)
+		partials['Power|forward', 'Rotor|kappa'] = N_rotor * T_rotor * v_ind
+		partials['Power|forward', 'v_inf'] = N_rotor * T_rotor * np.sin(a)
+		partials['Power|forward', 'v_induced'] = N_rotor * T_rotor * k
+
 class RotorProfilePower(om.ExplicitComponent):
 	"""
 	Computes the profile power of a rotor
