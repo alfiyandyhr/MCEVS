@@ -5,7 +5,7 @@ from MCEVS.Analyses.Aerodynamics.Empirical import MultirotorParasiteDrag
 from MCEVS.Analyses.Aerodynamics.Empirical import WingedParasiteDrag
 from MCEVS.Analyses.Aerodynamics.Parabolic import WingedAeroDrag
 
-from MCEVS.Analyses.Stability.Trim import MultiRotorTrim
+from MCEVS.Analyses.Stability.Trim import MultirotorConstantCruiseTrim
 
 from MCEVS.Analyses.Aerodynamics.Rotor import ThrustOfEachRotor
 from MCEVS.Analyses.Aerodynamics.Rotor import RotorRevolutionFromAdvanceRatio
@@ -25,6 +25,7 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 		hover_FM			: hover figure of merit
 		rotor_sigma 		: rotor's solidity
 		rho_air				: air density [kg/m**3]
+		g 					: gravitational acceleration [m/s**2]
 	Inputs:
 		Weight|takeoff 			: total take-off weight [kg]
 		Mission|cruise_speed	: cruising speed of the eVTOL [m/s]
@@ -39,92 +40,94 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 		self.options.declare('N_rotor', types=int, desc='Number of lifting rotors')
 		self.options.declare('hover_FM', types=float, desc='Hover figure of merit')
 		self.options.declare('rotor_sigma', types=float, desc='Rotor solidity')
-		self.options.declare('rho_air', default=1.225, desc='Air density')
+		self.options.declare('rho_air', types=float, desc='Air density')
+		self.options.declare('g', types=float, desc='Gravitational acceleration')
 
 	def setup(self):
 		N_rotor = self.options['N_rotor']
 		hover_FM = self.options['hover_FM']
 		rotor_sigma = self.options['rotor_sigma']
 		rho_air = self.options['rho_air']
+		g = self.options['g']
 
 		# Step 1: Calculate the drag for the multirotor in cruise
 		self.add_subsystem('parasite_drag',
 							MultirotorParasiteDrag(N_rotor=N_rotor, rho_air=rho_air),
-							promotes_inputs=['Weight|takeoff', 'Mission|cruise_speed', ('Rotor|radius', 'LiftRotor|radius')],
-							promotes_outputs=['Aero|total_drag', 'Aero|Cd0'])
+							promotes_inputs=['Weight|takeoff', ('Aero|speed','Mission|cruise_speed'), ('Rotor|radius', 'LiftRotor|radius')],
+							promotes_outputs=[('Aero|total_drag','Aero|Cruise|total_drag'), ('Aero|Cd0','Aero|Cruise|Cd0')])
 		
 		# Step 2: Calculate thrust required for trim and the body tilt angle
 		self.add_subsystem('trim',
-							MultiRotorTrim(),
-							promotes_inputs=['Weight|takeoff', 'Aero|total_drag'],
-							promotes_outputs=[('Thrust', 'Thrust_all'), 'Body|sin_beta'])
+							MultirotorConstantCruiseTrim(g=g),
+							promotes_inputs=['Weight|takeoff', ('Aero|total_drag','Aero|Cruise|total_drag')],
+							promotes_outputs=[('Thrust', 'Thrust_all_cruise'), ('Body|sin_beta','Body|Cruise|sin_beta')])
 
 		# Step 3: Convert Body|sin_beta into Rotor|alpha
 		self.add_subsystem('beta2alpha',
 							om.ExecComp('alpha = arccos(sin_beta)', alpha={'units':'rad'}),
-							promotes_inputs=[('sin_beta', 'Body|sin_beta')],
-							promotes_outputs=[('alpha', 'LiftRotor|alpha')])
+							promotes_inputs=[('sin_beta', 'Body|Cruise|sin_beta')],
+							promotes_outputs=[('alpha', 'LiftRotor|Cruise|alpha')])
 
 		# Step 4: Calculate the thrust required by each rotor
 		self.add_subsystem('thrust_each',
 							ThrustOfEachRotor(N_rotor=N_rotor),
-							promotes_inputs=['Thrust_all'],
-							promotes_outputs=[('Rotor|thrust', 'LiftRotor|thrust')])
+							promotes_inputs=[('Thrust_all','Thrust_all_cruise')],
+							promotes_outputs=[('Rotor|thrust', 'LiftRotor|Cruise|thrust')])
 
 		# Step 5: Calculate rotor omega given the advance ratio mu
 		self.add_subsystem('rotor_revolution',
 							RotorRevolutionFromAdvanceRatio(),
 							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
-											 ('Rotor|alpha',	'LiftRotor|alpha'),
+											 ('Rotor|alpha',	'LiftRotor|Cruise|alpha'),
 											 ('Rotor|mu',		'LiftRotor|advance_ratio'),
 											 ('v_inf',			'Mission|cruise_speed')],
-							promotes_outputs=[('Rotor|omega', 	'LiftRotor|omega')])
+							promotes_outputs=[('Rotor|omega', 	'LiftRotor|Cruise|omega')])
 
 		# Step 6: Calculate the thrust coefficient Ct
 		self.add_subsystem('Ct',
 							ThrustCoefficient(rho_air=rho_air),
-							promotes_inputs=[('Rotor|thrust',	'LiftRotor|thrust'),
+							promotes_inputs=[('Rotor|thrust',	'LiftRotor|Cruise|thrust'),
 											 ('Rotor|radius',	'LiftRotor|radius'),
-											 ('Rotor|omega',	'LiftRotor|omega')],
-							promotes_outputs=[('Rotor|thrust_coefficient','LiftRotor|thrust_coefficient')])
+											 ('Rotor|omega',	'LiftRotor|Cruise|omega')],
+							promotes_outputs=[('Rotor|thrust_coefficient','LiftRotor|Cruise|thrust_coefficient')])
 
 		# Step 7: Calculate profile power
 		self.add_subsystem('profile_power',
 							RotorProfilePower(rho_air=rho_air, sigma=rotor_sigma),
 							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
 											 ('Rotor|mu',		'LiftRotor|advance_ratio'),
-											 ('Rotor|omega',	'LiftRotor|omega')],
-							promotes_outputs=[('Rotor|profile_power', 'LiftRotor|profile_power')])
+											 ('Rotor|omega',	'LiftRotor|Cruise|omega')],
+							promotes_outputs=[('Rotor|profile_power', 'LiftRotor|Cruise|profile_power')])
 
 		# Step 8: Calculate induced power
 		self.add_subsystem('rotor_inflow',
 							RotorInflow(),
 							promotes_inputs=[('Rotor|mu', 					'LiftRotor|advance_ratio'),
-											 ('Rotor|alpha', 				'LiftRotor|alpha'),
-											 ('Rotor|thrust_coefficient', 	'LiftRotor|thrust_coefficient'),],
-							promotes_outputs=[('Rotor|lambda', 				'LiftRotor|lambda')])
+											 ('Rotor|alpha', 				'LiftRotor|Cruise|alpha'),
+											 ('Rotor|thrust_coefficient', 	'LiftRotor|Cruise|thrust_coefficient'),],
+							promotes_outputs=[('Rotor|lambda', 				'LiftRotor|Cruise|lambda')])
 		self.add_subsystem('v_induced',
 							InducedVelocity(),
 							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
-											 ('Rotor|alpha',	'LiftRotor|alpha'),
-											 ('Rotor|omega',	'LiftRotor|omega'),
-											 ('Rotor|lambda',	'LiftRotor|lambda'),
+											 ('Rotor|alpha',	'LiftRotor|Cruise|alpha'),
+											 ('Rotor|omega',	'LiftRotor|Cruise|omega'),
+											 ('Rotor|lambda',	'LiftRotor|Cruise|lambda'),
 											 ('v_inf', 			'Mission|cruise_speed')],
 							promotes_outputs=['v_induced'])
 		self.add_subsystem('kappa',
 							InducedPowerFactor(hover_FM=hover_FM, rho_air=rho_air),
-							promotes_inputs=[('Rotor|thrust',			'LiftRotor|thrust'),
-											 ('Rotor|profile_power',	'LiftRotor|profile_power'),
+							promotes_inputs=[('Rotor|thrust',			'LiftRotor|Cruise|thrust'),
+											 ('Rotor|profile_power',	'LiftRotor|Cruise|profile_power'),
 											 ('Rotor|radius',			'LiftRotor|radius'),],
-							promotes_outputs=[('Rotor|kappa',			'LiftRotor|kappa')])
+							promotes_outputs=[('Rotor|kappa',			'LiftRotor|Cruise|kappa')])
 
 		# Step 9: Calculate total power required
 		self.add_subsystem('power_req',
 							PowerForwardComp(N_rotor=N_rotor),
-							promotes_inputs=[('Rotor|thrust',			'LiftRotor|thrust'),
-											 ('Rotor|profile_power',	'LiftRotor|profile_power'),
-											 ('Rotor|alpha',			'LiftRotor|alpha'),
-											 ('Rotor|kappa',			'LiftRotor|kappa'),
+							promotes_inputs=[('Rotor|thrust',			'LiftRotor|Cruise|thrust'),
+											 ('Rotor|profile_power',	'LiftRotor|Cruise|profile_power'),
+											 ('Rotor|alpha',			'LiftRotor|Cruise|alpha'),
+											 ('Rotor|kappa',			'LiftRotor|Cruise|kappa'),
 											 'v_induced', ('v_inf', 'Mission|cruise_speed')],
 							promotes_outputs=[('Power|forward','Power|CruiseConstantSpeed')])
 

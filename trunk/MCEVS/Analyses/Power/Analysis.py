@@ -4,8 +4,8 @@ import openmdao.api as om
 from MCEVS.Analyses.Power.Hover.Stay import PowerHoverStay
 from MCEVS.Analyses.Power.HoverClimb.Constant_Speed import PowerHoverClimbConstantSpeed
 from MCEVS.Analyses.Power.HoverDescent.Constant_Speed import PowerHoverDescentConstantSpeed
-from MCEVS.Analyses.Power.Climb.Constant_Vy_Constant_Vx import PowerClimbConstantVyConstantVxWithWing
-from MCEVS.Analyses.Power.Descent.Constant_Vy_Constant_Vx import PowerDescentConstantVyConstantVxWithWing
+from MCEVS.Analyses.Power.Climb.Constant_Vy_Constant_Vx import PowerClimbConstantVyConstantVxWithWing, PowerClimbConstantVyConstantVxEdgewise
+from MCEVS.Analyses.Power.Descent.Constant_Vy_Constant_Vx import PowerDescentConstantVyConstantVxWithWing, PowerDescentConstantVyConstantVxEdgewise
 from MCEVS.Analyses.Power.Cruise.Constant_Speed import PowerCruiseConstantSpeedEdgewise, PowerCruiseConstantSpeedWithWing
 
 class PowerAnalysis(object):
@@ -155,25 +155,31 @@ class PowerRequirement(om.Group):
 													  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}')])
 			
 			if segment.kind == 'ClimbConstantVyConstantVx':
-				climb_gamma = segment.gamma
 				if vehicle.configuration == 'Multirotor':
-					pass
+					self.add_subsystem(f'segment_{segment.id}_power',
+										PowerClimbConstantVyConstantVxEdgewise(N_rotor=N_lift_rotor, hover_FM=hover_FM, rotor_sigma=rotor_sigma, rho_air=rho_air, g=g, climb_airspeed=segment.speed, gamma=segment.gamma),
+										promotes_inputs=['Weight|takeoff', 'LiftRotor|*'],
+										promotes_outputs=[('Power|ClimbConstantVyConstantVx', f'Power|LiftRotor|segment_{segment.id}'),
+														  ('LiftRotor|Climb|thrust', f'LiftRotor|thrust_each|segment_{segment.id}')])
 
 				elif vehicle.configuration == 'LiftPlusCruise':
 					self.add_subsystem(f'segment_{segment.id}_power',
-										PowerClimbConstantVyConstantVxWithWing(N_propeller=N_propeller, hover_FM=hover_FM, prop_sigma=prop_sigma, rho_air=rho_air, g=g, AoA=AoA, gamma=climb_gamma, climb_airspeed=segment.speed),
+										PowerClimbConstantVyConstantVxWithWing(N_propeller=N_propeller, hover_FM=hover_FM, prop_sigma=prop_sigma, rho_air=rho_air, g=g, AoA=AoA, gamma=segment.gamma, climb_airspeed=segment.speed),
 										promotes_inputs=['Weight|takeoff', 'Wing|*', 'Propeller|*'],
 										promotes_outputs=[('Power|ClimbConstantVyConstantVx', f'Power|Propeller|segment_{segment.id}'),
 														  ('Propeller|Climb|thrust',f'Propeller|thrust_each|segment_{segment.id}')])
 
 			if segment.kind == 'DescentConstantVyConstantVx':
-				descent_gamma = segment.gamma
 				if vehicle.configuration == 'Multirotor':
-					pass
+					self.add_subsystem(f'segment_{segment.id}_power',
+										PowerDescentConstantVyConstantVxEdgewise(N_rotor=N_lift_rotor, hover_FM=hover_FM, rotor_sigma=rotor_sigma, rho_air=rho_air, g=g, descent_airspeed=segment.speed, gamma=segment.gamma),
+										promotes_inputs=['Weight|takeoff', 'LiftRotor|*'],
+										promotes_outputs=[('Power|DescentConstantVyConstantVx',f'Power|LiftRotor|segment_{segment.id}'),
+														  ('LiftRotor|Descent|thrust', f'LiftRotor|thrust_each|segment_{segment.id}')])
 
 				elif vehicle.configuration == 'LiftPlusCruise':
 					self.add_subsystem(f'segment_{segment.id}_power',
-										PowerDescentConstantVyConstantVxWithWing(N_propeller=N_propeller, hover_FM=hover_FM, prop_sigma=prop_sigma, rho_air=rho_air, g=g, AoA=AoA, gamma=descent_gamma, descent_airspeed=segment.speed),
+										PowerDescentConstantVyConstantVxWithWing(N_propeller=N_propeller, hover_FM=hover_FM, prop_sigma=prop_sigma, rho_air=rho_air, g=g, AoA=AoA, gamma=segment.gamma, descent_airspeed=segment.speed),
 										promotes_inputs=['Weight|takeoff', 'Wing|*', 'Propeller|*'],
 										promotes_outputs=[('Power|DescentConstantVyConstantVx', f'Power|Propeller|segment_{segment.id}'),
 														  ('Propeller|Descent|thrust',f'Propeller|thrust_each|segment_{segment.id}')])
@@ -182,10 +188,10 @@ class PowerRequirement(om.Group):
 
 				if vehicle.configuration == 'Multirotor':
 					self.add_subsystem(f'segment_{segment.id}_power',
-										PowerCruiseConstantSpeedEdgewise(N_rotor=N_lift_rotor, hover_FM=hover_FM, rotor_sigma=rotor_sigma),
+										PowerCruiseConstantSpeedEdgewise(N_rotor=N_lift_rotor, hover_FM=hover_FM, rotor_sigma=rotor_sigma, rho_air=rho_air, g=g),
 										promotes_inputs=['Weight|*', 'Mission|*', 'LiftRotor|*'],
 										promotes_outputs=[('Power|CruiseConstantSpeed', f'Power|LiftRotor|segment_{segment.id}'),
-														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}')])
+														  ('LiftRotor|Cruise|thrust',f'LiftRotor|thrust_each|segment_{segment.id}')])
 
 				elif vehicle.configuration == 'LiftPlusCruise':
 					self.add_subsystem(f'segment_{segment.id}_power',
