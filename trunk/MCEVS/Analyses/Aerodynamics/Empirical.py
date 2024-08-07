@@ -79,7 +79,7 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 	"""
 	def initialize(self):
 		self.options.declare('N_rotor', types=int, desc='Number of rotors')
-		self.options.declare('rho_air', types=float, default=1.225, desc='Air density')
+		self.options.declare('rho_air', types=float, desc='Air density')
 		
 	def setup(self):
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')

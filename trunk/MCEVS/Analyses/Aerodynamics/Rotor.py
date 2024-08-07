@@ -17,7 +17,7 @@ class ThrustCoefficient(om.ExplicitComponent):
 		Johnson, W., “Rotorcraft Aeromechanics,” Cambridge University Press, 2013.
 	"""
 	def initialize(self):
-		self.options.declare('rho_air', default=1.225, desc='Air density')
+		self.options.declare('rho_air', types=float, desc='Air density')
 
 	def setup(self):
 		self.add_input('Rotor|thrust', units='N', desc='Thrust of a rotor')
