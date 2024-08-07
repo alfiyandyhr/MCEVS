@@ -36,19 +36,19 @@ design_var2 = {'wing_area': 8.0, 'wing_aspect_ratio': 10.0,
 			  'r_lift_rotor': 1.0, 'r_propeller': 1.0,
 			  'cruise_speed': cruise_speed, 'propeller_advance_ratio': 1.0}
 
-vehicle1 = StandardMultirotorEVTOL(design_var1, mtow=878.439221)
+vehicle1 = StandardMultirotorEVTOL(design_var1, mtow=863.78292543)
 vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, mtow=983.1065278)
 
 # Analysis
-analysis = EnergyAnalysis(vehicle=vehicle2, mission=mission, constants=constants)
+analysis = EnergyAnalysis(vehicle=vehicle1, mission=mission, constants=constants)
 results = analysis.evaluate()
 
 
-print(results.get_val('Power|segment_1', 'W'))
-print(results.get_val('Power|segment_2', 'W'))
-print(results.get_val('Power|segment_3', 'W'))
-print(results.get_val('Power|segment_4', 'W'))
-print(results.get_val('Power|segment_5', 'W'))
+print(results.get_val('Power|segment_1', 'kW'))
+print(results.get_val('Power|segment_2', 'kW'))
+print(results.get_val('Power|segment_3', 'kW'))
+print(results.get_val('Power|segment_4', 'kW'))
+print(results.get_val('Power|segment_5', 'kW'))
 print(results.get_val('Energy|entire_mission', 'kW*h'))
 
 
