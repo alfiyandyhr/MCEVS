@@ -1,7 +1,107 @@
 import numpy as np
 import openmdao.api as om
 
-class MultiRotorTrim(om.ExplicitComponent):
+class MultirotorConstantClimbTrim(om.ExplicitComponent):
+	"""
+	Computes the thrust and rotor tilt angle during climb
+	Parameters:
+		g 				: gravitational acceleration [m/s**2]
+		gamma			: flight path angle during climb [rad]
+	Inputs:
+		Weight|takeoff 	: total take-off weight [kg]
+		Aero|total_drag : drag of a multirotor body [N]
+	Outputs:
+		Thrust 			: total thrust required as a vehicle [N]
+		Body|cos_delta	: angle between thrust and x-axis
+	"""
+	def initialize(self):
+		self.options.declare('g', types=float, desc='Gravitational acceleration')
+		self.options.declare('gamma', desc='Flight path angle during climb')
+
+	def setup(self):
+		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
+		self.add_input('Aero|total_drag', units='N', desc='Drag of a multirotor body')
+		self.add_output('Thrust', units='N', desc='Thrust required as a vehicle')
+		self.add_output('Body|cos_delta', desc='Angle between thrust and x-axis')
+		self.declare_partials('*', '*')
+
+	def compute(self, inputs, outputs):
+		D = inputs['Aero|total_drag']			# in [N]
+		W_takeoff = inputs['Weight|takeoff'] 	# in [kg]
+		gamma = self.options['gamma']			# in [rad]
+		g = self.options['g']					# in [m/s**2]
+
+		thrust = np.sqrt((D*np.cos(gamma))**2 + (D*np.sin(gamma)+W_takeoff*g)**2)
+
+		outputs['Thrust'] = thrust
+		outputs['Body|cos_delta'] = D*np.cos(gamma)/thrust
+
+	def compute_partials(self, inputs, partials):
+		D = inputs['Aero|total_drag']			# in [N]
+		W_takeoff = inputs['Weight|takeoff'] 	# in [kg]
+		gamma = self.options['gamma']			# in [rad]
+		g = self.options['g']					# in [m/s**2]
+
+		thrust = np.sqrt((D*np.cos(gamma))**2 + (D*np.sin(gamma)+W_takeoff*g)**2)
+		dt_dm = (D*np.sin(gamma) + W_takeoff*g) * g / thrust
+		dt_dD = (D*np.cos(gamma)*np.cos(gamma) + (D*np.sin(gamma)+W_takeoff*g)*np.sin(gamma))/thrust
+
+		partials['Thrust', 'Weight|takeoff'] = dt_dm
+		partials['Thrust', 'Aero|total_drag'] = dt_dD
+		partials['Body|cos_delta', 'Weight|takeoff'] = - D*np.cos(gamma)/(thrust**2) * dt_dm
+		partials['Body|cos_delta', 'Aero|total_drag'] = np.cos(gamma)/thrust - D*np.cos(gamma)/(thrust**2) * dt_dD
+
+class MultirotorConstantDescentTrim(om.ExplicitComponent):
+	"""
+	Computes the thrust and rotor tilt angle during descent
+	Parameters:
+		g 				: gravitational acceleration [m/s**2]
+		gamma			: flight path angle during climb [rad]
+	Inputs:
+		Weight|takeoff 	: total take-off weight [kg]
+		Aero|total_drag : drag of a multirotor body [N]
+	Outputs:
+		Thrust 			: total thrust required as a vehicle [N]
+		Body|cos_delta	: angle between thrust and x-axis
+	"""
+	def initialize(self):
+		self.options.declare('g', types=float, desc='Gravitational acceleration')
+		self.options.declare('gamma', desc='Flight path angle during climb')
+
+	def setup(self):
+		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
+		self.add_input('Aero|total_drag', units='N', desc='Drag of a multirotor body')
+		self.add_output('Thrust', units='N', desc='Thrust required as a vehicle')
+		self.add_output('Body|cos_delta', desc='Angle between thrust and x-axis')
+		self.declare_partials('*', '*')
+
+	def compute(self, inputs, outputs):
+		D = inputs['Aero|total_drag']			# in [N]
+		W_takeoff = inputs['Weight|takeoff'] 	# in [kg]
+		gamma = self.options['gamma']			# in [rad]
+		g = self.options['g']					# in [m/s**2]
+
+		thrust = np.sqrt((D*np.cos(gamma))**2 + (W_takeoff*g - D*np.sin(gamma))**2)
+
+		outputs['Thrust'] = thrust
+		outputs['Body|cos_delta'] = D*np.cos(gamma)/thrust
+
+	def compute_partials(self, inputs, partials):
+		D = inputs['Aero|total_drag']			# in [N]
+		W_takeoff = inputs['Weight|takeoff'] 	# in [kg]
+		gamma = self.options['gamma']			# in [rad]
+		g = self.options['g']					# in [m/s**2]
+
+		thrust = np.sqrt((D*np.cos(gamma))**2 + (W_takeoff*g - D*np.sin(gamma))**2)
+		dt_dm = (W_takeoff*g - D*np.sin(gamma)) * g / thrust
+		dt_dD = (D*np.cos(gamma)*np.cos(gamma) - (W_takeoff*g - D*np.sin(gamma))*np.sin(gamma))/thrust
+
+		partials['Thrust', 'Weight|takeoff'] = dt_dm
+		partials['Thrust', 'Aero|total_drag'] = dt_dD
+		partials['Body|cos_delta', 'Weight|takeoff'] = - D*np.cos(gamma)/(thrust**2) * dt_dm
+		partials['Body|cos_delta', 'Aero|total_drag'] = np.cos(gamma)/thrust - D*np.cos(gamma)/(thrust**2) * dt_dD
+
+class MultirotorConstantCruiseTrim(om.ExplicitComponent):
 	"""
 	Computes the body tilt angle for wingless multirotor in cruise
 	Inputs:
@@ -12,7 +112,7 @@ class MultiRotorTrim(om.ExplicitComponent):
 		Body|sin_beta		: sin(beta), beta = body incidence angle [rad]
 	"""
 	def initialize(self):
-		self.options.declare('g', type=float, desc='Gravitational acceleration')
+		self.options.declare('g', types=float, desc='Gravitational acceleration')
 
 	def setup(self):
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
