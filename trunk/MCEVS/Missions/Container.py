@@ -2,6 +2,7 @@ from MCEVS.Missions.Segments.HoverClimb.Constant_Speed import HoverClimbConstant
 from MCEVS.Missions.Segments.HoverClimb.Constant_Acceleration import HoverClimbConstantAcceleration
 from MCEVS.Missions.Segments.Climb.Constant_Vy_Constant_Vx import ClimbConstantVyConstantVx
 from MCEVS.Missions.Segments.Climb.Constant_Vy_Constant_Ax import ClimbConstantVyConstantAx
+from MCEVS.Missions.Segments.Transition.Constant_Acceleration import TransitionConstantAcceleration
 from MCEVS.Missions.Segments.Cruise.Constant_Speed import CruiseConstantSpeed
 from MCEVS.Missions.Segments.Descent.Constant_Vy_Constant_Vx import DescentConstantVyConstantVx
 from MCEVS.Missions.Segments.Descent.Constant_Vy_Constant_Ax import DescentConstantVyConstantAx
@@ -58,6 +59,9 @@ class Mission(object):
 
 		elif kind == "ClimbConstantVyConstantAx":
 			self.segments.append(ClimbConstantVyConstantAx(id=self.curr_id, name=name, initial_speed_X=self.vx[-1][-1], n_discrete=n_discrete, kwargs=kwargs))
+
+		elif kind == "TransitionConstantAcceleration":
+			self.segments.append(TransitionConstantAcceleration(id=self.curr_id, name=name, initial_speed=self.vx[-1][-1], n_discrete=n_discrete, kwargs=kwargs))
 
 		elif kind == 'CruiseConstantSpeed':
 			self.segments.append(CruiseConstantSpeed(id=self.curr_id, name=name, n_discrete=n_discrete, kwargs=kwargs))

@@ -14,7 +14,7 @@ v = 67.1 # m/s
 
 plot_uber = False
 plot_simplified_uber = False
-plot_standard = False
+plot_standard = True
 plot_constantHAC = False
 
 # --- Uber Mission Requirement --- #

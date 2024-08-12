@@ -94,9 +94,11 @@ def StandardMissionProfile(mission_range, cruise_speed):
 
 	mission = Mission()
 	mission.add_segment(name='Hover Climb', kind='HoverClimbConstantSpeed', speed=2.54, distance=152.4, n_discrete=10)
-	mission.add_segment(name='Constant Climb', kind='ClimbConstantVyConstantVx', speed_Y=2.54, distance_Y=304.8, speed_X=cruise_speed/2, n_discrete=10)
+	mission.add_segment(name='Transition', kind='TransitionConstantAcceleration', final_speed=cruise_speed, duration=30.0, n_discrete=10)
+	mission.add_segment(name='Constant Climb', kind='ClimbConstantVyConstantVx', speed_Y=2.54, distance_Y=304.8, speed=cruise_speed, n_discrete=10)
 	mission.add_segment(name='Cruise', kind='CruiseConstantSpeed', speed=cruise_speed, distance=cruise_range, n_discrete=5)
-	mission.add_segment(name='Constant Descent', kind='DescentConstantVyConstantVx', speed_Y=1.524, distance_Y=304.8, speed_X=cruise_speed/2, n_discrete=10)
+	mission.add_segment(name='Constant Descent', kind='DescentConstantVyConstantVx', speed_Y=1.524, distance_Y=304.8, speed=cruise_speed, n_discrete=10)
+	mission.add_segment(name='Transition', kind='TransitionConstantAcceleration', final_speed=0.0, duration=30.0, n_discrete=10)
 	mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', speed=1.524, distance=152.4, n_discrete=10)
 
 	return mission
