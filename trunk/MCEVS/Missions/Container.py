@@ -21,13 +21,17 @@ class Mission(object):
 		self.takeoff_altitude = takeoff_altitude # ASL (Above Sea Level)
 		self.curr_id = 0
 		self.segments = []
-		self.x = [np.array([0.0])]
-		self.y = [np.array([0.0])]
+		self.x 	= [np.array([0.0])]
+		self.y 	= [np.array([0.0])]
 		self.vx = [np.array([0.0])]
 		self.vy = [np.array([0.0])]
 		self.ax = [np.array([0.0])]
 		self.ay = [np.array([0.0])]
-		self.t = [np.array([0.0])]
+		self.t 	= [np.array([0.0])]
+
+		# Performance
+		self.P 	= {}	# power
+		self.DL = {}	# disk loading
 
 	def add_segment(self, name:str, kind:str, n_discrete=10, **kwargs):
 		"""

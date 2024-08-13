@@ -1,6 +1,7 @@
 import numpy as np
 import openmdao.api as om
 from MCEVS.Analyses.Power.Analysis import PowerRequirement
+from MCEVS.Utils.Performance import record_performance_by_segments
 
 class EnergyAnalysis(object):
 	"""
@@ -12,7 +13,7 @@ class EnergyAnalysis(object):
 		self.mission = mission
 		self.constants = constants
 
-	def evaluate(self):
+	def evaluate(self, record=False):
 		# print('### --- Solving for energy requirement --- ###')
 
 		# MTOW should be defined if not in sizing mode
@@ -62,7 +63,10 @@ class EnergyAnalysis(object):
 
 		prob.setup(check=False)
 		prob.run_model()
-		
+
+		if record:
+			record_performance_by_segments(prob, self.vehicle.configuration, self.mission)
+
 		# self.total_energy_required = prob.get_val('energy_cnsmp', 'kW*h')[0]
 		return prob
 		# return f'Total energy required is {self.total_energy_required} kWh'

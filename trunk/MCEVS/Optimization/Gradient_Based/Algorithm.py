@@ -1,6 +1,7 @@
 import openmdao.api as om
 
 from MCEVS.Analyses.Weight.Analysis import MTOWEstimation
+from MCEVS.Utils.Performance import record_performance_by_segments
 
 def run_gradient_based_optimization(DesignProblem:object):
 
@@ -59,5 +60,8 @@ def run_gradient_based_optimization(DesignProblem:object):
 	# Run optimization
 	prob.setup(check=False)
 	prob.run_driver()
+
+	# Record the optimal design performance
+	record_performance_by_segments(prob, DesignProblem.vehicle.configuration, DesignProblem.mission)
 
 	return prob

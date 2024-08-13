@@ -31,6 +31,9 @@ class ClimbConstantVyConstantAx():
 
 		self.distance = None # Euclidean distance
 
+		# Performance
+		self.powers = []
+
 	def _initialize(self):
 		for item in list(self.kwargs):
 			if item == 'speed_Y':

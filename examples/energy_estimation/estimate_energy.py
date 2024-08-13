@@ -4,7 +4,7 @@ from MCEVS.Vehicles.Standard import StandardLiftPlusCruiseEVTOL
 from MCEVS.Missions.Container import Mission
 from MCEVS.Constants.Container import EarthGravityAndAtmosphere
 from MCEVS.Analyses.Energy.Analysis import EnergyAnalysis
-from MCEVS.Utils.Plots import plot_mission_parameters
+from MCEVS.Utils.Plots import plot_mission_parameters, plot_performance_by_segments
 
 # Mission requirement
 mission_range = 30000 # m
@@ -40,16 +40,18 @@ vehicle1 = StandardMultirotorEVTOL(design_var1, mtow=863.78292543)
 vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, mtow=983.1065278)
 
 # Analysis
-analysis = EnergyAnalysis(vehicle=vehicle1, mission=mission, constants=constants)
-results = analysis.evaluate()
+analysis = EnergyAnalysis(vehicle=vehicle2, mission=mission, constants=constants)
+analysis.evaluate(record=True)
+
+plot_performance_by_segments(mission=mission, vehicle=vehicle2)
 
 
-print(results.get_val('Power|segment_1', 'kW'))
-print(results.get_val('Power|segment_2', 'kW'))
-print(results.get_val('Power|segment_3', 'kW'))
-print(results.get_val('Power|segment_4', 'kW'))
-print(results.get_val('Power|segment_5', 'kW'))
-print(results.get_val('Energy|entire_mission', 'kW*h'))
+# print(results.get_val('Power|segment_1', 'kW'))
+# print(results.get_val('Power|segment_2', 'kW'))
+# print(results.get_val('Power|segment_3', 'kW'))
+# print(results.get_val('Power|segment_4', 'kW'))
+# print(results.get_val('Power|segment_5', 'kW'))
+# print(results.get_val('Energy|entire_mission', 'kW*h'))
 
 
 

@@ -3,7 +3,7 @@ from MCEVS.Vehicles.Standard import StandardLiftPlusCruiseEVTOL
 from MCEVS.Missions.Container import Mission
 from MCEVS.Constants.Container import EarthGravityAndAtmosphere
 from MCEVS.Analyses.Power.Analysis import PowerAnalysis
-from MCEVS.Utils.Plots import plot_mission_parameters
+from MCEVS.Utils.Plots import plot_mission_parameters, plot_performance_by_segments
 
 # Mission requirement
 mission_range = 30000 # m
@@ -32,36 +32,10 @@ vehicle1 = StandardMultirotorEVTOL(design_var1, mtow=878.439221)
 vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, mtow=945.145355)
 
 # Analysis
-analysis = PowerAnalysis(vehicle=vehicle1, mission=mission, constants=constants)
-results = analysis.evaluate()
+analysis = PowerAnalysis(vehicle=vehicle2, mission=mission, constants=constants)
+analysis.evaluate(record=True)
 
-# print(results.get_val('Power|LiftRotor|segment_1'))
-# print(results.get_val('Power|LiftRotor|segment_2'))
-# print(results.get_val('Power|LiftRotor|segment_3'))
-# print(results.get_val('Power|LiftRotor|maximum'))
-# print(results.get_val('Power|Propeller|segment_1'))
-# print(results.get_val('Power|Propeller|segment_2'))
-# print(results.get_val('Power|Propeller|segment_3'))
-# print(results.get_val('Power|Propeller|maximum'))
-# print(results.get_val('Power|segment_1'))
-# print(results.get_val('Power|segment_2'))
-# print(results.get_val('Power|segment_3'))
-
-print(results.get_val('LiftRotor|thrust_each|segment_1'))
-print(results.get_val('LiftRotor|thrust_each|segment_2'))
-print(results.get_val('LiftRotor|thrust_each|segment_3'))
-print(results.get_val('Propeller|thrust_each|segment_1'))
-print(results.get_val('Propeller|thrust_each|segment_2'))
-print(results.get_val('Propeller|thrust_each|segment_3'))
-
-print(results.get_val('DiskLoading|LiftRotor|segment_1'))
-print(results.get_val('DiskLoading|LiftRotor|segment_2'))
-print(results.get_val('DiskLoading|LiftRotor|segment_3'))
-print(results.get_val('DiskLoading|Propeller|segment_1'))
-print(results.get_val('DiskLoading|Propeller|segment_2'))
-print(results.get_val('DiskLoading|Propeller|segment_3'))
-
-
+plot_performance_by_segments(mission=mission, vehicle=vehicle2)
 
 
 

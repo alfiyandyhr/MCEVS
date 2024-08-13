@@ -7,6 +7,8 @@ from MCEVS.Analyses.Weight.Propulsion.Groups import PropulsionWeight
 from MCEVS.Analyses.Weight.Structure.Groups import StructureWeight
 from MCEVS.Analyses.Weight.Equipment.Groups import EquipmentWeight
 
+from MCEVS.Utils.Performance import record_performance_by_segments
+
 class VehicleWeight(object):
 	"""
 	docstring for VehicleWeight
@@ -61,7 +63,7 @@ class WeightAnalysis(object):
 		self.constants = constants
 		self.sizing_mode = sizing_mode
 
-	def evaluate(self):
+	def evaluate(self, record=False):
 
 		# --- Design parameters --- #
 
@@ -107,6 +109,9 @@ class WeightAnalysis(object):
 		prob.setup(check=False)
 		# prob.check_partials(compact_print=True)
 		prob.run_model()
+
+		if record:
+			record_performance_by_segments(prob, self.vehicle.configuration, self.mission)
 
 		return prob
 

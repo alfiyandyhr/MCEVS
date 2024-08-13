@@ -7,6 +7,7 @@ from MCEVS.Analyses.Power.HoverDescent.Constant_Speed import PowerHoverDescentCo
 from MCEVS.Analyses.Power.Climb.Constant_Vy_Constant_Vx import PowerClimbConstantVyConstantVxWithWing, PowerClimbConstantVyConstantVxEdgewise
 from MCEVS.Analyses.Power.Descent.Constant_Vy_Constant_Vx import PowerDescentConstantVyConstantVxWithWing, PowerDescentConstantVyConstantVxEdgewise
 from MCEVS.Analyses.Power.Cruise.Constant_Speed import PowerCruiseConstantSpeedEdgewise, PowerCruiseConstantSpeedWithWing
+from MCEVS.Utils.Performance import record_performance_by_segments
 
 class PowerAnalysis(object):
 	"""
@@ -18,7 +19,7 @@ class PowerAnalysis(object):
 		self.mission = mission
 		self.constants = constants
 
-	def evaluate(self):
+	def evaluate(self, record=False):
 		# print('### --- Solving for energy requirement --- ###')
 
 		# MTOW should be defined if not in sizing mode
@@ -69,6 +70,9 @@ class PowerAnalysis(object):
 		prob.setup(check=False)
 		prob.run_model()
 		
+		if record:
+			record_performance_by_segments(prob, self.vehicle.configuration, self.mission)
+
 		return prob
 
 class PowerRequirement(om.Group):

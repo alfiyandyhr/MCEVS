@@ -3,7 +3,7 @@ from MCEVS.Vehicles.Standard import StandardLiftPlusCruiseEVTOL
 from MCEVS.Missions.Container import Mission
 from MCEVS.Constants.Container import EarthGravityAndAtmosphere
 from MCEVS.Analyses.Weight.Analysis import WeightAnalysis
-from MCEVS.Utils.Plots import plot_mission_parameters
+from MCEVS.Utils.Plots import plot_mission_parameters, plot_performance_by_segments
 
 # Mission requirement
 mission_range = 30000 # m
@@ -38,16 +38,18 @@ vehicle = StandardLiftPlusCruiseEVTOL(design_var)
 
 # Analysis
 analysis = WeightAnalysis(vehicle=vehicle, mission=mission, constants=constants, sizing_mode=True)
-results = analysis.evaluate()
+results = analysis.evaluate(record=True)
 
-print('Power segment_1 = ', results.get_val('Power|segment_1', 'W'))
-print('Power segment_2 = ', results.get_val('Power|segment_2', 'W'))
-print('Power segment_3 = ', results.get_val('Power|segment_3', 'W'))
-print('Power segment_4 = ', results.get_val('Power|segment_4', 'W'))
-print('Power segment_5 = ', results.get_val('Power|segment_5', 'W'))
-print('Required energy = ', results.get_val('Energy|entire_mission', 'W*h'))
-# print(results.get_val('Power|Propeller|maximum'))
-# print(results.get_val('Power|LiftRotor|maximum'))
+plot_performance_by_segments(mission=mission, vehicle=vehicle)
+
+# print('Power segment_1 = ', results.get_val('Power|segment_1', 'W'))
+# print('Power segment_2 = ', results.get_val('Power|segment_2', 'W'))
+# print('Power segment_3 = ', results.get_val('Power|segment_3', 'W'))
+# print('Power segment_4 = ', results.get_val('Power|segment_4', 'W'))
+# print('Power segment_5 = ', results.get_val('Power|segment_5', 'W'))
+# print('Required energy = ', results.get_val('Energy|entire_mission', 'W*h'))
+# # print(results.get_val('Power|Propeller|maximum'))
+# # print(results.get_val('Power|LiftRotor|maximum'))
 
 print('Payload weight = ', results.get_val('Weight|payload'))
 print('Battery weight = ', results.get_val('Weight|battery'))
