@@ -6,6 +6,6 @@ Within this framework, users have the flexibility to tailor their flight profile
 
 After defining the mission requirements and vehicle specifications, a Newton solver is utilized to perform the sizing process and determine the Maximum Take-Off Weight (MTOW). Once the sizing iteration converges, a suitably sized vehicle is identified that meets the necessary physical criteria, such as aerodynamics and trim, across all flight phases.
 
-Additionally, users can conduct an optimization procedure using either a gradient-based or gradient-free method. This optimization process aims to identify the most efficient design variables, whether geometric or operational, that lead to a lighter takeoff weight for the aircraft.
+Additionally, users can conduct an optimization procedure using either a gradient-based or gradient-free method. This optimization process aims to identify the most efficient design variables, whether geometric or operational, that lead to a lighter MTOW for the aircraft.
 
 Author: @alfiyandyhr
