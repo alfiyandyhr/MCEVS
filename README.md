@@ -1,5 +1,4 @@
 # MCEVS: Multi-Configurational E-Vtol Sizing
-This repo contains my codes in sizing multi-configurational eVTOL aircraft.
 
 MCEVS is a framework designed to calculate the feasible weight of multi-configurational eVTOL aircraft based on specific mission requirements and vehicle specifications.
 
