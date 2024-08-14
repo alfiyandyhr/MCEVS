@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_mission_parameters(mission:object, print_info=False):
+def plot_mission_parameters(mission:object, print_info=False, save_fig=False):
 
 	if print_info:
 		mission.print_info()
@@ -27,19 +27,23 @@ def plot_mission_parameters(mission:object, print_info=False):
 		ay = np.concatenate((ay, ay_segment))
 
 	# Plot position
+	plt.figure(figsize=(6,3.5))
 	plt.plot(x/1000.0, y, '-o')
-	plt.xlabel('Distance ($km$) in X-dir')
+	plt.xlabel('Range ($km$) in X-dir')
 	plt.ylabel('AGL Altitude ($m$) in Y-dir')
 	plt.title('Aircraft position y vs x')
 	plt.minorticks_on()
 	plt.grid(which='major', linewidth=0.8)
 	plt.grid(which='minor', linewidth=0.2)
+	if save_fig:
+		plt.tight_layout()
+		plt.savefig('range_vs_altitude.pdf', format='pdf')
 	plt.show()
 
 	# Plot bulk
-	fig, axs = plt.subplots(nrows=3, ncols=2, sharex=False)
+	fig, axs = plt.subplots(nrows=3, ncols=2, sharex=False, figsize=(12,9))
 	axs[0,0].plot(t/60.0, x/1000.0, '-o')
-	axs[0,0].set_ylabel('Distance ($km$) in X-dir')
+	axs[0,0].set_ylabel('Range ($km$) in X-dir')
 	axs[0,0].minorticks_on()
 	axs[0,0].grid(which='major', linewidth=0.8)
 	axs[0,0].grid(which='minor', linewidth=0.2)
@@ -70,6 +74,8 @@ def plot_mission_parameters(mission:object, print_info=False):
 	axs[2,1].minorticks_on()
 	axs[2,1].grid(which='major', linewidth=0.8)
 	axs[2,1].grid(which='minor', linewidth=0.2)
+	if save_fig:
+		plt.savefig('flight_params.pdf', format='pdf')
 	plt.show()
 
 def plot_performance_by_segments(mission:object, vehicle:object):
