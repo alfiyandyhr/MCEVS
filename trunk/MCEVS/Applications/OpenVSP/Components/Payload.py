@@ -1,15 +1,29 @@
 import openvsp as vsp
 import numpy as np
 
-def Human(N_PAX:int):
+def Human(N_PAX:int, config:str):
 
 	# Seating according to N_PAX
-	if N_PAX == 4:
-		x_pos = np.array( [  2.10,  2.10,  3.70,  3.70 ] )
-		y_pos = np.array( [  0.40, -0.40,  0.40, -0.40 ] )
-		z_pos = np.array( [  0.20,  0.20,  0.20,  0.20 ] )
-		y_rot = np.array( [  20.0,  20.0,  20.0,  20.0 ] )
-		z_rot = np.array( [  0.00,  0.00,  0.00,  0.00 ] )
+	if N_PAX == 1:
+		if config == 'Multirotor':
+			x_pos = np.array( [  1.30 ] )
+			y_pos = np.array( [  0.00 ] )
+			z_pos = np.array( [ -0.15 ] )
+			y_rot = np.array( [  20.0 ] )
+			z_rot = np.array( [  0.00 ] )
+	elif N_PAX == 4:
+		if config == 'Multirotor':
+			x_pos = np.array( [  1.90,  1.90,  3.50,  3.50 ] )
+			y_pos = np.array( [  0.40, -0.40,  0.40, -0.40 ] )
+			z_pos = np.array( [ -0.35, -0.35, -0.45, -0.45 ] )
+			y_rot = np.array( [  20.0,  20.0,  20.0,  20.0 ] )
+			z_rot = np.array( [  0.00,  0.00,  0.00,  0.00 ] )
+		elif config == 'LiftPlusCruise':
+			x_pos = np.array( [  2.10,  2.10,  3.70,  3.70 ] )
+			y_pos = np.array( [  0.40, -0.40,  0.40, -0.40 ] )
+			z_pos = np.array( [  0.20,  0.20,  0.20,  0.20 ] )
+			y_rot = np.array( [  20.0,  20.0,  20.0,  20.0 ] )
+			z_rot = np.array( [  0.00,  0.00,  0.00,  0.00 ] )
 
 	human_ids = []
 	for i in range(N_PAX):
@@ -28,3 +42,5 @@ def Human(N_PAX:int):
 		vsp.SetParmVal(	human_ids[i], 'KneeRt', 		'Pose', 			80.0 	 )
 		vsp.SetParmVal(	human_ids[i], 'Y_Rel_Rotation', 'XForm', 			y_rot[i] )		# inclined seating
 		vsp.SetParmVal(	human_ids[i], 'Z_Rel_Rotation', 'XForm', 			z_rot[i] )		# in which direction they sit
+
+	return human_ids
