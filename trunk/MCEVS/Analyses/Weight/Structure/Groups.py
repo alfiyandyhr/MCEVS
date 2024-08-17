@@ -4,6 +4,7 @@ import openmdao.api as om
 from MCEVS.Analyses.Weight.Structure.Fuselage import FuselageWeight
 from MCEVS.Analyses.Weight.Structure.Landing_Gear import LandingGearWeight
 from MCEVS.Analyses.Weight.Structure.Wing import WingWeight
+from MCEVS.Analyses.Weight.Structure.Tail import HorizontalTailWeight, VerticalTailWeight
 
 class StructureWeight(om.Group):
 	"""
@@ -30,6 +31,19 @@ class StructureWeight(om.Group):
 		if vehicle.configuration == 'LiftPlusCruise':
 			n_ult_wing 	= vehicle.wing.ultimate_load_factor
 
+		# Horizontal tail parameter
+		if vehicle.configuration == 'LiftPlusCruise':
+			htail_AR 	= vehicle.horizontal_tail.aspect_ratio
+			t_rh 		= vehicle.horizontal_tail.max_root_thickness
+			htail_area 	= vehicle.horizontal_tail.area
+
+		# Vertical tail parameter
+		if vehicle.configuration == 'LiftPlusCruise':
+			vtail_AR 	= vehicle.vertical_tail.aspect_ratio
+			t_rv 		= vehicle.vertical_tail.max_root_thickness
+			vtail_sweep = vehicle.vertical_tail.sweep_angle
+			vtail_area 	= vehicle.vertical_tail.area
+
 		# Fuselage weight
 		self.add_subsystem('fuselage_weight',
 							FuselageWeight(n_pax=n_pax,l_fuse=l_fuse,p_max=np.pi*d_max),
@@ -51,15 +65,26 @@ class StructureWeight(om.Group):
 								promotes_outputs=['Weight|wing'])
 
 		# Tails weight
-		pass
+		if vehicle.configuration == 'LiftPlusCruise':
+			indep = self.add_subsystem('tail_geom', om.IndepVarComp())
+			indep.add_output('htail_area', val=htail_area, units='m**2')
+			indep.add_output('vtail_area', val=vtail_area, units='m**2')
+			self.add_subsystem('htail_weight',
+								HorizontalTailWeight(htail_AR=htail_AR, t_rh=t_rh),
+								promotes_inputs=['Weight|takeoff', ('Htail|area','tail_geom.htail_area')],
+								promotes_outputs=['Weight|horizontal_tail'])
+			self.add_subsystem('vtail_weight',
+								VerticalTailWeight(vtail_AR=vtail_AR, t_rv=t_rv, vtail_sweep=vtail_sweep),
+								promotes_inputs=['Weight|takeoff', ('Vtail|area','tail_geom.vtail_area')],
+								promotes_outputs=['Weight|vertical_tail'])
 
 		# Sum up
 		if vehicle.configuration == 'Multirotor':
 			input_names_list = ['Weight|fuselage', 'Weight|landing_gear']
 			sfs = [1., 1.,]
 		elif vehicle.configuration == 'LiftPlusCruise':
-			input_names_list = ['Weight|fuselage', 'Weight|landing_gear', 'Weight|wing']	
-			sfs = [1., 1., 1.]
+			input_names_list = ['Weight|fuselage', 'Weight|landing_gear', 'Weight|wing', 'Weight|horizontal_tail', 'Weight|vertical_tail']
+			sfs = [1., 1., 1., 1., 1.]
 		adder = om.AddSubtractComp()
 		adder.add_equation('Weight|structure',
 							input_names=input_names_list,

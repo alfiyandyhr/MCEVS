@@ -36,6 +36,10 @@ def create_NASA_LiftPlusCruise_vsp3(fname:str, vehicle:object):
 	d_fuse_max 		= vehicle.fuselage.max_diameter
 	wing_S 			= vehicle.wing.area
 	wing_AR 		= vehicle.wing.aspect_ratio
+	htail_S 		= vehicle.horizontal_tail.area
+	htail_AR  		= vehicle.horizontal_tail.aspect_ratio
+	vtail_S  		= vehicle.vertical_tail.area
+	vtail_AR		= vehicle.vertical_tail.aspect_ratio
 	l_strut 		= vehicle.landing_gear.strut_length
 	n_lift_rotor 	= vehicle.lift_rotor.n_rotor
 	n_blade_rotor 	= vehicle.lift_rotor.n_blade
@@ -47,8 +51,8 @@ def create_NASA_LiftPlusCruise_vsp3(fname:str, vehicle:object):
 	Human(N_PAX=n_pax, config=config)
 	NASA_LPC_Fuselage(l_fuse, d_fuse_max)
 	NASA_LPC_Wing(area=wing_S, aspect_ratio=wing_AR, l_fuse=l_fuse)
-	NASA_LPC_Horizontal_Tail(area=2.0, aspect_ratio=2.0, l_fuse=l_fuse)
-	NASA_LPC_Vertical_Tail(area=2.5, aspect_ratio=1.2, l_fuse=l_fuse)
+	NASA_LPC_Horizontal_Tail(area=htail_S, aspect_ratio=htail_AR, l_fuse=l_fuse)
+	NASA_LPC_Vertical_Tail(area=vtail_S, aspect_ratio=vtail_AR, l_fuse=l_fuse)
 	NASA_LPC_Landing_Gear(l_strut=l_strut, l_fuse=l_fuse, d_fuse_max=d_fuse_max)
 	NASA_LPC_Lift_Rotor(n_lift_rotor=n_lift_rotor, n_blade=n_blade_rotor, r_lift_rotor=r_lift_rotor, l_fuse=l_fuse, wing_S=wing_S, wing_AR=wing_AR)
 	NASA_LPC_Propeller(n_propeller=n_propeller, n_blade=n_blade_prop, r_propeller=r_propeller, l_fuse=l_fuse)

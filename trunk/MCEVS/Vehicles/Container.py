@@ -3,6 +3,7 @@ from MCEVS.Vehicles.Components.Fuselage import Fuselage
 from MCEVS.Vehicles.Components.Landing_Gear import LandingGear
 from MCEVS.Vehicles.Components.Rotors import LiftRotor, Propeller
 from MCEVS.Vehicles.Components.Battery import Battery
+from MCEVS.Vehicles.Components.Tails import HorizontalTail, VerticalTail
 
 from MCEVS.Analyses.Weight.Analysis import VehicleWeight
 
@@ -27,6 +28,8 @@ class LiftPlusCruiseEVTOL(object):
 		self.lift_rotor = None
 		self.propeller = None
 		self.battery = None
+		self.horizontal_tail = None
+		self.vertical_tail = None
 
 		# Weight and performance
 		self.weight = VehicleWeight(mtow)
@@ -68,6 +71,18 @@ class LiftPlusCruiseEVTOL(object):
 			self.propeller = Propeller(kwargs)
 			self.propeller._initialize()
 			self.propeller._calculate_weight_given_max_power(35669.31421)
+
+		elif kind == 'horizontal_tail':
+			self.horizontal_tail = HorizontalTail(kwargs)
+			self.horizontal_tail._initialize()
+			if self.weight.max_takeoff is not None:
+				self.horizontal_tail._calculate_weight_given_mtow(self.weight.max_takeoff)
+
+		elif kind == 'vertical_tail':
+			self.vertical_tail = VerticalTail(kwargs)
+			self.vertical_tail._initialize()
+			if self.weight.max_takeoff is not None:
+				self.vertical_tail._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 	def print_info(self):
 		print('Vehicle type: Lift+Cruise eVTOL')

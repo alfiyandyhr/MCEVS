@@ -31,6 +31,7 @@ def StandardLiftPlusCruiseEVTOL(design_var:dict, n_pax=4, mtow=None):
 		vehicle.add_component(kind='landing_gear', strut_length=0.3, ultimate_load_factor=5.7, technology_factor=0.8)
 		vehicle.add_component(kind='lift_rotor', n_rotor=4, n_blade=3, solidity=0.13, radius=r_lift_rotor, figure_of_merit=0.75, technology_factor=0.8)
 		vehicle.add_component(kind='propeller', n_propeller=1, n_blade=4, solidity=0.13, radius=r_propeller, advance_ratio=propeller_J, technology_factor=0.8)
-		# vehicle.add_component(kind='')
-
+		vehicle.add_component(kind='horizontal_tail', area=2.0, aspect_ratio=2.0, taper_ratio=0.6, max_root_thickness=0.15*1.25, technology_factor=0.8)
+		vehicle.add_component(kind='vertical_tail', area=2.5, aspect_ratio=1.2, max_root_thickness=0.12*2.92, sweep_angle=35, technology_factor=0.8)
+		
 	return vehicle
