@@ -8,7 +8,7 @@ import numpy as np
 
 # Mission requirement
 mission_range = 30000 # m
-cruise_speed = 30.0 # m/s
+cruise_speed = 50.0 # m/s
 payload_weight = 400.0
 
 # Cruise range
@@ -46,11 +46,11 @@ problem = DesignProblem(vehicle=vehicle,
 						algorithm='gradient-based')
 
 problem.add_objective('Weight|takeoff')
-problem.add_design_var('Mission|cruise_speed', 20.0, 60.0, 'm/s')
-problem.add_design_var('Wing|area', 4.0, 12.0, 'm**2')
+problem.add_design_var('Mission|cruise_speed', 40.0, 70.0, 'm/s')
+problem.add_design_var('Wing|area', 6.0, 20.0, 'm**2')
 problem.add_design_var('Wing|aspect_ratio', 6.0, 12.0)
-problem.add_design_var('LiftRotor|radius', 0.5, 1.5, 'm')
-problem.add_design_var('Propeller|radius', 0.5, 1.5, 'm')
+problem.add_design_var('LiftRotor|radius', 0.90, 1.75, 'm')
+problem.add_design_var('Propeller|radius', 0.70, 1.75, 'm')
 problem.add_design_var('Propeller|advance_ratio', 0.01, 1.3)
 problem.add_constraint('Aero|Cruise|CL', 0.0, 0.6)
 problem.add_constraint('Propeller|Cruise|thrust_coefficient', 0.0, 0.14*vehicle.propeller.solidity)
