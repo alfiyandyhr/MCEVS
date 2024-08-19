@@ -60,6 +60,7 @@ if plot_all:
 		axs[1,i].plot([x+1 for x in range(len(driver_cases))], hist_array[:,j], '-o')
 		axs[1,i].grid()
 		axs[1,i].set_ylabel(ylabels[i+5])
+		axs[1,i].set_xlabel('Iteration')
 	plt.show()
 
 
