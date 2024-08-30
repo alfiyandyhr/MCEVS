@@ -11,10 +11,11 @@ class AvionicsWeight(om.ExplicitComponent):
 	Outputs:
 		Weight|avionics : weight of all avionics systems [kg]
 	Notes:
-		> This equation has not been checked against old-established literatures
+		> This equation has been checked to be the same as electrical system weight found in Roskam.
 	Source:
 		1. Kadhiresan, A. R., and Duffy, M. J., “Conceptual Design and Mission Analysis for EVTOL Urban Air Mobility Flight Vehicle Configurations,”
 		   presented at the AIAA Aviation 2019 Forum, Dallas, Texas, 2019. https://doi.org/10.2514/6.2019-2873
+		2. Roskam, J. Airplane Design - Part V: Component Weight Estimation. Lawrence, Kansas: Analysis and Research Corporation, 2003.
   	"""
 	def initialize(self):
 		self.options.declare('tf', types=float, default=0.8, desc='Technology factor')
