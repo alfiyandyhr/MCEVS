@@ -12,6 +12,7 @@ class Fuselage(object):
 		self.length = None
 		self.max_diameter = None
 		self.number_of_passenger = None
+		self.fineness_ratio = None
 		self.weight = None
 
 		# Use of new material that reduces weight?
@@ -27,6 +28,8 @@ class Fuselage(object):
 				self.number_of_passenger = int(self.kwargs[item])
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
+
+		self.fineness_ratio = self.length / self.max_diameter
 
 	def _calculate_weight_given_mtow(self, mtow):
 		W_fuselage = 14.86 * (mtow*2.20462)**0.144

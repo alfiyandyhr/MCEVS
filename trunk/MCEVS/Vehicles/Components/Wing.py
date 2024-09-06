@@ -18,6 +18,7 @@ class Wing(object):
 		self.tip_chord_length = None
 		self.mean_chord_length = None
 		self.ultimate_load_factor = None
+		self.thickness_to_chord_ratio = None
 
 		# Weight and performance
 		self.weight = None
@@ -34,6 +35,8 @@ class Wing(object):
 				self.aspect_ratio = float(self.kwargs[item])
 			elif item == 'ultimate_load_factor':
 				self.ultimate_load_factor = float(self.kwargs[item])
+			elif item == 'thickness_to_chord_ratio':
+				self.thickness_to_chord_ratio = float(self.kwargs[item])
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
 

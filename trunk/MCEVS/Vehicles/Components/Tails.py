@@ -20,6 +20,7 @@ class HorizontalTail(object):
 		self.tip_chord_length = None
 		self.mean_chord_length = None
 		self.max_root_thickness = None
+		self.thickness_to_chord_ratio = None
 
 		# Weight and performance
 		self.weight = None
@@ -38,6 +39,8 @@ class HorizontalTail(object):
 				self.taper_ratio = float(self.kwargs[item])
 			elif item == 'max_root_thickness':
 				self.max_root_thickness = float(self.kwargs[item])
+			elif item == 'thickness_to_chord_ratio':
+				self.thickness_to_chord_ratio = float(self.kwargs[item])
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
 
@@ -81,6 +84,7 @@ class VerticalTail(object):
 		self.tip_chord_length = None
 		self.mean_chord_length = None
 		self.max_root_thickness = None
+		self.thickness_to_chord_ratio = None
 
 		# Weight and performance
 		self.weight = None
@@ -101,6 +105,8 @@ class VerticalTail(object):
 				self.max_root_thickness = float(self.kwargs[item])
 			elif item == 'sweep_angle':
 				self.sweep_angle = float(self.kwargs[item])	
+			elif item == 'thickness_to_chord_ratio':
+				self.thickness_to_chord_ratio = float(self.kwargs[item])
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
 

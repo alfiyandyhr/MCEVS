@@ -17,6 +17,10 @@ class LiftRotor(object):
 		self.weight = None
 		self.figure_of_merit = None
 		self.advance_ratio = None
+
+		# Hub info
+		self.hub_length = None
+		self.hub_max_diameter = None
 	
 		# Use of new material that reduces weight?
 		self.technology_factor = None
@@ -31,6 +35,10 @@ class LiftRotor(object):
 				self.solidity = float(self.kwargs[item])
 			elif item == 'radius':
 				self.radius = float(self.kwargs[item])
+			elif item == 'hub_length':
+				self.hub_length = float(self.kwargs[item])
+			elif item == 'hub_max_diameter':
+				self.hub_max_diameter = float(self.kwargs[item])
 			elif item == 'figure_of_merit':
 				self.figure_of_merit = float(self.kwargs[item])
 			elif item == 'advance_ratio':
@@ -82,7 +90,11 @@ class Propeller(object):
 		# Weight and performance
 		self.weight = None
 		self.advance_ratio = None
-	
+
+		# Hub info
+		self.hub_length = None
+		self.hub_max_diameter = None	
+
 		# Use of new material that reduces weight?
 		self.technology_factor = None	
 
@@ -96,6 +108,10 @@ class Propeller(object):
 				self.solidity = float(self.kwargs[item])
 			elif item == 'radius':
 				self.radius = float(self.kwargs[item])
+			elif item == 'hub_length':
+				self.hub_length = float(self.kwargs[item])
+			elif item == 'hub_max_diameter':
+				self.hub_max_diameter = float(self.kwargs[item])
 			elif item == 'advance_ratio':
 				self.advance_ratio = float(self.kwargs[item])
 			elif item == 'technology_factor':
