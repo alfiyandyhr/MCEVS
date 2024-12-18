@@ -9,20 +9,12 @@ design_var1 = {'r_lift_rotor': 1.5, 'rotor_advance_ratio': 0.3}
 design_var2 = {'wing_area': 16.2, 'wing_aspect_ratio': 7.32,
 			   'r_lift_rotor': 1.0, 'r_propeller': 1.0,
 			   'propeller_advance_ratio': 1.0}
-design_var2_opt = {'wing_area':20.0, 'wing_aspect_ratio': 6.0,
-				   'r_lift_rotor': 1.75, 'r_propeller': 0.87,
-				   'propeller_advance_ratio': 1.3}
 
 vehicle1 = StandardMultirotorEVTOL(design_var1, n_pax=4)
 # vehicle1.print_info()
 
 vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, n_pax=4)
 # vehicle2.print_info()
-vehicle2_opt = StandardLiftPlusCruiseEVTOL(design_var2_opt, n_pax=4)
 
-# create_NASA_QuadRotor_vsp3('multirotor.vsp3', vehicle1)
-create_NASA_QuadRotor_vsp3('test1.vsp3', vehicle1)
-# create_NASA_LiftPlusCruise_vsp3('test2.vsp3', vehicle2)
-# create_NASA_LiftPlusCruise_vsp3('liftpluscruise_init.vsp3', vehicle2)
-# create_NASA_LiftPlusCruise_vsp3('liftpluscruise_opt.vsp3', vehicle2_opt)
-
+create_NASA_QuadRotor_vsp3('multirotor.vsp3', vehicle1)
+create_NASA_LiftPlusCruise_vsp3('liftpluscruise.vsp3', vehicle2)
