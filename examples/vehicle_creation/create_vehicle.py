@@ -21,6 +21,8 @@ vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, n_pax=4)
 vehicle2_opt = StandardLiftPlusCruiseEVTOL(design_var2_opt, n_pax=4)
 
 # create_NASA_QuadRotor_vsp3('multirotor.vsp3', vehicle1)
-create_NASA_LiftPlusCruise_vsp3('liftpluscruise_init.vsp3', vehicle2)
-create_NASA_LiftPlusCruise_vsp3('liftpluscruise_opt.vsp3', vehicle2_opt)
+create_NASA_QuadRotor_vsp3('test1.vsp3', vehicle1)
+# create_NASA_LiftPlusCruise_vsp3('test2.vsp3', vehicle2)
+# create_NASA_LiftPlusCruise_vsp3('liftpluscruise_init.vsp3', vehicle2)
+# create_NASA_LiftPlusCruise_vsp3('liftpluscruise_opt.vsp3', vehicle2_opt)
 

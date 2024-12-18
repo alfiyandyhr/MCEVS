@@ -35,7 +35,7 @@ comp_surf = vsp.GetXSecSurf(comp_id, 0)
 # # 	# print(vsp.GetParmVal(comp_id, 'Dihedral', f'XSec_{i}'))
 # 	print(vsp.GetParmVal(vsp.GetXSecParm(xsec, 'Ellipse_Height')))
 
-print(vsp.GetParmVal(comp_id, 'Rots_Attach_Flag', 'Attach'))
+# print(vsp.GetParmVal(comp_id, 'Rots_Attach_Flag', 'Attach'))
 
 
 # # # # print(vsp.GetParmVal(wing_id,'Diameter','XSecCurve1'))
