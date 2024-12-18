@@ -1,7 +1,7 @@
 import openvsp as vsp
 import numpy as np
 
-def NASA_LPC_Horizontal_Tail(area=19.75560,aspect_ratio=2.15182,l_fuse=30.0):
+def NASA_LPC_Horizontal_Tail(area=19.75560, aspect_ratio=2.15182, l_fuse=30.0, fuse_id=None):
 
 	# Baseline params
 	span_base 	= 6.52000
@@ -12,15 +12,19 @@ def NASA_LPC_Horizontal_Tail(area=19.75560,aspect_ratio=2.15182,l_fuse=30.0):
 	z_pos_base  = 8.00806
 	tr_base 	= 0.60
 
-	htail_id = vsp.AddGeom('WING')
+	htail_id = vsp.AddGeom('WING', fuse_id)
 
-	# vsp.SetParmVal( htail_id, 'X_Rel_Location', 	'XForm', 	(27.4277-1.8890)/30.0*l_fuse )
-	vsp.SetParmVal( htail_id, 'X_Rel_Location', 	'XForm', 	0.98*l_fuse-rc_base*0.3048		 )
-	vsp.SetParmVal( htail_id, 'Y_Rel_Location', 	'XForm', 	0.0 		 			   	 )
-	vsp.SetParmVal( htail_id, 'Z_Rel_Location', 	'XForm', 	(8.0081-4.2490)/30.0*l_fuse  )
-	vsp.SetParmVal( htail_id, 'Tess_W', 			'Shape', 	13 			  				 )
-	vsp.SetParmVal( htail_id, 'LECluster', 'WingGeom', 1.0)
-	vsp.SetParmVal( htail_id, 'TECluster', 'WingGeom', 1.0)
+	vsp.SetParmVal( htail_id, 'X_Rel_Location', 	'XForm', 		0.000  )
+	vsp.SetParmVal( htail_id, 'Y_Rel_Location', 	'XForm', 		0.000  )
+	vsp.SetParmVal( htail_id, 'Z_Rel_Location', 	'XForm', 	   -0.110  )
+	vsp.SetParmVal( htail_id, 'Tess_W', 			'Shape', 		13 	   )
+	vsp.SetParmVal( htail_id, 'LECluster', 			'WingGeom', 	1.0    )
+	vsp.SetParmVal( htail_id, 'TECluster', 			'WingGeom', 	1.0    )
+	vsp.SetParmVal( htail_id, 'Sym_Planar_Flag', 	'Sym', 			2 	   )
+	vsp.SetParmVal( htail_id, 'Trans_Attach_Flag', 	'Attach',  		2.0    )
+	vsp.SetParmVal( htail_id, 'Rots_Attach_Flag',  	'Attach',  		1.0    )
+	vsp.SetParmVal( htail_id, 'U_Attach_Location', 	'Attach',  		0.8365 )
+	vsp.SetParmVal( htail_id, 'V_Attach_Location', 	'Attach',  		0.7500 )
 
 	# Calculating other params
 	S 	= area
@@ -60,7 +64,9 @@ def NASA_LPC_Horizontal_Tail(area=19.75560,aspect_ratio=2.15182,l_fuse=30.0):
 		vsp.SetParmVal(vsp.GetXSecParm(htail_xsec, 'Camber'), 0.0)
 		vsp.SetParmVal(vsp.GetXSecParm(htail_xsec, 'CamberLoc'), 0.0)
 
-def NASA_LPC_Vertical_Tail(area=27.34325, aspect_ratio=1.17990, l_fuse=30.0):
+	return htail_id
+
+def NASA_LPC_Vertical_Tail(area=27.34325, aspect_ratio=1.17990, l_fuse=30.0, fuse_id=None):
 	
 	# Baseline params
 
@@ -86,20 +92,24 @@ def NASA_LPC_Vertical_Tail(area=27.34325, aspect_ratio=1.17990, l_fuse=30.0):
 	OutLESweep 		= [  61.831313,  49.99450,  40.60705,  40.60705 ]
 	OutLEDihedral 	= [ -1.469E-14, -1.09E-14, -9.15E-15, -9.15E-15 ]
 
-	vtail_id = vsp.AddGeom('WING')
+	vtail_id = vsp.AddGeom('WING', fuse_id)
 	vsp.InsertXSec(vtail_id, 1, vsp.XS_FOUR_SERIES)
 	vsp.InsertXSec(vtail_id, 1, vsp.XS_FOUR_SERIES)
 	vsp.InsertXSec(vtail_id, 1, vsp.XS_FOUR_SERIES)
 
-	# vsp.SetParmVal( vtail_id, 'X_Rel_Location', 	'XForm', 	(20.843-1.889)/30.0*l_fuse )
-	vsp.SetParmVal( vtail_id, 'X_Rel_Location', 	'XForm', 	0.98*l_fuse-Root_Chord[0]*0.3048)
-	vsp.SetParmVal( vtail_id, 'Y_Rel_Location', 	'XForm', 	0.0 		 			   )
-	vsp.SetParmVal( vtail_id, 'Z_Rel_Location', 	'XForm', 	(8.231-4.249)/30.0*l_fuse  )
-	vsp.SetParmVal( vtail_id, 'Tess_W', 			'Shape', 	13 			  			   )
-	vsp.SetParmVal( vtail_id, 'X_Rel_Rotation', 	'XForm', 	90.0 					   )
-	vsp.SetParmVal( vtail_id, 'Sym_Planar_Flag',	'Sym',		0 						   )
-	vsp.SetParmVal( vtail_id, 'LECluster', 'WingGeom', 			1.0 					   )
-	vsp.SetParmVal( vtail_id, 'TECluster', 'WingGeom', 			1.0 					   )
+	vsp.SetParmVal( vtail_id, 'X_Rel_Location', 	'XForm', 		0.000     )
+	vsp.SetParmVal( vtail_id, 'Y_Rel_Location', 	'XForm', 		0.000     )
+	vsp.SetParmVal( vtail_id, 'Z_Rel_Location', 	'XForm', 	   -0.07117   )
+	vsp.SetParmVal( vtail_id, 'Tess_W', 			'Shape', 		13 		  )
+	vsp.SetParmVal( vtail_id, 'X_Rel_Rotation', 	'XForm', 		90.0 	  )
+	vsp.SetParmVal( vtail_id, 'Sym_Planar_Flag',	'Sym',			0 		  )
+	vsp.SetParmVal( vtail_id, 'LECluster', 			'WingGeom', 	1.0 	  )
+	vsp.SetParmVal( vtail_id, 'TECluster', 			'WingGeom', 	1.0 	  )
+	vsp.SetParmVal( vtail_id, 'Sym_Planar_Flag', 	'Sym', 			0 	   	  )
+	vsp.SetParmVal( vtail_id, 'Trans_Attach_Flag', 	'Attach',  		2.0    	  )
+	vsp.SetParmVal( vtail_id, 'Rots_Attach_Flag',  	'Attach',  		1.0    	  )
+	vsp.SetParmVal( vtail_id, 'U_Attach_Location', 	'Attach',  		0.7696485 )
+	vsp.SetParmVal( vtail_id, 'V_Attach_Location', 	'Attach',  		0.7500000 )
 
 	# Calculating other params
 	S 	= area
@@ -157,6 +167,8 @@ def NASA_LPC_Vertical_Tail(area=27.34325, aspect_ratio=1.17990, l_fuse=30.0):
 		vsp.SetParmVal(vsp.GetXSecParm(vtail_xsec, 'ThickChord'), series[i])
 		vsp.SetParmVal(vsp.GetXSecParm(vtail_xsec, 'Camber'), 0.0)
 		vsp.SetParmVal(vsp.GetXSecParm(vtail_xsec, 'CamberLoc'), 0.0)
+
+	return vtail_id
 
 
 

@@ -2,7 +2,7 @@ import MCEVS
 import openvsp as vsp
 import numpy as np
 
-def NASA_LPC_Wing(area=210.27814, aspect_ratio=12.12761, l_fuse=30.0):
+def NASA_LPC_Wing(area=210.27814, aspect_ratio=12.12761, l_fuse=30.0, fuse_id=None):
 
 	# Baseline params
 
@@ -52,18 +52,22 @@ def NASA_LPC_Wing(area=210.27814, aspect_ratio=12.12761, l_fuse=30.0):
 		Tip_Chord_i.append(tc_i)
 
 
-	wing_id = vsp.AddGeom('WING')
+	wing_id = vsp.AddGeom('WING', fuse_id)
 	vsp.InsertXSec(wing_id, 1, vsp.XS_FILE_AIRFOIL)
 	vsp.InsertXSec(wing_id, 1, vsp.XS_FILE_AIRFOIL)
 	vsp.InsertXSec(wing_id, 1, vsp.XS_FILE_AIRFOIL)
 
-	vsp.SetParmVal( wing_id, 'X_Rel_Location', 	'XForm', 	(8.889-1.889)/30*l_fuse )
-	vsp.SetParmVal( wing_id, 'Y_Rel_Location', 	'XForm', 	0.0 		 			)
-	vsp.SetParmVal( wing_id, 'Z_Rel_Location', 	'XForm', 	(8.499-4.249)/30*l_fuse )
+	vsp.SetParmVal( wing_id, 'X_Rel_Location', 		'XForm', 		0.0 	 )
+	vsp.SetParmVal( wing_id, 'Y_Rel_Location', 		'XForm', 		0.0   	 )
+	vsp.SetParmVal( wing_id, 'Z_Rel_Location', 		'XForm', 		0.0  	 )
+	vsp.SetParmVal( wing_id, 'Sym_Planar_Flag', 	'Sym', 			2 		 )
+	vsp.SetParmVal( wing_id, 'Trans_Attach_Flag', 	'Attach',  		2.0 	 )
+	vsp.SetParmVal( wing_id, 'Rots_Attach_Flag',  	'Attach',  		1.0 	 )
+	vsp.SetParmVal( wing_id, 'U_Attach_Location', 	'Attach',  		0.39 	 )
+	vsp.SetParmVal( wing_id, 'V_Attach_Location', 	'Attach',  		0.75 	 )
 	vsp.SetParmVal( wing_id, 'Tess_W', 			'Shape', 	13 			  			)
 	vsp.SetParmVal( wing_id, 'LECluster', 'WingGeom', 1.0)
 	vsp.SetParmVal( wing_id, 'TECluster', 'WingGeom', 1.0)
-	
 
 	for i in range(1,5):
 		vsp.SetParmValUpdate( wing_id, 'Span', 					f'XSec_{i}', 	Span_i[i-1]			)
@@ -88,7 +92,6 @@ def NASA_LPC_Wing(area=210.27814, aspect_ratio=12.12761, l_fuse=30.0):
 		vsp.SetParmValUpdate( wing_id, 'OutLESweep', 			f'XSec_{i}',	OutLESweep[i-1]		)
 		vsp.SetParmValUpdate( wing_id, 'OutLEDihedral', 		f'XSec_{i}',	OutLEDihedral[i-1]	)
 
-
 	# Change airfoil shape using NASA/LANGLEY LS(1)-0417 (GA(W)-1) AIRFOIL
 	airfoil_dir = MCEVS.__file__[:-11] + 'Applications/OpenVSP/Components/Airfoils/LS417.dat'
 	wing_surf = vsp.GetXSecSurf(wing_id, 0)
@@ -98,12 +101,13 @@ def NASA_LPC_Wing(area=210.27814, aspect_ratio=12.12761, l_fuse=30.0):
 		xsec = vsp.GetXSec(wing_surf, i)
 		vsp.ReadFileAirfoil(xsec, airfoil_dir)
 
-
 	# wing_xsec_surf = vsp.GetXSecSurf(wing_id, 0)
 	# for i in range(2):
 	# 	wing_xsec = vsp.GetXSec(wing_xsec_surf, i)
 	# 	vsp.SetParmVal(vsp.GetXSecParm(wing_xsec, 'ThickChord'), 0.12)
 	# 	vsp.SetParmVal(vsp.GetXSecParm(wing_xsec, 'Camber'), 0.02)
 	# 	vsp.SetParmVal(vsp.GetXSecParm(wing_xsec, 'CamberLoc'), 0.4)
+
+	return wing_id
 
 

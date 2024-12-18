@@ -72,11 +72,10 @@ def NASA_QR_Boom(n_lift_rotor=4, r_lift_rotor=9.159, l_fuse=21.0, d_fuse_max=6.7
 
 	return boom_ids
 
-
-def NASA_LPC_Boom(n_lift_rotor=4, r_lift_rotor=1.0, l_fuse=30.0, wing_AR=12.12761, wing_S=210.27814):
+def NASA_LPC_Boom(n_lift_rotor=4, r_lift_rotor=1.0, l_fuse=30.0, wing_AR=12.12761, wing_S=210.27814, wing_id=None):
 
 	# Parameters
-	l_boom  = 0.8*8.0/30.0*l_fuse/1.6*r_lift_rotor if r_lift_rotor>=1.6 else 0.8*8.0/30.0*l_fuse
+	l_boom  = 1.6*8.0/30.0*l_fuse/1.6*r_lift_rotor if r_lift_rotor>=1.6 else 1.6*8.0/30.0*l_fuse
 	b = np.sqrt(wing_S * wing_AR)	# wing span
 	wing_rc = 2.0 * ((5.4432819 + 4.1308305)/2 * 14.745022 / 210.27814 * wing_S) / (14.745022/25.26*b/2) / (1 + 4.1308305/5.4432819)
 	wing_c_loc = 2.0 * ((4.130830 + 3.304664)/2 * 6.626930 / 210.27814 * wing_S) / (6.6269300/25.26*b/2) / (1 + 3.304664/4.130830)
@@ -86,35 +85,41 @@ def NASA_LPC_Boom(n_lift_rotor=4, r_lift_rotor=1.0, l_fuse=30.0, wing_AR=12.1276
 	wing_Z0 = (8.499-4.249)/30*l_fuse
 
 	if n_lift_rotor == 4:
-		X_Rel_Locations = [ wing_X0 - (l_boom - 0.5*wing_rc),
-							wing_X0 + 0.5*wing_rc ]
-		Y_Rel_Locations = [ 0.25*b, 0.25*b ]
-		Z_Rel_Locations = (wing_Z0 - (t_per_c * wing_c_loc)) * np.ones(2)		
+		X_Rel_Locations = [ -1.148 if r_lift_rotor<=1.6 else -1.500]
+		Y_Rel_Locations = [  0.00  ]
+		Z_Rel_Locations = [ -0.20  ]
+		U_Attach_Locs	= [  0.31  ]
+		V_Attach_Locs	= [  0.50  ]
 
 	if n_lift_rotor == 8:
-		X_Rel_Locations = [ wing_X0 - (l_boom - 0.5*wing_rc),
-							wing_X0 + 0.5*wing_rc,
-							wing_X0 - (l_boom - 0.5*wing_rc),
-							wing_X0 + 0.5*wing_rc ]
-		Y_Rel_Locations = [ 14.745022/2/50.52*b,
-							14.745022/2/50.52*b,
-							(14.745022+6.626930/2)/50.52*b,
-							(14.745022+6.626930/2)/50.52*b ]
-		Z_Rel_Locations = (wing_Z0 - (t_per_c * wing_c_loc)) * np.ones(4)
+		X_Rel_Locations = [ -1.148, -1.300  ]
+		Y_Rel_Locations = [  0.000,  0.000  ]
+		Z_Rel_Locations = [ -0.200, -0.200  ]
+		U_Attach_Locs	= [  0.250,  0.420  ]
+		V_Attach_Locs	= [  0.500,  0.500  ]		
 
-	for i in range(int(n_lift_rotor/2)):
-		boom_id 	= vsp.AddGeom('FUSELAGE')
+	boom_ids = []
+	for i in range(int(n_lift_rotor/4)):
+		boom_id 	= vsp.AddGeom('FUSELAGE', wing_id)
+		boom_ids.append(boom_id)
 		boom_surf 	= vsp.GetXSecSurf(boom_id, 0)
 		xsec_num	= vsp.GetNumXSec(boom_surf)
-		vsp.SetParmVal(boom_id, 'Length', 'Design', l_boom)
-		vsp.SetParmVal(boom_id, 'X_Rel_Location', 'XForm', X_Rel_Locations[i])
-		vsp.SetParmVal(boom_id, 'Y_Rel_Location', 'XForm', Y_Rel_Locations[i])
-		vsp.SetParmVal(boom_id, 'Z_Rel_Location', 'XForm', Z_Rel_Locations[i])
-		vsp.SetParmVal(boom_id, 'Sym_Planar_Flag', 'Sym', 2)
+		vsp.SetParmVal( boom_id, 'Length', 'Design', l_boom)
+		vsp.SetParmVal( boom_id, 'X_Rel_Location', 		'XForm', 	X_Rel_Locations[i] )
+		vsp.SetParmVal( boom_id, 'Y_Rel_Location', 		'XForm', 	Y_Rel_Locations[i] )
+		vsp.SetParmVal( boom_id, 'Z_Rel_Location', 		'XForm', 	Z_Rel_Locations[i] )
+		vsp.SetParmVal( boom_id, 'Sym_Ancestor', 		'Sym', 		0 				   )
+		vsp.SetParmVal( boom_id, 'Sym_Planar_Flag', 	'Sym', 		2 				   )
+		vsp.SetParmVal( boom_id, 'Trans_Attach_Flag', 	'Attach',	2.0  			   )
+		vsp.SetParmVal( boom_id, 'Rots_Attach_Flag',  	'Attach',	1.0  			   )
+		vsp.SetParmVal( boom_id, 'U_Attach_Location', 	'Attach',	U_Attach_Locs[i]   )
+		vsp.SetParmVal( boom_id, 'V_Attach_Location', 	'Attach',	V_Attach_Locs[i]   )
 
 		# Change shape of XSecs, and set height + width
 		for i in range(1, xsec_num-1):
 			vsp.ChangeXSecShape(boom_surf, i, vsp.XS_CIRCLE)
 			xsec = vsp.GetXSec(boom_surf, i)
 			vsp.SetParmVal(	vsp.GetXSecParm(xsec, 'Circle_Diameter'), 1.0/30.0*l_fuse )
+
+	return boom_ids
 	

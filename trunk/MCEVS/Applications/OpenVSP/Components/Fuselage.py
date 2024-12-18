@@ -131,6 +131,8 @@ def NASA_LPC_Fuselage(l_fuse=30.0, d_fuse_max=6.150259):
 		vsp.SetParmVal(		vsp.GetXSecParm(xsec, 'BottomLStrength'), 	BottomLStrength[i]	)
 		vsp.SetParmVal(		vsp.GetXSecParm(xsec, 'BottomLSlew'), 		BottomLSlew[i]		)
 
+	return fuselage_id
+
 
 
 
