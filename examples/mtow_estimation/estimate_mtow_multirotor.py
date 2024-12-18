@@ -6,8 +6,8 @@ from MCEVS.Analyses.Weight.Analysis import WeightAnalysis
 from MCEVS.Utils.Plots import plot_mission_parameters, plot_performance_by_segments
 
 # Mission requirement
-mission_range = 30000 # m
-cruise_speed = 30.0 # m/s
+mission_range = 96000 # m
+cruise_speed = 50.0 # m/s
 payload_weight = 400.0
 
 # Cruise range
@@ -30,29 +30,33 @@ mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', spee
 constants = EarthGravityAndAtmosphere('US_Standard_1976').compute_constants(altitude=mission.takeoff_altitude)
 
 # Design variables (aircraft design and operation)
-design_var = {'r_lift_rotor': 1.0, 'cruise_speed': cruise_speed, 'rotor_advance_ratio': 0.3}
+design_var = {'r_lift_rotor': 1.5, 'cruise_speed': cruise_speed, 'rotor_advance_ratio': 0.3}
 
 vehicle = StandardMultirotorEVTOL(design_var)
 
+# vehicle.print_info()
+
 # Analysis
-analysis = WeightAnalysis(vehicle=vehicle, mission=mission, constants=constants, sizing_mode=True)
-analysis.evaluate(record=True)
+analysis = WeightAnalysis(vehicle=vehicle, mission=mission, constants=constants, fidelity={'aero':1}, sizing_mode=True)
+results = analysis.evaluate(record=True)
 
-plot_performance_by_segments(mission=mission, vehicle=vehicle)
+# plot_performance_by_segments(mission=mission, vehicle=vehicle)
 
-# print('Power segment_1 = ', results.get_val('Power|segment_1', 'kW'))
-# print('Power segment_2 = ', results.get_val('Power|segment_2', 'kW'))
-# print('Power segment_3 = ', results.get_val('Power|segment_3', 'kW'))
-# print('Power segment_4 = ', results.get_val('Power|segment_4', 'kW'))
-# print('Power segment_5 = ', results.get_val('Power|segment_5', 'kW'))
-# print('Required energy = ', results.get_val('Energy|entire_mission', 'kW*h'))
-# # print(results.get_val('Power|Propeller|maximum'))
-# # print(results.get_val('Power|LiftRotor|maximum'))
+print(vehicle.Cd0)
 
-# print('Payload weight = ', results.get_val('Weight|payload'))
-# print('Battery weight = ', results.get_val('Weight|battery'))
-# print('Propulsion weight = ', results.get_val('Weight|propulsion'))
-# print('Structure weight = ', results.get_val('Weight|structure'))
-# print('Equipment weight = ', results.get_val('Weight|equipment'))
-# print('MTOW = ', results.get_val('Weight|takeoff'))
-# print('Residual = ', results.get_val('Weight|residual'))
+print('Power segment_1 = ', results.get_val('Power|segment_1', 'kW'))
+print('Power segment_2 = ', results.get_val('Power|segment_2', 'kW'))
+print('Power segment_3 = ', results.get_val('Power|segment_3', 'kW'))
+print('Power segment_4 = ', results.get_val('Power|segment_4', 'kW'))
+print('Power segment_5 = ', results.get_val('Power|segment_5', 'kW'))
+print('Required energy = ', results.get_val('Energy|entire_mission', 'kW*h'))
+# print(results.get_val('Power|Propeller|maximum'))
+# print(results.get_val('Power|LiftRotor|maximum'))
+
+print('Payload weight = ', results.get_val('Weight|payload'))
+print('Battery weight = ', results.get_val('Weight|battery'))
+print('Propulsion weight = ', results.get_val('Weight|propulsion'))
+print('Structure weight = ', results.get_val('Weight|structure'))
+print('Equipment weight = ', results.get_val('Weight|equipment'))
+print('MTOW = ', results.get_val('Weight|takeoff'))
+print('Residual = ', results.get_val('Weight|residual'))
