@@ -1,0 +1,8 @@
+README.md
+setup.py
+trunk/MCEVS/__init__.py
+trunk/MCEVS.egg-info/PKG-INFO
+trunk/MCEVS.egg-info/SOURCES.txt
+trunk/MCEVS.egg-info/dependency_links.txt
+trunk/MCEVS.egg-info/requires.txt
+trunk/MCEVS.egg-info/top_level.txt

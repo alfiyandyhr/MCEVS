@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: MCEVS
+Version: 0.0.1
+Summary: MCEVS: Multi-configurational eVTOL Sizing Codes
+Requires-Dist: numpy
+Requires-Dist: openmdao>=3.16.0
+Requires-Dist: matplotlib
+Requires-Dist: pymoo>=0.6.0.1

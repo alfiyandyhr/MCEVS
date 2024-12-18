@@ -1,0 +1,4 @@
+numpy
+openmdao>=3.16.0
+matplotlib
+pymoo>=0.6.0.1
