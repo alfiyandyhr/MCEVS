@@ -35,7 +35,10 @@ class LiftPlusCruiseEVTOL(object):
 
 		# Weight and performance
 		self.weight = VehicleWeight(mtow)
-		self.performance = None
+		self.Cd0 = {'climb':None, 'cruise':None, 'descent':None} # used when Cd0 is evaluated using fidelity > 0
+
+		# Wetted area (an array of wetted area for all components) called by calc_wetted_area
+		self.S_wetted = None
 
 		# Whether or not this vehicle has been sized
 		self.is_sized = False
@@ -98,6 +101,8 @@ class LiftPlusCruiseEVTOL(object):
 		print(self.battery._info())
 		print(self.fuselage._info())
 		print(self.wing._info())
+		print(self.horizontal_tail._info())
+		print(self.vertical_tail._info())
 		print(self.landing_gear._info())
 		print(self.lift_rotor._info())
 		print(self.propeller._info())
@@ -120,10 +125,14 @@ class MultirotorEVTOL(object):
 		self.empennage = None
 		self.lift_rotor = None
 		self.battery = None
+		self.boom = None
 
 		# Weight and performance
 		self.weight = VehicleWeight(mtow)
-		self.performance = None
+		self.Cd0 = {'climb':None, 'cruise':None, 'descent':None} # used when Cd0 is evaluated using fidelity > 0
+
+		# Wetted area (an array of wetted area for all components) called by calc_wetted_area
+		self.S_wetted = None
 
 		# Whether or not this vehicle has been sized
 		self.is_sized = False
@@ -151,11 +160,18 @@ class MultirotorEVTOL(object):
 			self.lift_rotor._initialize()
 			self.lift_rotor._calculate_weight_given_max_power(151102.2955)
 
+		elif kind == 'boom': # boom is represented as a wing object in multirotor
+			self.boom = Boom(kwargs)
+			self.boom._initialize()
+			if self.weight.max_takeoff is not None:
+				self.boom._calculate_weight_given_mtow(self.weight.max_takeoff)
+
 	def print_info(self):
 		print('Vehicle type: Multirotor eVTOL')
 		print('List of components:')
 		print(self.battery._info())
 		print(self.fuselage._info())
+		print(self.boom._info())
 		print(self.landing_gear._info())
 		print(self.lift_rotor._info())
 

@@ -36,7 +36,10 @@ class Wing(object):
 			elif item == 'ultimate_load_factor':
 				self.ultimate_load_factor = float(self.kwargs[item])
 			elif item == 'thickness_to_chord_ratio':
-				self.thickness_to_chord_ratio = float(self.kwargs[item])
+				if type(self.kwargs[item]) == list:
+					self.thickness_to_chord_ratio = self.kwargs[item]
+				else:
+					self.thickness_to_chord_ratio = float(self.kwargs[item])
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
 

@@ -5,12 +5,18 @@ def StandardMultirotorEVTOL(design_var:dict, n_pax=4, mtow=None):
 
 	r_lift_rotor 	= design_var['r_lift_rotor']
 	rotor_mu		= design_var['rotor_advance_ratio']
+	t_per_c_1		= (0.2+0.2+0.36)/3
+	t_per_c_2		= (0.2+0.2+0.36)/3
+	t_per_c_3		= (0.27273+0.27273+0.2+0.32)/4
+	t_per_c_4		= (0.27273+0.27273+0.2+0.32)/4
+	t_per_c_list 	= [t_per_c_1, t_per_c_2, t_per_c_3, t_per_c_4]
 
 	if n_pax == 4:
 		vehicle = MultirotorEVTOL(mtow=mtow)
 		vehicle.add_component(kind='battery', density=250, efficiency=0.85, max_discharge=0.8)
 		vehicle.add_component(kind='fuselage', length=5.2, max_diameter=1.8, number_of_passenger=n_pax, technology_factor=0.8)
 		vehicle.add_component(kind='landing_gear', strut_length=0.3, ultimate_load_factor=5.7, technology_factor=0.8)
+		vehicle.add_component(kind='boom', thickness_to_chord_ratio=t_per_c_list, number_of_booms=4)
 		vehicle.add_component(kind='lift_rotor', n_rotor=4, n_blade=5, solidity=0.13, radius=r_lift_rotor, figure_of_merit=0.75, advance_ratio=rotor_mu, technology_factor=0.8)
 	
 	return vehicle
@@ -25,7 +31,7 @@ def StandardLiftPlusCruiseEVTOL(design_var:dict, n_pax=4, mtow=None):
 
 	if n_pax == 4:
 		l_fuse 		= 9.0
-		l_boom 		= 0.8*8.0/30.0*l_fuse/1.6*r_lift_rotor if r_lift_rotor>=1.6 else 0.8*8.0/30.0*l_fuse
+		l_boom  	= 1.6*8.0/30.0*l_fuse/1.6*r_lift_rotor if r_lift_rotor>=1.6 else 1.6*8.0/30.0*l_fuse
 		d_boom 		= 1.0/30.0*l_fuse
 		l_rotor_hub = 1.0/30.0*l_fuse
 		d_rotor_hub = 2.25/10.0*r_lift_rotor
@@ -38,7 +44,7 @@ def StandardLiftPlusCruiseEVTOL(design_var:dict, n_pax=4, mtow=None):
 		vehicle.add_component(kind='fuselage', length=l_fuse, max_diameter=1.8, number_of_passenger=n_pax, technology_factor=0.8)
 		vehicle.add_component(kind='landing_gear', strut_length=0.3, ultimate_load_factor=5.7, technology_factor=0.8)
 		vehicle.add_component(kind='boom', length=l_boom, max_diameter=d_boom, number_of_booms=4)
-		vehicle.add_component(kind='lift_rotor', n_rotor=4, n_blade=2, solidity=0.13, radius=r_lift_rotor, hub_length=l_rotor_hub, hub_max_diameter=d_rotor_hub, figure_of_merit=0.75, technology_factor=0.8)
+		vehicle.add_component(kind='lift_rotor', n_rotor=8, n_blade=2, solidity=0.13, radius=r_lift_rotor, hub_length=l_rotor_hub, hub_max_diameter=d_rotor_hub, figure_of_merit=0.75, technology_factor=0.8)
 		vehicle.add_component(kind='propeller', n_propeller=1, n_blade=4, solidity=0.13, radius=r_propeller, advance_ratio=propeller_J, hub_length=l_prop_hub, hub_max_diameter=d_prop_hub, technology_factor=0.8)
 		vehicle.add_component(kind='horizontal_tail', area=2.0, aspect_ratio=2.0, taper_ratio=0.6, max_root_thickness=0.15*1.25, thickness_to_chord_ratio=0.15, technology_factor=0.8)
 		vehicle.add_component(kind='vertical_tail', area=2.5, aspect_ratio=1.2, max_root_thickness=0.12*2.92, sweep_angle=35, thickness_to_chord_ratio=0.136, technology_factor=0.8)

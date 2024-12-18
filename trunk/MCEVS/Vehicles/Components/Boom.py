@@ -9,10 +9,17 @@ class Boom(object):
 		self.kwargs = kwargs
 		self.name = 'boom'
 
+		# Represented as a fuselage/pod
 		self.length = None
 		self.max_diameter = None
-		self.number_of_booms = None
 		self.fineness_ratio = None
+
+		# Represented as a wing
+		self.thickness_to_chord_ratio = None
+		self.area = None
+		self.aspect_ratio = None
+
+		self.number_of_booms = None
 		self.weight = None
 
 		# Use of new material that reduces weight?
@@ -28,8 +35,19 @@ class Boom(object):
 				self.number_of_booms = int(self.kwargs[item])
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
+			elif item == 'fineness_ratio':
+				if len(self.kwargs[item]) == 1:
+					self.fineness_ratio = float(self.kwargs[item])
+				else:
+					self.fineness_ratio = self.kwargs[item]
+			elif item == 'thickness_to_chord_ratio':
+				if type(self.kwargs[item]) == list:
+					self.thickness_to_chord_ratio = self.kwargs[item]
+				else:
+					self.thickness_to_chord_ratio = float(self.kwargs[item])
 
-		self.fineness_ratio = self.length / self.max_diameter
+		if self.fineness_ratio is None and self.length is not None and self.max_diameter is not None:
+			self.fineness_ratio = self.length / self.max_diameter
 
 	def _calculate_weight_given_mtow(self, mtow):
 		pass
