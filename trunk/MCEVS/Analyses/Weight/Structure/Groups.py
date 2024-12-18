@@ -5,6 +5,7 @@ from MCEVS.Analyses.Weight.Structure.Fuselage import FuselageWeight
 from MCEVS.Analyses.Weight.Structure.Landing_Gear import LandingGearWeight
 from MCEVS.Analyses.Weight.Structure.Wing import WingWeight
 from MCEVS.Analyses.Weight.Structure.Tail import HorizontalTailWeight, VerticalTailWeight
+from MCEVS.Analyses.Weight.Structure.Boom import BoomWeight
 
 class StructureWeight(om.Group):
 	"""
@@ -56,6 +57,12 @@ class StructureWeight(om.Group):
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=['Weight|landing_gear'])
 
+		# Boom weight
+		self.add_subsystem('boom_weight',
+							BoomWeight(),
+							promotes_inputs=['total_req_takeoff_power'],
+							promotes_outputs=['Weight|boom'])
+
 		# Wing weight
 		# wing is possessed by lift+cruise, tiltrotor, and tiltiwing configurations
 		if vehicle.configuration == 'LiftPlusCruise':
@@ -80,11 +87,11 @@ class StructureWeight(om.Group):
 
 		# Sum up
 		if vehicle.configuration == 'Multirotor':
-			input_names_list = ['Weight|fuselage', 'Weight|landing_gear']
-			sfs = [1., 1.,]
+			input_names_list = ['Weight|fuselage', 'Weight|landing_gear', 'Weight|boom']
+			sfs = [1., 1., 1.]
 		elif vehicle.configuration == 'LiftPlusCruise':
-			input_names_list = ['Weight|fuselage', 'Weight|landing_gear', 'Weight|wing', 'Weight|horizontal_tail', 'Weight|vertical_tail']
-			sfs = [1., 1., 1., 1., 1.]
+			input_names_list = ['Weight|fuselage', 'Weight|landing_gear', 'Weight|wing', 'Weight|horizontal_tail', 'Weight|vertical_tail', 'Weight|boom']
+			sfs = [1., 1., 1., 1., 1., 1.]
 		adder = om.AddSubtractComp()
 		adder.add_equation('Weight|structure',
 							input_names=input_names_list,

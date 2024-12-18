@@ -56,11 +56,12 @@ class WeightAnalysis(object):
 	"""
 	docstring for WeightAnalysis
 	"""
-	def __init__(self, vehicle:object, mission:object, constants:object, sizing_mode=True):
+	def __init__(self, vehicle:object, mission:object, constants:object, fidelity:dict, sizing_mode=True):
 		super(WeightAnalysis, self).__init__()
 		self.vehicle = vehicle
 		self.mission = mission
 		self.constants = constants
+		self.fidelity = fidelity
 		self.sizing_mode = sizing_mode
 
 	def evaluate(self, record=False):
@@ -102,6 +103,7 @@ class WeightAnalysis(object):
 								  MTOWEstimation(mission=self.mission,
 								  				 vehicle=self.vehicle,
 								  				 constants=self.constants,
+								  				 fidelity=self.fidelity,
 								  				 sizing_mode=self.sizing_mode),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
@@ -157,6 +159,7 @@ class MTOWEstimation(om.Group):
 		self.options.declare('mission', types=object, desc='Mission object')
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
 		self.options.declare('constants', types=object, desc='Constants object')
+		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
 		self.options.declare('sizing_mode', types=bool, desc='Whether to use in a sizing mode')
 
 	def setup(self):
@@ -165,6 +168,7 @@ class MTOWEstimation(om.Group):
 		mission 	= self.options['mission']
 		vehicle 	= self.options['vehicle']
 		constants 	= self.options['constants']
+		fidelity 	= self.options['fidelity']
 		sizing_mode = self.options['sizing_mode']
 
 		# Unpacking battery parameters
@@ -176,7 +180,8 @@ class MTOWEstimation(om.Group):
 		self.add_subsystem('energy',
 							EnergyConsumption(mission=mission,
 											  vehicle=vehicle,
-											  constants=constants),
+											  constants=constants,
+											  fidelity=fidelity),
 							promotes_inputs=['*'],
 							promotes_outputs=['*'])
 
@@ -223,6 +228,10 @@ class MTOWEstimation(om.Group):
 							StructureWeight(vehicle=vehicle),
 							promotes_inputs=input_list_struct,
 							promotes_outputs=['Weight|*'])
+		# includes mission segment power for takeoff for sizing booms
+		for i,segment in enumerate(mission.segments):
+			if segment.kind in ['HoverClimbConstantSpeed']:
+				self.connect(f'Power|LiftRotor|segment_{i+1}','structure_weight.total_req_takeoff_power')
 
 		# 4. Equipment weight
 		# includes avionics, flight control, anti icing, and furnishing

@@ -2,6 +2,7 @@ import numpy as np
 import openmdao.api as om
 from MCEVS.Analyses.Stability.Trim import WingedConstantDescentTrimOfLift, WingedConstantDescentTrimOfThrust
 from MCEVS.Analyses.Stability.Trim import MultirotorConstantDescentTrim
+from MCEVS.Analyses.Aerodynamics.Parasite import ParasiteDragFidelityOne
 from MCEVS.Analyses.Aerodynamics.Empirical import WingedParasiteDrag, MultirotorParasiteDrag
 from MCEVS.Analyses.Aerodynamics.Parabolic import WingedAeroDrag
 from MCEVS.Analyses.Aerodynamics.Rotor import ThrustOfEachRotor, ThrustCoefficient, RotorAdvanceRatio
@@ -31,32 +32,45 @@ class PowerDescentConstantVyConstantVxEdgewise(om.Group):
 		Rotor|thrust						: thrust of a rotor [N]
 	"""
 	def initialize(self):
+		self.options.declare('vehicle', types=object, desc='Vehicle object')
 		self.options.declare('N_rotor', types=int, desc='Number of lifting rotors')
 		self.options.declare('hover_FM', types=float, desc='Hover figure of merit')
 		self.options.declare('rotor_sigma', types=float, desc='Rotor solidity')
 		self.options.declare('rho_air', default=1.225, desc='Air density')
+		self.options.declare('mu_air', types=float, desc='Air dynamic viscosity')
 		self.options.declare('g', types=float, desc='Gravitational acceleration')
 		self.options.declare('descent_airspeed', desc='Descent air speed')
 		self.options.declare('gamma', desc='Flight path angle during climb/descent')
+		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
 
 	def setup(self):
-
+		vehicle = self.options['vehicle']
 		N_rotor = self.options['N_rotor']
 		hover_FM = self.options['hover_FM']
 		rotor_sigma = self.options['rotor_sigma']
 		rho_air = self.options['rho_air']
+		mu_air = self.options['mu_air']
 		g = self.options['g']
 		gamma = self.options['gamma']
 		descent_airspeed = self.options['descent_airspeed']
+		fidelity = self.options['fidelity']
 
-		# Step 1: Calculate the drag for the multirotor in cruise
+		# Step 1: Calculate the drag for the multirotor in descent
 		indep = self.add_subsystem('descent', om.IndepVarComp())
 		indep.add_output('descent_airspeed', val=descent_airspeed, units='m/s')
 		indep.add_output('gamma', val=gamma, units='rad')
-		self.add_subsystem('parasite_drag',
-							MultirotorParasiteDrag(N_rotor=N_rotor, rho_air=rho_air),
-							promotes_inputs=['Weight|takeoff', ('Aero|speed','descent.descent_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
-							promotes_outputs=[('Aero|total_drag','Aero|Descent|total_drag'), ('Aero|Cd0','Aero|Descent|Cd0')])
+
+		if fidelity['aero'] == 0:
+			self.add_subsystem('parasite_drag',
+								MultirotorParasiteDrag(N_rotor=N_rotor, rho_air=rho_air),
+								promotes_inputs=['Weight|takeoff', ('Aero|speed','descent.descent_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
+								promotes_outputs=[('Aero|total_drag','Aero|Descent|total_drag'), ('Aero|Cd0','Aero|Descent|Cd0')])
+		elif fidelity['aero'] == 1:
+			if vehicle.Cd0['descent'] is None:
+				self.add_subsystem('parasite_drag',
+						ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='descent'),
+						promotes_inputs=[('Aero|speed', 'descent.descent_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
+						promotes_outputs=[('Aero|Cd0', 'Aero|Descent|Cd0'), ('Aero|parasite_drag','Aero|Descent|total_drag')])
 		
 		# Step 2: Calculate thrust required for trim and the body tilt angle
 		self.add_subsystem('trim',
@@ -158,24 +172,30 @@ class PowerDescentConstantVyConstantVxWithWing(om.Group):
 		Rotor|thrust				: thrust of a rotor [N]
 	"""
 	def initialize(self):
+		self.options.declare('vehicle', types=object, desc='Vehicle object')
 		self.options.declare('N_propeller', types=int, desc='Number of propellers')
 		self.options.declare('hover_FM', types=float, desc='Hover figure of merit')
 		self.options.declare('prop_sigma', types=float, desc='Propeller solidity')
 		self.options.declare('rho_air', types=float, desc='Air density')
+		self.options.declare('mu_air', types=float, desc='Air dynamic viscosity')
 		self.options.declare('g', types=float, desc='Gravitational acceleration')
 		self.options.declare('AoA', desc='Aircraft angle of attack')
 		self.options.declare('descent_airspeed', desc='Descent air speed')
 		self.options.declare('gamma', desc='Flight path angle during climb/descent')
+		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
 
 	def setup(self):
+		vehicle = self.options['vehicle']
 		N_propeller = self.options['N_propeller']
 		hover_FM = self.options['hover_FM']
 		prop_sigma = self.options['prop_sigma']
 		rho_air = self.options['rho_air']
+		mu_air = self.options['mu_air']
 		g = self.options['g']
 		AoA = self.options['AoA']
 		gamma = self.options['gamma']
 		descent_airspeed = self.options['descent_airspeed']
+		fidelity = self.options['fidelity']
 
 		# Step 1: Trim analysis
 		self.add_subsystem('trim_lift',
@@ -183,13 +203,21 @@ class PowerDescentConstantVyConstantVxWithWing(om.Group):
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=[('Aero|lift','Aero|Descent|lift')])
 
-		# Step 2: Calculate drag in climb using simple polar equations
+		# Step 2: Calculate drag in descent using simple polar equations
 		indep = self.add_subsystem('descent', om.IndepVarComp())
 		indep.add_output('descent_airspeed', val=descent_airspeed, units='m/s')
-		self.add_subsystem('parasite_drag',
-							WingedParasiteDrag(rho_air=rho_air),
-							promotes_inputs=['Weight|takeoff', 'Wing|area', ('Aero|speed', 'descent.descent_airspeed')],
-							promotes_outputs=[('Aero|Cd0','Aero|Descent|Cd0'), ('Aero|parasite_drag','Aero|Descent|parasite_drag')])
+
+		if fidelity['aero'] == 0:
+			self.add_subsystem('parasite_drag',
+								WingedParasiteDrag(rho_air=rho_air),
+								promotes_inputs=['Weight|takeoff', 'Wing|area', ('Aero|speed', 'descent.descent_airspeed')],
+								promotes_outputs=[('Aero|Cd0','Aero|Descent|Cd0'), ('Aero|parasite_drag','Aero|Descent|parasite_drag')])
+
+		elif fidelity['aero'] == 1:
+			self.add_subsystem('parasite_drag',
+								ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='descent'),
+								promotes_inputs=[('Aero|speed', 'descent.descent_airspeed'),'Wing|area'],
+								promotes_outputs=[('Aero|Cd0', 'Aero|Descent|Cd0'), ('Aero|parasite_drag','Aero|Descent|parasite_drag')])
 
 		self.add_subsystem('total_drag',
 							WingedAeroDrag(rho_air=rho_air),

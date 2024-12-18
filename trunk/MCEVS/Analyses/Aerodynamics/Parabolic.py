@@ -23,7 +23,7 @@ class WingedAeroDrag(om.ExplicitComponent):
 		Raymer, D. P. Aircraft Design: A Conceptual Approach. Reston, Virginia: American Institute of Aeronautics and Astronautics, Inc., 2006.
 	"""
 	def initialize(self):
-		self.options.declare('rho_air', default=1.225, desc='Air density')
+		self.options.declare('rho_air', types=float, desc='Air density')
 
 	def setup(self):
 		self.add_input('Aero|Cd0', desc='Minimum Cd of the polar drag')

@@ -7,11 +7,12 @@ class EnergyAnalysis(object):
 	"""
 	docstring for EnergyAnalysis
 	"""
-	def __init__(self, vehicle:object, mission:object, constants:object):
+	def __init__(self, vehicle:object, mission:object, constants:object, fidelity:dict):
 		super(EnergyAnalysis, self).__init__()
 		self.vehicle = vehicle
 		self.mission = mission
 		self.constants = constants
+		self.fidelity = fidelity
 
 	def evaluate(self, record=False):
 		# print('### --- Solving for energy requirement --- ###')
@@ -57,7 +58,8 @@ class EnergyAnalysis(object):
 		prob.model.add_subsystem('energy_model',
 								  EnergyConsumption(mission=self.mission,
 								  					vehicle=self.vehicle,
-								  					constants=self.constants),
+								  					constants=self.constants,
+								  					fidelity=self.fidelity),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
 
@@ -99,6 +101,7 @@ class EnergyConsumption(om.Group):
 		self.options.declare('mission', types=object, desc='Mission object')
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
 		self.options.declare('constants', types=object, desc='Constants object')
+		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
 
 	def setup(self):
 
@@ -106,6 +109,7 @@ class EnergyConsumption(om.Group):
 		mission 	= self.options['mission']
 		vehicle 	= self.options['vehicle']
 		constants 	= self.options['constants']
+		fidelity 	= self.options['fidelity']
 
 		# -------------------------------------------------------------#
 		# --- Calculate power consumptions for each flight segment --- #
@@ -114,7 +118,8 @@ class EnergyConsumption(om.Group):
 		self.add_subsystem('power_requirement',
 							PowerRequirement(mission=mission,
 											 vehicle=vehicle,
-											 constants=constants),
+											 constants=constants,
+											 fidelity=fidelity),
 							promotes_inputs=['*'],
 							promotes_outputs=['*'])
 
