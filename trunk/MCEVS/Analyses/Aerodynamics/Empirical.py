@@ -63,7 +63,7 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 		rho_air				: air density [kg/m**3]
 	Inputs:
 		Weight|takeoff 			: total take-off weight [kg]
-		Aero|speed 	: cruising speed of the eVTOL [m/s]
+		Aero|speed 				: cruising speed of the eVTOL [m/s]
 		Rotor|radius			: rotor radius [m]
 	Outputs:
 		Aero|Cd0				: parasite drag coefficient
@@ -129,7 +129,6 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 		partials['Aero|total_drag', 'Rotor|radius'] = 0.0
 		partials['Aero|total_drag', 'Weight|takeoff'] = 0.5 * rho_air * v**2 * df_dW
 		partials['Aero|total_drag', 'Aero|speed'] = rho_air * v * f
-
 
 class WingedParasiteDrag(om.ExplicitComponent):
 	"""
@@ -204,16 +203,93 @@ class WingedParasiteDrag(om.ExplicitComponent):
 		partials['Aero|parasite_drag', 'Aero|speed'] = rho_air * v * f
 		partials['Aero|parasite_drag', 'Wing|area'] = 0
 
+class RotorHubParasiteDragFidelityZero(om.ExplicitComponent):
+	"""
+	Computes the parasite drag of rotor hubs of wingless and winged configurations
+	Parameters:
+		vehicle			: MCEVS vehicle object
+		rho_air			: air density [kg/m**3]
+	Inputs:
+		Weight|takeoff 	: total take-off weight [kg]
+		Aero|speed 		: air speed of the eVTOL [m/s]
+		Rotor|radius	: rotor radius [m]
+		Wing|area 		: wing area [m**2]
+	Outputs:
+		Aero|Cd0_rotor_hub				: parasite drag coefficient
+		Aero|rotor_hub_parasite_drag	: parasite drag [N]
+	Notes:
+		> Based on an empirical equivalent flat plat drag area as a function of gross weight
+		> Adapted from compound helicopter drag data
+	Source:
+		1. Harris, F. D., “Introduction to Autogyros, Helicopters, and Other V/STOL Aircraft,”
+		   National Aeronautics and Space Administration, Ames Research Center, Moffett Field, Calif, 2011.
+		2. Yeo, H., and Johnson, W., “Aeromechanics Analysis of a Heavy Lift Slowed-Rotor Compound Helicopter,”
+		   Journal of Aircraft, Vol. 44, No. 2, 2007, pp. 501–508. https://doi.org/10.2514/1.23905
+	"""
+	def initialize(self):
+		self.options.declare('vehicle', types=object, desc='Vehicle object')
+		self.options.declare('rho_air', types=float, default=1.225, desc='Air density')
+		
+	def setup(self):
+		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
+		self.add_input('Aero|speed', units='m/s', desc='Air speed')
+		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
+		self.add_input('Wing|area', units='m**2', desc='Wing reference area')
+		self.add_output('Aero|Cd0_rotor_hub', desc='Rotor hub parasite drag coefficient')
+		self.add_output('Aero|rotor_hub_parasite_drag', units='N', desc='Rotor hub parasite drag of a winged config')
+		self.declare_partials('*', '*')
 
+	def compute(self, inputs, outputs):
+		vehicle = self.options['vehicle']
+		rho_air = self.options['rho_air']
+		W_takeoff = inputs['Weight|takeoff']	# in [kg]
+		v = inputs['Aero|speed']				# in [m/s**2]
 
+		# Equivalent flat plate area "f"
+		kg_to_lb = 2.20462**(2/3)
+		ft2_to_m2 = 0.3048*0.3048
 
+		if vehicle.configuration in ['Multirotor']:
+			r_rotor = inputs['Rotor|radius']		# in [m]
+			S_disk = np.pi * r_rotor**2 			# in [m**2]
+			S_ref = S_disk 							# ref area is the disk area
+			f = 0.85 * (W_takeoff/1000)**(2/3) * kg_to_lb * ft2_to_m2
+		elif vehicle.configuration in ['LiftPlusCruise']:
+			S_wing = inputs['Wing|area']			# in [m**2]
+			S_ref = S_wing 							# ref area is the wing area
+			f = 0.40 * (W_takeoff/1000)**(2/3) * kg_to_lb * ft2_to_m2
 
+		# Rotor hub drag coefficient
+		CD0_rotor_hub = f/S_ref
 
+		outputs['Aero|Cd0_rotor_hub'] = CD0_rotor_hub
+		outputs['Aero|rotor_hub_parasite_drag'] = 0.5 * rho_air * v * v * S_ref * CD0_rotor_hub
 
+	def compute_partials(self, inputs, partials):
+		vehicle = self.options['vehicle']
+		rho_air = self.options['rho_air']
+		W_takeoff = inputs['Weight|takeoff']	# in [kg]
+		v = inputs['Aero|speed']				# in [m/s**2]
 
+		# Equivalent flat plate area "f"
+		kg_to_lb = 2.20462**(2/3)
+		ft2_to_m2 = 0.3048*0.3048
 
+		if vehicle.configuration in ['Multirotor']:
+			r_rotor = inputs['Rotor|radius']		# in [m]
+			S_disk = np.pi * r_rotor**2 			# in [m**2]
+			S_ref = S_disk 							# ref area is the disk area
+			f = 0.85 * (W_takeoff/1000)**(2/3) * kg_to_lb * ft2_to_m2
+			df_dW = 0.85 * (2/3) * W_takeoff**(-1/3) * (1/1000)**(2/3) * kg_to_lb * ft2_to_m2
+		elif vehicle.configuration in ['LiftPlusCruise']:
+			S_wing = inputs['Wing|area']			# in [m**2]
+			S_ref = S_wing 							# ref area is the wing area
+			f = 0.40 * (W_takeoff/1000)**(2/3) * kg_to_lb * ft2_to_m2
+			df_dW = 0.40 * (2/3) * W_takeoff**(-1/3) * (1/1000)**(2/3) * kg_to_lb * ft2_to_m2
 
-
-
-
-
+		partials['Aero|Cd0_rotor_hub', 'Weight|takeoff'] = 1/S_ref * df_dW
+		partials['Aero|Cd0_rotor_hub', 'Aero|speed'] = 0
+		partials['Aero|Cd0_rotor_hub', 'Wing|area'] = -f/(S_ref**2)
+		partials['Aero|rotor_hub_parasite_drag', 'Weight|takeoff'] = 0.5 * rho_air * v**2 * df_dW
+		partials['Aero|rotor_hub_parasite_drag', 'Aero|speed'] = rho_air * v * f
+		partials['Aero|rotor_hub_parasite_drag', 'Wing|area'] = 0

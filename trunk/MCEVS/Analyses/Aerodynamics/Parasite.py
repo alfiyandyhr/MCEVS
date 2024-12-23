@@ -1,9 +1,51 @@
 import numpy as np
 import openmdao.api as om
 import openvsp as vsp
+from MCEVS.Analyses.Aerodynamics.Empirical import RotorHubParasiteDragFidelityZero
 from MCEVS.Applications.OpenVSP.Utils import calc_wetted_area
 
-class ParasiteDragFidelityOne(om.ExplicitComponent):
+class ParasiteDragFidelityOne(om.Group):
+	"""
+	Computes the parasite drag coefficient via a component build-up approach (fidelity one) and empirical rotor hub drag
+	"""
+	def initialize(self):
+		self.options.declare('vehicle', types=object, desc='Vehicle object')
+		self.options.declare('rho_air', types=float, desc='Air density')
+		self.options.declare('mu_air', types=float, desc='Air dynamic viscosity')
+		self.options.declare('segment_name', types=str, desc='Segment name')
+
+	def setup(self):
+
+		vehicle = self.options['vehicle']
+		rho_air = self.options['rho_air']
+		mu_air = self.options['mu_air']
+		segment_name = self.options['segment_name']
+
+		self.add_subsystem('parasite_drag_without_rotor_hub',
+							VehicleParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name=segment_name),
+							promotes_inputs=['Aero|speed', 'Rotor|radius', 'Wing|area'],
+							promotes_outputs=['Aero|Cd0_vehicle', 'Aero|parasite_drag_vehicle'])
+
+		self.add_subsystem('rotor_hub_parasite_drag',
+							RotorHubParasiteDragFidelityZero(vehicle=vehicle, rho_air=rho_air),
+							promotes_inputs=['Weight|takeoff', 'Aero|speed', 'Rotor|radius', 'Wing|area'],
+							promotes_outputs=['Aero|Cd0_rotor_hub', 'Aero|rotor_hub_parasite_drag'])
+
+		# Sum the vehicle parasite drag via build-up approach and empirical rotor hub drag
+		adder = om.AddSubtractComp()
+		adder.add_equation('Aero|Cd0',
+							input_names=['Aero|Cd0_vehicle', 'Aero|Cd0_rotor_hub'],
+							scaling_factors=[1., 1.])
+		adder.add_equation('Aero|parasite_drag',
+							input_names=['Aero|parasite_drag_vehicle', 'Aero|rotor_hub_parasite_drag'],
+							units='N',
+							scaling_factors=[1., 1.])
+		self.add_subsystem('total_parasite_drag',
+							adder,
+							promotes_inputs=['*'],
+							promotes_outputs=['Aero|Cd0', 'Aero|parasite_drag'])
+
+class VehicleParasiteDragFidelityOne(om.ExplicitComponent):
 	"""
 	Computes the parasite drag coefficient via a component build-up approach (fidelity one)
 	Parameters:
@@ -17,8 +59,6 @@ class ParasiteDragFidelityOne(om.ExplicitComponent):
 	Outputs:
 		Aero|Cd0			: parasite drag coefficient
 		Aero|parasite_drag	: parasite drag [N]
-	Notes:
-		> 
 	Source:
 		1. https://openvsp.org/wiki/doku.php?id=parasitedrag
 		2. Raymer, D. P. Aircraft Design: A Conceptual Approach. Reston, Virginia: American Institute of Aeronautics and Astronautics, Inc., 2006.
@@ -33,8 +73,8 @@ class ParasiteDragFidelityOne(om.ExplicitComponent):
 		self.add_input('Aero|speed', units='m/s', desc='Air speed')
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
 		self.add_input('Wing|area', units='m**2', desc='Wing reference area')
-		self.add_output('Aero|Cd0', desc='Parasite drag coefficient')
-		self.add_output('Aero|parasite_drag', units='N', desc='Parasite drag of a winged config')
+		self.add_output('Aero|Cd0_vehicle', desc='Parasite drag coefficient')
+		self.add_output('Aero|parasite_drag_vehicle', units='N', desc='Parasite drag')
 		self.declare_partials('*', '*', method='fd')
 
 	def compute(self, inputs, outputs):
@@ -48,34 +88,18 @@ class ParasiteDragFidelityOne(om.ExplicitComponent):
 			S_ref = np.pi*r_rotor**2
 		elif vehicle.configuration == 'LiftPlusCruise':
 			S_wing = inputs['Wing|area']	# in [m**2]
-			S_ref = S_wing 	# ref area is the wing area
+			S_ref = S_wing
 
 		if vehicle.Cd0[segment_name] is None:
 			f = calc_flat_plate_drag(vehicle, rho_air, mu_air, v) # in [m**2]
+
 			CD0 = f/S_ref
 			vehicle.Cd0[segment_name] = CD0
 		else:
 			CD0 = vehicle.Cd0[segment_name]
 
-		outputs['Aero|Cd0'] = CD0
-		outputs['Aero|parasite_drag'] = 0.5 * rho_air * v * v * S_ref * CD0
-
-	# def compute_partials(self, inputs, partials):
-	# 	vehicle = self.options['vehicle']
-	# 	rho_air = self.options['rho_air']
-	# 	mu_air = self.options['mu_air']
-	# 	v = inputs['Aero|speed']		# in [m/s**2]
-	# 	S_wing = inputs['Wing|area']	# in [m**2]
-
-	# 	f = calc_flat_plate_drag(vehicle, rho_air, mu_air, v) # in [m**2]
-	# 	S_ref = S_wing
-	# 	CD0 = f/S_ref
-
-	# 	partials['Aero|Cd0', 'Aero|speed'] = 0
-	# 	partials['Aero|Cd0', 'Wing|area'] = -f/(S_ref**2)
-	# 	partials['Aero|parasite_drag', 'Aero|speed'] = rho_air * v * f
-	# 	partials['Aero|parasite_drag', 'Wing|area'] = 0
-		
+		outputs['Aero|Cd0_vehicle'] = CD0
+		outputs['Aero|parasite_drag_vehicle'] = 0.5 * rho_air * v * v * S_ref * CD0
 
 def calc_flat_plate_drag(vehicle:object, rho_air:float, mu_air:float, v_inf:float):
 	"""
@@ -89,29 +113,12 @@ def calc_flat_plate_drag(vehicle:object, rho_air:float, mu_air:float, v_inf:floa
 		6. Boom 2
 		7. Boom 3
 		8. Boom 4
-		9. Rotor Hub 1
-		10. Rotor Hub 2
-		11. Rotor Hub 3
-		12. Rotor Hub 4
-		13. Rotor Blade 1_1
-		14. Rotor Blade 1_2
-		15. Rotor Blade 2_1
-		16. Rotor Blade 2_2
-		17. Rotor Blade 3_1
-		18. Rotor Blade 3_2
-		19. Rotor Blade 4_1
-		20. Rotor Blade 4_2
-		21. Propeller Hub 1
-		22. Propeller Blade 1_1
-		23. Propeller Blade 1_2
-		24. Propeller Blade 1_3
-		25. Propeller Blade 1_4
-		26. Nose Strut LG
-		27. Main Strut LG 1
-		28. Main Strut LG 2
-		29. Nose Wheel LG
-		30. Main Wheel LG 1
-		31. Main Wheel LG 2
+		9. Nose Strut LG
+		10. Main Strut LG 1
+		11. Main Strut LG 2
+		12. Nose Wheel LG
+		13. Main Wheel LG 1
+		14. Main Wheel LG 2
 	"""
 	# Flow condition
 	Re_L = rho_air * v_inf / mu_air
