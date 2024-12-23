@@ -96,7 +96,7 @@ def NASA_LPC_Boom(n_lift_rotor=4, r_lift_rotor=1.0, l_fuse=30.0, wing_AR=12.1276
 		Y_Rel_Locations = [  0.000,  0.000  ]
 		Z_Rel_Locations = [ -0.200, -0.200  ]
 		U_Attach_Locs	= [  0.250,  0.420  ]
-		V_Attach_Locs	= [  0.500,  0.500  ]		
+		V_Attach_Locs	= [  0.500,  0.500  ]
 
 	boom_ids = []
 	for i in range(int(n_lift_rotor/4)):

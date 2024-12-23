@@ -72,7 +72,7 @@ def calc_wetted_area(vehicle:object):
 		vtail_id = NASA_LPC_Vertical_Tail(area=vtail_S, aspect_ratio=vtail_AR, l_fuse=l_fuse, fuse_id=fuse_id)
 		lg_ids, wheel_ids = NASA_LPC_Landing_Gear(l_strut=l_strut, fuse_id=fuse_id)
 		boom_ids = NASA_LPC_Boom(n_lift_rotor=n_lift_rotor, r_lift_rotor=r_lift_rotor, l_fuse=l_fuse, wing_S=wing_S, wing_AR=wing_AR, wing_id=wing_id)
-		# vsp.WriteVSPFile('liftpluscruise_check.vsp3')
+		# vsp.WriteVSPFile('liftpluscruise_wisk_aero.vsp3')
 		# vsp.ClearVSPModel()
 
 		mesh_id	= vsp.ComputeCompGeom(vsp.SET_ALL, False, 0)
