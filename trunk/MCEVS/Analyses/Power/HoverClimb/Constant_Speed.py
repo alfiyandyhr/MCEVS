@@ -5,11 +5,11 @@ class PowerHoverClimbConstantSpeed(om.ExplicitComponent):
 	"""
 	Computes the power required for hover climb with constant speed
 	Parameters:
-		N_rotor		: number or lift rotors
-		hover_FM	: hover figure of merit
-		rho_air		: air density [kg/m**3]
-		g 			: gravitational acceleration [m/s**2]
-		v_climb 	: climb speed [m/s]
+		N_rotor		 : number or lift rotors
+		hover_FM	 : hover figure of merit
+		rho_air		 : air density [kg/m**3]
+		g 			 : gravitational acceleration [m/s**2]
+		v_climb 	 : climb speed [m/s]
 	Inputs:
 		Weight|takeoff  	: total take-off weight [kg]
 		LiftRotor|radius	: lift rotor radius [m]

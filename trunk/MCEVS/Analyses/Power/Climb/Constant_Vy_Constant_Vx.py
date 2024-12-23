@@ -14,13 +14,13 @@ class PowerClimbConstantVyConstantVxEdgewise(om.Group):
 	"""
 	Computes the power required in edgewise climb phase
 	Parameters:
-		N_rotor				: number or rotors
-		hover_FM			: hover figure of merit
-		rotor_sigma 		: rotor's solidity
-		rho_air				: air density [kg/m**3]
-		g 					: gravitational acceleration [m/s**2]
-		climb_airspeed		: climb air speed [m/s]
-		gamma				: flight path angle during climb/descent
+		N_rotor			: number or rotors
+		hover_FM		: hover figure of merit
+		rotor_sigma 	: rotor's solidity
+		rho_air			: air density [kg/m**3]
+		g 				: gravitational acceleration [m/s**2]
+		climb_airspeed	: climb air speed [m/s]
+		gamma			: flight path angle during climb/descent
 	Inputs:
 		Weight|takeoff 			: total take-off weight [kg]
 		Mission|cruise_speed	: cruising speed of the eVTOL [m/s]
@@ -69,7 +69,7 @@ class PowerClimbConstantVyConstantVxEdgewise(om.Group):
 			if vehicle.Cd0['climb'] is None:
 				self.add_subsystem('parasite_drag',
 						ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='climb'),
-						promotes_inputs=[('Aero|speed', 'climb.climb_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
+						promotes_inputs=['Weight|takeoff', ('Aero|speed', 'climb.climb_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
 						promotes_outputs=[('Aero|Cd0', 'Aero|Climb|Cd0'), ('Aero|parasite_drag','Aero|Climb|total_drag')])
 
 		# Step 2: Calculate thrust required for trim and the body tilt angle
@@ -216,7 +216,7 @@ class PowerClimbConstantVyConstantVxWithWing(om.Group):
 		elif fidelity['aero'] == 1:
 			self.add_subsystem('parasite_drag',
 								ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='climb'),
-								promotes_inputs=[('Aero|speed', 'climb.climb_airspeed'),'Wing|area'],
+								promotes_inputs=['Weight|takeoff', ('Aero|speed', 'climb.climb_airspeed'),'Wing|area'],
 								promotes_outputs=[('Aero|Cd0', 'Aero|Climb|Cd0'), ('Aero|parasite_drag','Aero|Climb|parasite_drag')])
 
 		self.add_subsystem('total_drag',

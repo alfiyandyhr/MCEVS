@@ -5,10 +5,10 @@ class PowerHoverStay(om.ExplicitComponent):
 	"""
 	Computes the power required for hover stay (staying still in the air)
 	Parameters:
-		N_rotor		: number or lift rotors
-		hover_FM	: hover figure of merit
-		rho_air		: air density [kg/m**3]
-		g 			: gravitational acceleration [m/s**2]
+		N_rotor		 : number or lift rotors
+		hover_FM	 : hover figure of merit
+		rho_air		 : air density [kg/m**3]
+		g 			 : gravitational acceleration [m/s**2]
 	Inputs:
 		Weight|takeoff  	: total take-off weight [kg]
 		LiftRotor|radius	: lift rotor radius [m]

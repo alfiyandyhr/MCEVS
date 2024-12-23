@@ -22,11 +22,11 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 	"""
 	Computes the power required in edgewise forward flight (cruise of wingless multirotor)
 	Parameters:
-		N_rotor				: number or rotors
-		hover_FM			: hover figure of merit
-		rotor_sigma 		: rotor's solidity
-		rho_air				: air density [kg/m**3]
-		g 					: gravitational acceleration [m/s**2]
+		N_rotor		 : number or rotors
+		hover_FM	 : hover figure of merit
+		rotor_sigma  : rotor's solidity
+		rho_air		 : air density [kg/m**3]
+		g 			 : gravitational acceleration [m/s**2]
 	Inputs:
 		Weight|takeoff 			: total take-off weight [kg]
 		Mission|cruise_speed	: cruising speed of the eVTOL [m/s]
@@ -67,7 +67,7 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 			if vehicle.Cd0['cruise'] is None:
 				self.add_subsystem('parasite_drag',
 						ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
-						promotes_inputs=[('Aero|speed', 'Mission|cruise_speed'), ('Rotor|radius', 'LiftRotor|radius')],
+						promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed'), ('Rotor|radius', 'LiftRotor|radius')],
 						promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|total_drag')])
 		
 		# Step 2: Calculate thrust required for trim and the body tilt angle
@@ -149,20 +149,20 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 	"""
 	Computes the power required in winged forward flight (cruise of winged config)
 	Parameters:
-		N_rotor				: number or rotors
-		hover_FM			: hover figure of merit
-		rho_air				: air density [kg/m**3]
-		rotor_sigma 		: rotor's solidity
-		g 					: gravitational acceleration [m/s**2]
-		AoA 				: aircraft's angle of attack [deg]
+		N_rotor		 : number or rotors
+		hover_FM	 : hover figure of merit
+		rho_air		 : air density [kg/m**3]
+		rotor_sigma  : rotor's solidity
+		g 			 : gravitational acceleration [m/s**2]
+		AoA 		 : aircraft's angle of attack [deg]
 	Inputs:
-		Weight|takeoff 	: total take-off weight [kg]
-		eVTOL|S_wing 		: wing area [m**2]
-		eVTOL|AR_wing		: wing aspect ratio 
+		Weight|takeoff 			: total take-off weight [kg]
+		eVTOL|S_wing 			: wing area [m**2]
+		eVTOL|AR_wing			: wing aspect ratio 
 		Mission|cruise_speed	: cruising speed of the eVTOL [m/s]
-		Rotor|radius		: rotor radius [m]
-		Rotor|J				: propeller's advance ratio
-		Rotor|alpha 		: rotor tilt angle [rad]
+		Rotor|radius			: rotor radius [m]
+		Rotor|J					: propeller's advance ratio
+		Rotor|alpha 			: rotor tilt angle [rad]
 	Outputs:
 		Power|CruiseConstantSpeed 	: required power for cruise [W]
 		Rotor|thrust				: thrust of a rotor [N]
@@ -208,7 +208,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 		elif fidelity['aero'] == 1:
 			self.add_subsystem('parasite_drag',
 								ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
-								promotes_inputs=[('Aero|speed', 'Mission|cruise_speed'),'Wing|area'],
+								promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed'),'Wing|area'],
 								promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|parasite_drag')])
 
 		self.add_subsystem('total_drag',

@@ -69,7 +69,7 @@ class PowerDescentConstantVyConstantVxEdgewise(om.Group):
 			if vehicle.Cd0['descent'] is None:
 				self.add_subsystem('parasite_drag',
 						ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='descent'),
-						promotes_inputs=[('Aero|speed', 'descent.descent_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
+						promotes_inputs=['Weight|takeoff', ('Aero|speed', 'descent.descent_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
 						promotes_outputs=[('Aero|Cd0', 'Aero|Descent|Cd0'), ('Aero|parasite_drag','Aero|Descent|total_drag')])
 		
 		# Step 2: Calculate thrust required for trim and the body tilt angle
@@ -216,7 +216,7 @@ class PowerDescentConstantVyConstantVxWithWing(om.Group):
 		elif fidelity['aero'] == 1:
 			self.add_subsystem('parasite_drag',
 								ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='descent'),
-								promotes_inputs=[('Aero|speed', 'descent.descent_airspeed'),'Wing|area'],
+								promotes_inputs=['Weight|takeoff', ('Aero|speed', 'descent.descent_airspeed'),'Wing|area'],
 								promotes_outputs=[('Aero|Cd0', 'Aero|Descent|Cd0'), ('Aero|parasite_drag','Aero|Descent|parasite_drag')])
 
 		self.add_subsystem('total_drag',

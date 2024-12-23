@@ -5,11 +5,11 @@ class PowerHoverDescentConstantSpeed(om.ExplicitComponent):
 	"""
 	Computes the power required for hover descent with constant speed
 	Parameters:
-		N_rotor		: number or lift rotors
-		hover_FM	: hover figure of merit
-		rho_air		: air density [kg/m**3]
-		g 			: gravitational acceleration [m/s**2]
-		v_descent 	: descent speed [m/s]
+		N_rotor		 : number or lift rotors
+		hover_FM	 : hover figure of merit
+		rho_air		 : air density [kg/m**3]
+		g 			 : gravitational acceleration [m/s**2]
+		v_descent 	 : descent speed [m/s]
 	Inputs:
 		Weight|takeoff  	: total take-off weight [kg]
 		LiftRotor|radius	: lift rotor radius [m]
@@ -69,6 +69,6 @@ class PowerHoverDescentConstantSpeed(om.ExplicitComponent):
 			partials['Power|HoverDescentConstantSpeed', 'LiftRotor|radius'] = - (W_takeoff*g)**2 / (4*hover_FM*rho_air*N_rotor*S_disk**2) * ( (v_descent/2)**2 - (W_takeoff*g)/(2*rho_air*N_rotor*S_disk) )**(-0.5) * dSdisk_dr
 		else:
 			partials['Power|HoverDescentConstantSpeed', 'Weight|takeoff'] = 1.5/hover_FM * np.sqrt((W_takeoff * g**3)/(2*rho_air*S_disk*N_rotor))
-			partials['Power|HoverDescentConstantSpeed', 'LiftRotor|radius'] = -0.5/hover_FM * np.sqrt(((W_takeoff*g)**3)/(2*rho_air*N_rotor*S_disk**3)) * dSdisk_dr
+			partials['Power|HoverDescentConstantSpeed', 'LiftRotor|radius'] = - 0.5/hover_FM * np.sqrt(((W_takeoff*g)**3)/(2*rho_air*N_rotor*S_disk**3)) * dSdisk_dr
 		partials['LiftRotor|thrust', 'Weight|takeoff'] = g / N_rotor
 
