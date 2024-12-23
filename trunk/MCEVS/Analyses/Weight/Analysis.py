@@ -165,11 +165,11 @@ class MTOWEstimation(om.Group):
 	def setup(self):
 		
 		# Unpacking option objects
-		mission 	= self.options['mission']
-		vehicle 	= self.options['vehicle']
-		constants 	= self.options['constants']
-		fidelity 	= self.options['fidelity']
-		sizing_mode = self.options['sizing_mode']
+		mission 	 = self.options['mission']
+		vehicle 	 = self.options['vehicle']
+		constants 	 = self.options['constants']
+		fidelity 	 = self.options['fidelity']
+		sizing_mode  = self.options['sizing_mode']
 
 		# Unpacking battery parameters
 		battery_rho 			= vehicle.battery.density
@@ -239,7 +239,6 @@ class MTOWEstimation(om.Group):
 							EquipmentWeight(),
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=['Weight|*'])
-
 
 		# 4. Weight residuals
 		

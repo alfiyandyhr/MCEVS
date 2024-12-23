@@ -2,7 +2,7 @@ import numpy as np
 import openmdao.api as om
 
 from MCEVS.Analyses.Weight.Structure.Fuselage import FuselageWeight
-from MCEVS.Analyses.Weight.Structure.Landing_Gear import LandingGearWeight
+from MCEVS.Analyses.Weight.Structure.Landing_Gear import LandingGearWeightNDARCFractionalMethod
 from MCEVS.Analyses.Weight.Structure.Wing import WingWeight
 from MCEVS.Analyses.Weight.Structure.Tail import HorizontalTailWeight, VerticalTailWeight
 from MCEVS.Analyses.Weight.Structure.Boom import BoomWeight
@@ -25,6 +25,7 @@ class StructureWeight(om.Group):
 		d_max	= vehicle.fuselage.max_diameter
 		
 		# Landing gear parameter
+		gear_type 	= vehicle.landing_gear.gear_type
 		l_sm 		= vehicle.landing_gear.strut_length
 		n_ult_lg 	= vehicle.landing_gear.ultimate_load_factor
 
@@ -53,7 +54,7 @@ class StructureWeight(om.Group):
 
 		# Landing gear weight
 		self.add_subsystem('landing_gear_weight',
-							LandingGearWeight(l_sm=l_sm,n_ult=n_ult_lg),
+							LandingGearWeightNDARCFractionalMethod(gear_type=gear_type),
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=['Weight|landing_gear'])
 

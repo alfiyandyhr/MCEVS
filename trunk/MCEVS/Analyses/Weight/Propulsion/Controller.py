@@ -12,10 +12,8 @@ class MotorControllerWeight(om.ExplicitComponent):
 		Weight|controllers : weight of all motor controllers [kg]
 	Notes:
 	Sources:
-		1. Kadhiresan, A. R., and Duffy, M. J., “Conceptual Design and Mission Analysis for EVTOL Urban Air Mobility Flight Vehicle Configurations,”
-		   presented at the AIAA Aviation 2019 Forum, Dallas, Texas, 2019. https://doi.org/10.2514/6.2019-2873
-  		2. Duffy, M., Sevier, A. E., Hupp, R., Perdomo, E., and Wakayama, S., “Propulsion Scaling Methods in the Era of Electric Flight,”
-  		   presented at the 2018 AIAA/IEEE Electric Aircraft Technologies Symposium, Cincinnati, Ohio, 2018. https://doi.org/10.2514/6.2018-4978
+  		Duffy, M., Sevier, A. E., Hupp, R., Perdomo, E., and Wakayama, S., “Propulsion Scaling Methods in the Era of Electric Flight,”
+  		presented at the 2018 AIAA/IEEE Electric Aircraft Technologies Symposium, Cincinnati, Ohio, 2018. https://doi.org/10.2514/6.2018-4978
 	"""
 	def initialize(self):
 		self.options.declare('N_motor', types=int, desc='Number of motors')
@@ -30,14 +28,14 @@ class MotorControllerWeight(om.ExplicitComponent):
 		p_max = inputs['max_power']/1000.0 # in [kW]
 
 		# Calculating W_controllers
-		W_controller = 49.9/398 * (p_max/N_motor - 2.0) + 0.1
+		W_controller = 0.1149 * (p_max/N_motor)
 		W_controllers = N_motor * W_controller
 
 		outputs['Weight|controllers'] = W_controllers # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		N_motor = self.options['N_motor']
-		partials['Weight|controllers', 'max_power'] = 49.9/398 * 1/1000 * 1/N_motor
+		partials['Weight|controllers', 'max_power'] = 0.1149 * 1/1000 * 1/N_motor
 
 
 

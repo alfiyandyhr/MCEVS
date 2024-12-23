@@ -1,7 +1,57 @@
 import numpy as np
 import openmdao.api as om
 
-class LandingGearWeight(om.ExplicitComponent):
+class LandingGearWeightNDARCFractionalMethod(om.ExplicitComponent):
+	"""
+	Computes landing gear weight
+	Parameters:
+		gear_type : landing gear type; either "wheeled" or "skid"
+		tf 		  : technology factor (a reduction due to the use of composites, e.g., 0.8)
+	Inputs:
+		Weight|takeoff : total take-off weight [kg]
+	Outputs:
+		Weight|landing_gear : landing gear weight [kg]
+	Notes:
+		> 
+	Source:
+		Johnson, W. NDARC - NASA Design and Analysis of Rotorcraft. NASA/TP–20220000355/APPX-A. Moffett Field, California. March 2023.
+	"""
+	def initialize(self):
+		self.options.declare('gear_type', types=str, desc='Gear type; either "wheeled" or "skid".')
+		self.options.declare('tf', types=float, default=0.8, desc='Technology factor')
+
+	def setup(self):
+		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
+		self.add_output('Weight|landing_gear', units='kg', desc='Landing gear weight')
+		self.declare_partials('Weight|landing_gear', 'Weight|takeoff')
+
+	def compute(self, inputs, outputs):
+		gear_type = self.options['gear_type']
+		tf = self.options['tf']
+		W_takeoff = inputs['Weight|takeoff']
+
+		# Calculating W_landing_gear
+		if gear_type == 'wheeled': f_LG = 0.0325
+		elif gear_type == 'skid': f_LG = 0.014
+		else: raise ValueError('Gear type should be either "wheeled" or "skid".')
+
+		W_landing_gear = f_LG * W_takeoff
+
+		outputs['Weight|landing_gear'] = tf * W_landing_gear # in [kg]
+
+	def compute_partials(self, inputs, partials):
+		gear_type = self.options['gear_type']
+		tf = self.options['tf']
+		W_takeoff = inputs['Weight|takeoff']
+
+		# Calculating W_landing_gear
+		if gear_type == 'wheeled': f_LG = 0.0325
+		elif gear_type == 'skid': f_LG = 0.014
+		else: raise ValueError('Gear type should be either "wheeled" or "skid".')
+
+		partials['Weight|landing_gear', 'Weight|takeoff'] = tf * f_LG
+
+class LandingGearWeightRoskamMethod(om.ExplicitComponent):
 	"""
 	Computes landing gear weight
 	Parameters:
