@@ -70,11 +70,14 @@ class WeightAnalysis(object):
 
 		if self.vehicle.configuration == 'Multirotor':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
 			rotor_advance_ratio 	= self.vehicle.lift_rotor.advance_ratio
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
 			r_propeller 			= self.vehicle.propeller.radius 		# m
+			c_propeller 			= self.vehicle.propeller.chord  		# m
 			wing_area 				= self.vehicle.wing.area 				# m**2
 			wing_aspect_ratio 		= self.vehicle.wing.aspect_ratio
 			propeller_advance_ratio = self.vehicle.propeller.advance_ratio
@@ -90,11 +93,14 @@ class WeightAnalysis(object):
 
 		if self.vehicle.configuration == 'Multirotor':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|advance_ratio', rotor_advance_ratio)
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
 			indeps.add_output('Propeller|radius', r_propeller, units='m')
+			indeps.add_output('Propeller|chord', c_propeller, units='m')
 			indeps.add_output('Wing|area', wing_area, units='m**2')
 			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
 			indeps.add_output('Propeller|advance_ratio', propeller_advance_ratio)

@@ -22,15 +22,16 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 	"""
 	Computes the power required in edgewise forward flight (cruise of wingless multirotor)
 	Parameters:
-		N_rotor		 : number or rotors
-		hover_FM	 : hover figure of merit
-		rotor_sigma  : rotor's solidity
-		rho_air		 : air density [kg/m**3]
-		g 			 : gravitational acceleration [m/s**2]
+		N_rotor		: number or rotors
+		n_blade 	: number of blades per rotor
+		hover_FM	: hover figure of merit
+		rho_air		: air density [kg/m**3]
+		g 			: gravitational acceleration [m/s**2]
 	Inputs:
 		Weight|takeoff 			: total take-off weight [kg]
 		Mission|cruise_speed	: cruising speed of the eVTOL [m/s]
 		Rotor|radius			: rotor radius [m]
+		Rotor|chord 			: rotor chord length [m]
 		Rotor|mu 	 			: rotor's advance ratio
 		Rotor|alpha				: rotor tilt angle [rad]
 	Outputs:
@@ -40,8 +41,8 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 	def initialize(self):
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
 		self.options.declare('N_rotor', types=int, desc='Number of lifting rotors')
+		self.options.declare('n_blade', types=int, desc='Number of blades per rotor')
 		self.options.declare('hover_FM', types=float, desc='Hover figure of merit')
-		self.options.declare('rotor_sigma', types=float, desc='Rotor solidity')
 		self.options.declare('rho_air', types=float, desc='Air density')
 		self.options.declare('mu_air', types=float, desc='Air dynamic viscosity')
 		self.options.declare('g', types=float, desc='Gravitational acceleration')
@@ -50,8 +51,8 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 	def setup(self):
 		vehicle = self.options['vehicle']
 		N_rotor = self.options['N_rotor']
+		n_blade = self.options['n_blade']
 		hover_FM = self.options['hover_FM']
-		rotor_sigma = self.options['rotor_sigma']
 		rho_air = self.options['rho_air']
 		mu_air = self.options['mu_air']
 		g = self.options['g']
@@ -107,8 +108,9 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 
 		# Step 7: Calculate profile power
 		self.add_subsystem('profile_power',
-							RotorProfilePower(rho_air=rho_air, sigma=rotor_sigma),
+							RotorProfilePower(rho_air=rho_air, n_blade=n_blade),
 							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
+											 ('Rotor|chord',	'LiftRotor|chord'),
 											 ('Rotor|mu',		'LiftRotor|advance_ratio'),
 											 ('Rotor|omega',	'LiftRotor|Cruise|omega')],
 							promotes_outputs=[('Rotor|profile_power', 'LiftRotor|Cruise|profile_power')])
@@ -149,12 +151,12 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 	"""
 	Computes the power required in winged forward flight (cruise of winged config)
 	Parameters:
-		N_rotor		 : number or rotors
-		hover_FM	 : hover figure of merit
-		rho_air		 : air density [kg/m**3]
-		rotor_sigma  : rotor's solidity
-		g 			 : gravitational acceleration [m/s**2]
-		AoA 		 : aircraft's angle of attack [deg]
+		N_propeller	: number or propellers
+		n_blade 	: number of blades per propeller
+		hover_FM	: hover figure of merit
+		rho_air		: air density [kg/m**3]
+		g 			: gravitational acceleration [m/s**2]
+		AoA 		: aircraft's angle of attack [deg]
 	Inputs:
 		Weight|takeoff 			: total take-off weight [kg]
 		eVTOL|S_wing 			: wing area [m**2]
@@ -169,22 +171,22 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 	"""
 	def initialize(self):
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
-		self.options.declare('N_rotor', types=int, desc='Number of cruising rotors')
+		self.options.declare('N_propeller', types=int, desc='Number of propellers')
+		self.options.declare('n_blade', types=int, desc='Number of blades per propeller')
 		self.options.declare('hover_FM', types=float, desc='Hover figure of merit')
 		self.options.declare('rho_air', types=float, desc='Air density')
 		self.options.declare('mu_air', types=float, desc='Air dynamic viscosity')
-		self.options.declare('rotor_sigma', types=float, desc='Rotor solidity')
 		self.options.declare('g', types=float, desc='Gravitational acceleration')
 		self.options.declare('AoA', desc='Aircraft angle of attack')
 		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
 
 	def setup(self):
 		vehicle = self.options['vehicle']
-		N_rotor = self.options['N_rotor']
+		N_propeller = self.options['N_propeller']
+		n_blade = self.options['n_blade']
 		hover_FM = self.options['hover_FM']
 		rho_air = self.options['rho_air']
 		mu_air = self.options['mu_air']
-		rotor_sigma = self.options['rotor_sigma']
 		g = self.options['g']
 		AoA = self.options['AoA']
 		fidelity = self.options['fidelity']
@@ -218,7 +220,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 
 		# Step 3: Calculate thrust required by each propeller (thrust = drag)
 		self.add_subsystem('thrust_each',
-							ThrustOfEachRotor(N_rotor=N_rotor),
+							ThrustOfEachRotor(N_rotor=N_propeller),
 							promotes_inputs=[('Thrust_all', 'Aero|Cruise|total_drag')],
 							promotes_outputs=[('Rotor|thrust','Propeller|Cruise|thrust')])
 
@@ -247,8 +249,9 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 
 		# Step 6: Calculate profile power of a rotor
 		self.add_subsystem('profile_power',
-							RotorProfilePower(rho_air=rho_air, sigma=rotor_sigma),
+							RotorProfilePower(rho_air=rho_air, n_blade=n_blade),
 							promotes_inputs=[('Rotor|radius',			'Propeller|radius'),
+											 ('Rotor|chord',			'Propeller|chord'),
 											 ('Rotor|mu', 	  			'Propeller|Cruise|mu'),
 											 ('Rotor|omega',  			'Propeller|Cruise|omega')],
 							promotes_outputs=[('Rotor|profile_power', 	'Propeller|Cruise|profile_power')])
@@ -281,7 +284,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 
 		# Step 8: Calculate total power required for winged forward flight
 		self.add_subsystem('power_req',
-							PowerForwardComp(N_rotor=N_rotor),
+							PowerForwardComp(N_rotor=N_propeller),
 							promotes_inputs=[('Rotor|thrust', 'Propeller|Cruise|thrust'),
 											 ('Rotor|profile_power', 'Propeller|Cruise|profile_power'),
 											 ('Rotor|alpha', 'Propeller|Cruise|alpha'),

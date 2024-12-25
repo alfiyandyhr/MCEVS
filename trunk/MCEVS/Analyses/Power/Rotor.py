@@ -71,10 +71,12 @@ class RotorProfilePower(om.ExplicitComponent):
 	"""
 	Computes the profile power of a rotor
 	Parameters:
+		n_blade 		: number of blades per rotor
 		rho_air			: air density [kg/m**3]
-		rotor_sigma 	: rotor's solidity
+		Cd0 			: zero lift drag of a rotor
 	Inputs:
 		Rotor|radius	: rotor radius [m]
+		Rotor|chord 	: rotor chord length [m]
 		Rotor|mu 		: rotor's advance ratio
 		Rotor|omega 	: rotor's angular velocity [rad/s]
 	Outputs:
@@ -83,35 +85,40 @@ class RotorProfilePower(om.ExplicitComponent):
 		Johnson, W., “Rotorcraft Aeromechanics,” Cambridge University Press, 2013.
 	"""
 	def initialize(self):
+		self.options.declare('n_blade', desc='Number of blades per rotor')
 		self.options.declare('rho_air', default=1.225, desc='Air density')
-		self.options.declare('sigma', types=float, default=0.13, desc='Rotor solidity, e.g., 0.13')
 		self.options.declare('Cd0', default=0.012, desc='Zero lift drag of a rotor')
 
 	def setup(self):
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
+		self.add_input('Rotor|chord', units='m', desc='Rotor chord length')
 		self.add_input('Rotor|mu', desc='Rotor advance ratio')
 		self.add_input('Rotor|omega', units='rad/s', desc='Rotor angular velocity')
 		self.add_output('Rotor|profile_power', units='W', desc='Profile power of a rotor, P0')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
+		n_blade = self.options['n_blade']
 		rho_air = self.options['rho_air']
-		sigma = self.options['sigma']
 		Cd0 = self.options['Cd0']
 		mu = inputs['Rotor|mu']
 		omega = inputs['Rotor|omega']
 		r = inputs['Rotor|radius']
+		c = inputs['Rotor|chord']
+		sigma = n_blade * c / (np.pi * r)
 
 		P0_each = (sigma*Cd0/8) * (1 + 4.65*mu**2) * (np.pi * rho_air * omega**3 * r**5)
 		outputs['Rotor|profile_power'] = P0_each
 
 	def compute_partials(self, inputs, partials):
+		n_blade = self.options['n_blade']
 		rho_air = self.options['rho_air']
-		sigma = self.options['sigma']
 		Cd0 = self.options['Cd0']
 		mu = inputs['Rotor|mu']
 		omega = inputs['Rotor|omega']
 		r = inputs['Rotor|radius']
+		c = inputs['Rotor|chord']
+		sigma = n_blade * c / (np.pi * r)
 
 		k1 = sigma * Cd0 / 8
 		k2 = 1 + 4.65*mu**2
@@ -119,7 +126,8 @@ class RotorProfilePower(om.ExplicitComponent):
 
 		partials['Rotor|profile_power', 'Rotor|mu'] = k1 * k3 * (2 * 4.65 * mu)
 		partials['Rotor|profile_power', 'Rotor|omega'] = k1 * k2 * (np.pi * rho_air * 3 * omega**2 * r**5)
-		partials['Rotor|profile_power', 'Rotor|radius'] = k1 * k2 * (np.pi * rho_air * omega**3 * 5 * r**4)
+		partials['Rotor|profile_power', 'Rotor|radius'] = n_blade * c / np.pi * Cd0 / 8 * k2 * (np.pi * rho_air * omega**3 * 4 * r**3)
+		partials['Rotor|profile_power', 'Rotor|chord'] = n_blade / np.pi * Cd0 / 8 * k2 * (np.pi * rho_air * omega**3 * r**4)
 
 class InducedPowerFactorComp(om.ExplicitComponent):
 	"""

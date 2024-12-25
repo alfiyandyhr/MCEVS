@@ -1,3 +1,6 @@
+
+import numpy as np
+
 class LiftRotor(object):
 	"""
 	docstring for LiftRotor
@@ -12,6 +15,7 @@ class LiftRotor(object):
 		self.n_blade = None
 		self.solidity = None
 		self.radius = None
+		self.chord = None
 
 		# Weight and performance
 		self.weight = None
@@ -31,10 +35,10 @@ class LiftRotor(object):
 				self.n_rotor = int(self.kwargs[item])
 			elif item == 'n_blade':
 				self.n_blade = int(self.kwargs[item])
-			elif item == 'solidity':
-				self.solidity = float(self.kwargs[item])
 			elif item == 'radius':
 				self.radius = float(self.kwargs[item])
+			elif item == 'chord':
+				self.chord = float(self.kwargs[item])
 			elif item == 'hub_length':
 				self.hub_length = float(self.kwargs[item])
 			elif item == 'hub_max_diameter':
@@ -45,6 +49,8 @@ class LiftRotor(object):
 				self.advance_ratio = float(self.kwargs[item])
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
+
+		self.solidity = self.n_blade * self.chord / (np.pi * self.radius)
 
 	def _calculate_weight_given_max_power(self, p_max):
 		k_prop = 0.144 # for piston engines; 0.108 for turboprops
@@ -59,6 +65,7 @@ class LiftRotor(object):
 		info += f'\t\tNumber of blade(s) per rotor = {self.n_blade}\n'
 		info += f'\t\tSolidity = {self.solidity}\n'
 		info += f'\t\tRadius = {self.radius} m\n'
+		info += f'\t\tChord = {self.chord} m\n'
 		info += f'\t\tFigure of Merit = {self.figure_of_merit}\n'
 		info += f'\t\tAdvance ratio = {self.advance_ratio}'
 		return info
@@ -69,6 +76,7 @@ class LiftRotor(object):
 		print(f'\tNumber of blade(s) per rotor = {self.n_blade}')
 		print(f'\tSolidity = {self.solidity}')
 		print(f'\tRadius = {self.radius} m')
+		print(f'\tChord = {self.chord} m')
 		print(f'\tFigure of Merit = {self.figure_of_merit}')
 		print(f'\tAdvance ratio = {self.advance_ratio}')
 
@@ -86,6 +94,7 @@ class Propeller(object):
 		self.n_blade = None
 		self.solidity = None
 		self.radius = None
+		self.chord = None
 
 		# Weight and performance
 		self.weight = None
@@ -104,10 +113,10 @@ class Propeller(object):
 				self.n_propeller = int(self.kwargs[item])
 			elif item == 'n_blade':
 				self.n_blade = int(self.kwargs[item])
-			elif item == 'solidity':
-				self.solidity = float(self.kwargs[item])
 			elif item == 'radius':
 				self.radius = float(self.kwargs[item])
+			elif item == 'chord':
+				self.chord = float(self.kwargs[item])
 			elif item == 'hub_length':
 				self.hub_length = float(self.kwargs[item])
 			elif item == 'hub_max_diameter':
@@ -116,6 +125,8 @@ class Propeller(object):
 				self.advance_ratio = float(self.kwargs[item])
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
+
+		self.solidity = self.n_blade * self.chord / (np.pi * self.radius)
 
 	def _calculate_weight_given_max_power(self, p_max):
 		k_prop = 0.144 # for piston engines; 0.108 for turboprops
@@ -130,6 +141,7 @@ class Propeller(object):
 		info += f'\t\tNumber of blade(s) per propeller = {self.n_blade}\n'
 		info += f'\t\tSolidity = {self.solidity}\n'
 		info += f'\t\tRadius = {self.radius} m\n'
+		info += f'\t\tChord = {self.chord} m\n'
 		info += f'\t\tAdvance ratio = {self.advance_ratio}'
 		return info
 
@@ -139,6 +151,7 @@ class Propeller(object):
 		print(f'\tNumber of blade(s) per propeller = {self.n_blade}')
 		print(f'\tSolidity = {self.solidity} m')
 		print(f'\tRadius = {self.radius} m')
+		print(f'\tChord = {self.chord} m')
 		print(f'\tAdvance ratio = {self.advance_ratio}')
 
 
