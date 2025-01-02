@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+# BEMT: without grads, solver: bisection method, implemented using scipy
+# BEMT_OM: with grads, solver: newton solver, implemented using OpenMDAO
+
 # Sweep the v_inf from 0 to 45 m/s
 v_infs = np.arange(0,46,1)
 
