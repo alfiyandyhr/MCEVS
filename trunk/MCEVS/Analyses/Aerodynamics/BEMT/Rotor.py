@@ -7,34 +7,34 @@ class Rotor(object):
 	Notes:
 		> should be called with "initialize_rotor" function
 	"""
-	def __init__(self, rotorDict:dict, caseDict:dict):
+	def __init__(self, rotorDict:dict):
 		super(Rotor, self).__init__()
 		
 		# Unpacking
 		D = rotorDict['diameter']
-		rpm = caseDict['rpm']
-		v_inf = caseDict['v_inf']
 
+		self.diameter = rotorDict['diameter']
 		self.nblades = rotorDict['nblades']
-		self.blade_radius = 0.5 * D
+		self.blade_radius = 0.5 * rotorDict['diameter']
 		self.hub_radius = rotorDict['hub_radius']
-		self.area = 0.25 * np.pi * D**2
+		self.area = 0.25 * np.pi * rotorDict['diameter']**2
 
 		# Operating point
-		self.op = {'v_inf': v_inf,
-				   'omega': rpm*2*np.pi/60.0,
-				   'n': rpm/60.0,
-				   'J': v_inf*60.0/(D*rpm)}
+		self.op = {'v_inf': None,
+				   'rpm': None,
+				   'omega': None,
+				   'n': None,
+				   'J': None}
 
 	def _calc_performance(self, T, Q, P, rho):
 		"""
 		Calculate rotor performance given thrust, torque, power
 		"""
 		# Unpacking
-		n = self.op['n']
-		D = 2.0 * self.blade_radius
-		J = self.op['J']
+		D = self.diameter
 		v_inf = self.op['v_inf']
+		n = self.op['n']
+		J = self.op['J']
 
 		# Ideal power
 		ideal_P = T * ( v_inf/2 + np.sqrt((v_inf/2)**2 + T/(2*rho*self.area)) )
@@ -50,15 +50,15 @@ class Rotor(object):
 
 		return FM, CT, CQ, CP, eta
 
-def initialize_rotor(rotorDict, caseDict):
-	r = Rotor(rotorDict, caseDict)
+def initialize_rotor(rotorDict):
+	r = Rotor(rotorDict)
 	return r
 
 class RotorPerformanceCoeffs(om.ExplicitComponent):
 	"""
 	Parameter: rho
 	Inputs: T, Q, P, v_inf, omega, blade_radius
-	Outputs: FM, CT, CQ, CP, eta
+	Outputs: FM, CT, CQ, CP, eta, J
 	"""
 	def initialize(self):
 		self.options.declare('rho', types=float)
@@ -75,6 +75,7 @@ class RotorPerformanceCoeffs(om.ExplicitComponent):
 		self.add_output('CQ', units=None)
 		self.add_output('eta', units=None)
 		self.add_output('FM', units=None)
+		self.add_output('J', units=None)
 		self.declare_partials('*','*')
 
 	def compute(self, inputs, outputs):
@@ -96,6 +97,7 @@ class RotorPerformanceCoeffs(om.ExplicitComponent):
 		outputs['CP'] = 2 * np.pi * Q / (32 * rho * n**2 * blade_radius**5)
 		outputs['eta'] = T * blade_radius * J / (np.pi * Q)
 		outputs['FM'] = ideal_P / P
+		outputs['J'] = J
 
 	def compute_partials(self, inputs, partials):
 		rho = self.options['rho']
@@ -155,6 +157,13 @@ class RotorPerformanceCoeffs(om.ExplicitComponent):
 		partials['FM','v_inf'] = dIP_dvinf / P
 		partials['FM','omega'] = 0.0
 		partials['FM','blade_radius'] = dIP_dr / P
+
+		partials['J','T'] = 0.0
+		partials['J','Q'] = 0.0
+		partials['J','P'] = 0.0
+		partials['J','v_inf'] = np.pi / (omega * blade_radius)
+		partials['J','omega'] = v_inf * np.pi / blade_radius * (-1/omega**2)
+		partials['J','blade_radius'] = v_inf * np.pi / omega * (-1/blade_radius**2)
 
 
 

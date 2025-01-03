@@ -21,11 +21,10 @@ fluidDict = {'rho': 1.225, 'mu':1.81E-5}
 
 for v_inf in v_infs:
 	print(f'Solving for v_inf = {v_inf} m/s')
-	caseDict = {'v_inf': float(v_inf), 'rpm': 1100.0}
-	solver = BEMTSolver(caseDict, rotorDict, sectionDict, fluidDict)
-	results = solver.run()
-	solverOM = BEMTSolverOM(caseDict, rotorDict, sectionDict, fluidDict)
-	resultsOM = solverOM.run()
+	solver = BEMTSolver(rotorDict, sectionDict, fluidDict)
+	results = solver.run(v_inf=float(v_inf), rpm=1100.0)
+	solverOM = BEMTSolverOM(rotorDict, sectionDict, fluidDict)
+	resultsOM = solverOM.run(v_inf=float(v_inf), rpm=1100.0)
 
 	results_dict['J'].append(results['J'])
 	results_dict['CT'].append(results['CT'])
@@ -60,8 +59,8 @@ fig.suptitle('Experiment vs BEMT')
 fig.legend([r'$C_T$-exp',r'$C_T$-bemt',r'$C_T$-bemt_OM',r'$C_P$-exp',r'$C_P$-bemt',r'$C_P$-bemt_OM',r'$\eta$-exp',r'$\eta$-bemt',r'$\eta$-bemt_OM'],
 			ncols=3, loc='upper center', bbox_to_anchor=(0.5,0.94))
 plt.subplots_adjust(left=0.12, bottom=0.1, right=0.9, top=0.76, hspace=0.1)
-# plt.show()
-plt.savefig('bemt_validation.pdf',format='pdf',dpi=600)
+plt.show()
+# plt.savefig('bemt_validation.pdf',format='pdf',dpi=600)
 
 # References
 # [1] Theodorsen T., Stickle G.W. and Brevoort, M.J. “Characteristics of six propellers including the high-speed range.”
