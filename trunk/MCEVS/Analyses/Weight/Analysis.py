@@ -70,11 +70,13 @@ class WeightAnalysis(object):
 
 		if self.vehicle.configuration == 'Multirotor':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
 			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
 			rotor_advance_ratio 	= self.vehicle.lift_rotor.advance_ratio
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
 			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
 			r_propeller 			= self.vehicle.propeller.radius 		# m
 			c_propeller 			= self.vehicle.propeller.chord  		# m
@@ -89,23 +91,46 @@ class WeightAnalysis(object):
 		# --- OpenMDAO probolem --- #
 		prob = om.Problem()
 		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
+		
+		# indeps.add_output('Weight|takeoff', 1500.0, units='kg') # mtow guess
 		indeps.add_output('Mission|cruise_speed', cruise_speed, units='m/s')
 
 		if self.vehicle.configuration == 'Multirotor':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|advance_ratio', rotor_advance_ratio)
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
 			indeps.add_output('Propeller|radius', r_propeller, units='m')
 			indeps.add_output('Propeller|chord', c_propeller, units='m')
 			indeps.add_output('Wing|area', wing_area, units='m**2')
 			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
 			indeps.add_output('Propeller|advance_ratio', propeller_advance_ratio)
-		
-		prob.model.add_subsystem('energy_model',
+
+		# Lift rotor variables needed for BEMT
+		if self.fidelity['hover_climb'] == 1:
+			n_sections = self.vehicle.lift_rotor.n_section
+			radius_list = np.array(self.vehicle.lift_rotor.r_to_R_list) * self.vehicle.lift_rotor.radius
+			chord_list = np.array(self.vehicle.lift_rotor.c_to_R_list) * self.vehicle.lift_rotor.radius
+			pitch_list = np.array(self.vehicle.lift_rotor.pitch_list)
+			for i in range(n_sections):
+				if i == 0:
+					width = 2*(radius_list[i] - r_hub_lift_rotor)
+				elif i == n_sections-1:
+					width = 2*(r_lift_rotor - radius_list[i])
+				else:
+					width = radius_list[i] - radius_list[i-1]	
+				indeps.add_output(f'LiftRotor|Section{i+1}|radius', radius_list[i], units='m')
+				indeps.add_output(f'LiftRotor|Section{i+1}|chord', chord_list[i], units='m')
+				indeps.add_output(f'LiftRotor|Section{i+1}|pitch', pitch_list[i], units='deg')
+				indeps.add_output(f'LiftRotor|Section{i+1}|width', width, units='m')
+			indeps.add_output('LiftRotor|hover_climb_rpm', 1000.0, units='rpm') # rpm guess
+
+		prob.model.add_subsystem('mtow_model',
 								  MTOWEstimation(mission=self.mission,
 								  				 vehicle=self.vehicle,
 								  				 constants=self.constants,
@@ -114,9 +139,17 @@ class WeightAnalysis(object):
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
 
-		prob.setup(check=False)
-		# prob.check_partials(compact_print=True)
-		prob.run_model()
+		if self.fidelity['hover_climb'] == 0:
+			prob.setup(check=False)
+			prob.run_model()
+
+		elif self.fidelity['hover_climb'] == 1:
+			prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=False)
+			prob.model.add_design_var('LiftRotor|hover_climb_rpm', lower=100, upper=2000)
+			prob.model.add_objective('LiftRotor|hover_climb|thrust_residual_square')
+			prob.setup(check=False)
+			# prob.check_partials(compact_print=True, method='fd')
+			prob.run_driver()
 
 		if record:
 			record_performance_by_segments(prob, self.vehicle.configuration, self.mission)
@@ -215,14 +248,14 @@ class MTOWEstimation(om.Group):
 							promotes_inputs=['*'],
 							promotes_outputs=['*'])
 		if vehicle.configuration == 'Multirotor':
-			self.connect('Power|LiftRotor|maximum', 'lift_rotor_weight.max_power')
+			self.connect('LiftRotor|thrust_each|maximum', 'lift_rotor_weight.max_thrust')
 			self.connect('Power|LiftRotor|maximum', 'lift_rotor_motor_weight.max_power')
 			self.connect('Power|LiftRotor|maximum', 'lift_rotor_controller_weight.max_power')
 		elif vehicle.configuration == 'LiftPlusCruise':
-			self.connect('Power|LiftRotor|maximum', 'lift_rotor_weight.max_power')
+			self.connect('LiftRotor|thrust_each|maximum', 'lift_rotor_weight.max_thrust')
 			self.connect('Power|LiftRotor|maximum', 'lift_rotor_motor_weight.max_power')
 			self.connect('Power|LiftRotor|maximum', 'lift_rotor_controller_weight.max_power')
-			self.connect('Power|Propeller|maximum', 'propeller_weight.max_power')
+			self.connect('Propeller|thrust_each|maximum', 'propeller_weight.max_thrust')
 			self.connect('Power|Propeller|maximum', 'propeller_motor_weight.max_power')
 			self.connect('Power|Propeller|maximum', 'propeller_controller_weight.max_power')
 
@@ -246,7 +279,7 @@ class MTOWEstimation(om.Group):
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=['Weight|*'])
 
-		# 4. Weight residuals
+		# 5. Weight residuals
 		
 		# W_residual = W_total - W_payload - W_battery - W_propulsion - W_structure - W_equipment
 		# where:
@@ -280,8 +313,8 @@ class MTOWEstimation(om.Group):
 			residual_balance = om.BalanceComp('W_total',
 											   units='kg',
 											   eq_units='kg',
-											   lower=500.0,
-											   upper=2500.0,
+											   lower=0.0,
+											   upper=10000.0,
 											   val=1500.0,
 											   rhs_val=0.0,
 											   use_mult=False)
@@ -291,7 +324,7 @@ class MTOWEstimation(om.Group):
 								promotes_outputs=[('W_total','Weight|takeoff')])
 
 			# Add solvers for implicit relations
-			self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=50, iprint=0, rtol=1e-10)
+			self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=50, iprint=0, rtol=1e-3)
 			self.nonlinear_solver.options['err_on_non_converge'] = True
 			self.nonlinear_solver.options['reraise_child_analysiserror'] = True
 			self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
