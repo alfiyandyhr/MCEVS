@@ -37,12 +37,13 @@ design_var = {'wing_area': 16.2, 'wing_aspect_ratio': 7.32,
 vehicle = StandardLiftPlusCruiseEVTOL(design_var)
 
 # Analysis
-analysis = WeightAnalysis(vehicle=vehicle, mission=mission, constants=constants, fidelity={'aero':1}, sizing_mode=True)
+analysis = WeightAnalysis(vehicle=vehicle, mission=mission, constants=constants, fidelity={'aero':1, 'hover_climb':1}, sizing_mode=True)
 results = analysis.evaluate(record=True)
 
 # plot_performance_by_segments(mission=mission, vehicle=vehicle)
 
 print(vehicle.Cd0)
+print('Hover Climb RPM = ', results.get_val('LiftRotor|hover_climb_rpm'))
 
 print('Power segment_1 = ', results.get_val('Power|segment_1', 'kW'))
 print('Power segment_2 = ', results.get_val('Power|segment_2', 'kW'))

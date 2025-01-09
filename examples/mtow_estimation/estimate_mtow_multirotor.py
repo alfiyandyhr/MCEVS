@@ -30,19 +30,22 @@ mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', spee
 constants = EarthGravityAndAtmosphere('US_Standard_1976').compute_constants(altitude=mission.takeoff_altitude)
 
 # Design variables (aircraft design and operation)
-design_var = {'r_lift_rotor': 1.5, 'cruise_speed': cruise_speed, 'rotor_advance_ratio': 0.3}
+design_var = {'r_lift_rotor': 1.5,
+			  'cruise_speed': cruise_speed,
+			  'rotor_advance_ratio': 0.3}
 
 vehicle = StandardMultirotorEVTOL(design_var)
 
 # vehicle.print_info()
 
 # Analysis
-analysis = WeightAnalysis(vehicle=vehicle, mission=mission, constants=constants, fidelity={'aero':1}, sizing_mode=True)
+analysis = WeightAnalysis(vehicle=vehicle, mission=mission, constants=constants, fidelity={'aero':1, 'hover_climb':1}, sizing_mode=True)
 results = analysis.evaluate(record=True)
 
 # plot_performance_by_segments(mission=mission, vehicle=vehicle)
 
 print(vehicle.Cd0)
+print('Hover Climb RPM = ', results.get_val('LiftRotor|hover_climb_rpm'))
 
 print('Power segment_1 = ', results.get_val('Power|segment_1', 'kW'))
 print('Power segment_2 = ', results.get_val('Power|segment_2', 'kW'))
