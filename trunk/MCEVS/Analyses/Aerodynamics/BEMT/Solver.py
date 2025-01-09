@@ -140,7 +140,6 @@ class BEMTSolverOM(object):
 								  BEMTSolverOMGroup(nblades=self.rotorDict['nblades'],
 								  				    airfoil_list=self.sectionDict['airfoil_list'],
 								  				    rho=self.fluidDict['rho'],
-								  				    mu=self.fluidDict['mu'],
 								  				    trim_rpm=False),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
@@ -198,7 +197,6 @@ class BEMTSolverOM(object):
 								  BEMTSolverOMGroup(nblades=self.rotorDict['nblades'],
 								  				    airfoil_list=self.sectionDict['airfoil_list'],
 								  				    rho=self.fluidDict['rho'],
-								  				    mu=self.fluidDict['mu'],
 								  				    trim_rpm=True),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
@@ -240,14 +238,12 @@ class BEMTSolverOMGroup(om.Group):
 		self.options.declare('nblades', types=int, desc='Number of blades per rotor')
 		self.options.declare('airfoil_list', types=list, desc='List of sectional airfoils')
 		self.options.declare('rho', types=float, desc='Air density')
-		self.options.declare('mu', types=float, desc='Air dynamic viscosity')
 		self.options.declare('trim_rpm', types=bool, desc='Whether to use in trim mode (find trimmed_rpm)')
 
 	def setup(self):
 		nblades = self.options['nblades']
 		airfoil_list = self.options['airfoil_list']
 		rho = self.options['rho']
-		mu = self.options['mu']
 		trim_rpm = self.options['trim_rpm']
 
 		self.add_subsystem(f'rpm2omega',
@@ -260,6 +256,7 @@ class BEMTSolverOMGroup(om.Group):
 		for i in range(len(airfoil_list)):
 
 			input_list = ['v_inf','omega','blade_radius','hub_radius',
+						   ('phi',f'Section{i+1}|phi'),
 						   ('radius',f'Section{i+1}|radius'),
 						   ('pitch',f'Section{i+1}|pitch'),
 						   ('chord',f'Section{i+1}|chord')]
@@ -279,12 +276,12 @@ class BEMTSolverOMGroup(om.Group):
 						   ('phi',f'Section{i+1}|phi')]
 
 			self.add_subsystem(f'section{i+1}_solver',
-								SectionSolverOM(airfoil=airfoil_list[i], nblades=nblades, rho=rho, mu=mu),
+								SectionSolverOM(airfoil=airfoil_list[i], nblades=nblades, rho=rho),
 								promotes_inputs=input_list,
 								promotes_outputs=output_list)
 
 			self.add_subsystem(f'section{i+1}_forces',
-								SectionForces(nblades=nblades, rho=rho, mu=mu),
+								SectionForces(nblades=nblades, rho=rho),
 								promotes_inputs=['v_inf','omega',
 												 ('a',f'Section{i+1}|a'),
 												 ('ap',f'Section{i+1}|ap'),

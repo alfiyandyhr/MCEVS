@@ -1,4 +1,5 @@
 import os
+import openmdao.api as om
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
@@ -69,6 +70,73 @@ def load_airfoil(name):
 	a.Cd_func = interp1d(a.alpha_data, a.Cd_data, kind='quadratic')
 
 	return a
+
+class AirfoilCoeffs(om.ExplicitComponent):
+	"""
+	Parameter: airfoil
+	Input: AoA
+	Output: Cl, Cd
+	"""
+	def initialize(self):
+		self.options.declare('airfoil', types=str)
+
+	def setup(self):
+		self.add_input('AoA', units='deg')
+		self.add_output('Cl', units=None)
+		self.add_output('Cd', units=None)
+		self.declare_partials('*','*')
+
+	def compute(self, inputs, outputs):
+		airfoil = self.options['airfoil']
+		AoA = inputs['AoA']
+
+		if airfoil == 'CLARKY':
+			if AoA < -9.25:
+				outputs['Cl'] = 0.00016055*AoA**2 + 0.03038325*AoA - 0.12669162
+				outputs['Cd'] = 0.00010179*AoA**2 + 0.01926335*AoA + 0.25451674
+			elif AoA > 17.0:
+				outputs['Cl'] =  0.00013341*AoA**2 - 0.02628272*AoA + 1.75924935
+				outputs['Cd'] = -0.00010646*AoA**2 + 0.02097336*AoA - 0.23195915
+			else:
+				outputs['Cl'] = -0.00022620*AoA**3 + 0.00035166*AoA**2 + 0.11501989*AoA + 0.376
+				outputs['Cd'] =  0.00000563*AoA**3 + 0.00026543*AoA**2 - 0.00170558*AoA + 0.00652
+
+		elif airfoil == 'BOEING_VERTOL_VR12':
+			if AoA < -9.5:
+				outputs['Cl'] = -0.00004972*AoA**2 - 0.00942282*AoA - 0.58952914
+				outputs['Cd'] = -0.00014875*AoA**2 - 0.02818766*AoA - 0.15965827
+			elif AoA > 18.5:
+				outputs['Cl'] =  0.00069132*AoA**2 - 0.13722607*AoA + 3.64317973
+				outputs['Cd'] = -0.00020911*AoA**2 + 0.04150877*AoA - 0.59881363
+			else:
+				outputs['Cl'] = -0.00023201*AoA**3 + 0.00151456*AoA**2 + 0.11609899*AoA + 0.17357118
+				outputs['Cd'] = -0.00000441*AoA**3 + 0.00038061*AoA**2 - 0.00225189*AoA + 0.00628659
+				
+	def compute_partials(self, inputs, partials):
+		airfoil = self.options['airfoil']
+		AoA = inputs['AoA']
+
+		if airfoil == 'CLARKY':
+			if AoA < -9.25:
+				partials['Cl','AoA'] = 2*0.00016055*AoA + 0.03038325
+				partials['Cd','AoA'] = 2*0.00010179*AoA + 0.01926335
+			elif AoA > 17.0:
+				partials['Cl','AoA'] =  2*0.00013341*AoA - 0.02628272
+				partials['Cd','AoA'] = -2*0.00010646*AoA + 0.02097336
+			else:
+				partials['Cl','AoA'] = -3*0.00022620*AoA**2 + 2*0.00035166*AoA + 0.11501989
+				partials['Cd','AoA'] =  3*0.00000563*AoA**2 + 2*0.00026543*AoA - 0.00170558
+
+		elif airfoil == 'BOEING_VERTOL_VR12':
+			if AoA < -9.5:
+				partials['Cl','AoA'] = -2*0.00004972*AoA - 0.00942282
+				partials['Cd','AoA'] = -2*0.00014875*AoA - 0.02818766
+			elif AoA > 18.5:
+				partials['Cl','AoA'] =  2*0.00069132*AoA - 0.13722607
+				partials['Cd','AoA'] = -2*0.00020911*AoA + 0.04150877
+			else:
+				partials['Cl','AoA'] = -3*0.00023201*AoA**2 + 2*0.00151456*AoA + 0.11609899
+				partials['Cd','AoA'] = -3*0.00000441*AoA**2 + 2*0.00038061*AoA - 0.00225189
 
 if __name__ == '__main__':
 	airfoil = load_airfoil('CLARKY')

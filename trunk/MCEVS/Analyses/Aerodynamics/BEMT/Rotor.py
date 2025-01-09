@@ -98,7 +98,7 @@ class RotorPerformanceCoeffs(om.ExplicitComponent):
 		outputs['eta'] = T * blade_radius * J / (np.pi * Q)
 		outputs['FM'] = ideal_P / P
 		outputs['J'] = J
-
+		
 	def compute_partials(self, inputs, partials):
 		rho = self.options['rho']
 		T = inputs['T']

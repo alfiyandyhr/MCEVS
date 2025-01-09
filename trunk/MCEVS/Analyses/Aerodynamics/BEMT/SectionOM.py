@@ -1,3 +1,4 @@
+from MCEVS.Analyses.Aerodynamics.BEMT.Airfoil import AirfoilCoeffs
 import openmdao.api as om
 import numpy as np
 
@@ -9,13 +10,11 @@ class SectionSolverOM(om.Group):
 		self.options.declare('airfoil', types=str, desc='Airfoil name')
 		self.options.declare('nblades', types=int, desc='Number of blades per rotor')
 		self.options.declare('rho', types=float, desc='Air density')
-		self.options.declare('mu', types=float, desc='Air viscosity')
 	
 	def setup(self):
 		airfoil = self.options['airfoil']
 		nblades = self.options['nblades']
 		rho = self.options['rho']
-		mu = self.options['mu']
 
 		self.add_subsystem(f'dr_tip_calc',
 							om.ExecComp('dr_tip = blade_radius - radius', dr_tip={'units':'m'}, blade_radius={'units':'m'}, radius={'units':'m'}),
@@ -87,14 +86,13 @@ class SectionSolverOM(om.Group):
 
 class SectionForces(om.ExplicitComponent):
 	"""
-	Parameters: nblades, rho, mu
+	Parameters: nblades, rho
 	Inputs: a, ap, CT, CQ, v_inf, omega, radius, width, chord
 	Outputs: dT, dQ
 	"""
 	def initialize(self):
 		self.options.declare('nblades', types=int)
 		self.options.declare('rho', types=float)
-		self.options.declare('mu', types=float)
 
 	def setup(self):
 		self.add_input('a', units=None)
@@ -113,7 +111,6 @@ class SectionForces(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		nblades = self.options['nblades']
 		rho = self.options['rho']
-		mu = self.options['mu']
 		a = inputs['a']
 		ap = inputs['ap']
 		CT = inputs['CT']
@@ -137,7 +134,6 @@ class SectionForces(om.ExplicitComponent):
 	def compute_partials(self, inputs, partials):
 		nblades = self.options['nblades']
 		rho = self.options['rho']
-		mu = self.options['mu']
 		a = inputs['a']
 		ap = inputs['ap']
 		CT = inputs['CT']
@@ -193,7 +189,7 @@ class InductionFactors(om.ExplicitComponent):
 		kappa = inputs['kappa']
 		kappap = inputs['kappap']
 		outputs['a'] = 1.0 / (kappa - 1.0)
-		outputs['ap'] = 1.0 / (kappap - 1.0)
+		outputs['ap'] = 1.0 / (kappap + 1.0)
 		
 	def compute_partials(self, inputs, partials):
 		kappa = inputs['kappa']
@@ -201,7 +197,7 @@ class InductionFactors(om.ExplicitComponent):
 		partials['a','kappa'] = - 1.0 / (kappa - 1.0)**2
 		partials['a','kappap'] = 0.0
 		partials['ap','kappa'] = 0.0
-		partials['ap','kappap'] = - 1.0 / (kappap - 1.0)**2
+		partials['ap','kappap'] = - 1.0 / (kappap + 1.0)**2
 
 class InductionFactorsKappa(om.ExplicitComponent):
 	"""
@@ -292,51 +288,6 @@ class ThrustTorqueCoeffs(om.ExplicitComponent):
 		partials['CQ','Cl'] = np.sin(phi)
 		partials['CQ','Cd'] = np.cos(phi)
 		partials['CQ','phi'] = Cl*np.cos(phi) - Cd*np.sin(phi)
-
-class AirfoilCoeffs(om.ExplicitComponent):
-	"""
-	Parameter: airfoil
-	Input: AoA
-	Output: Cl, Cd
-	"""
-	def initialize(self):
-		self.options.declare('airfoil', types=str)
-
-	def setup(self):
-		self.add_input('AoA', units='deg')
-		self.add_output('Cl', units=None)
-		self.add_output('Cd', units=None)
-		self.declare_partials('*','*')
-
-	def compute(self, inputs, outputs):
-		airfoil = self.options['airfoil']
-		AoA = inputs['AoA']
-
-		if airfoil == 'CLARKY':
-			if AoA < -9.090909:
-				outputs['Cl'] = 0.000160528*AoA**2 + 0.03037802*AoA - 0.12694487
-				outputs['Cd'] = 0.00010178*AoA**2 + 0.01926120*AoA + 0.25441268
-			elif AoA > 12.727273:
-				outputs['Cl'] = 0.00013293*AoA**2 - 0.02617291*AoA + 1.75379976
-				outputs['Cd'] = -0.00010616*AoA**2 + 0.02090305*AoA - 0.22847177
-			else:
-				outputs['Cl'] = 0.10334725*AoA + 0.376
-				outputs['Cd'] = 0.00016334*AoA**2 - 0.00043427*AoA + 0.00652
-
-	def compute_partials(self, inputs, partials):
-		airfoil = self.options['airfoil']
-		AoA = inputs['AoA']
-
-		if airfoil == 'CLARKY':
-			if AoA < -9.090909:
-				partials['Cl','AoA'] = 2*0.000160528*AoA + 0.03037802
-				partials['Cd','AoA'] = 2*0.00010178*AoA + 0.01926120
-			elif AoA > 12.727273:
-				partials['Cl','AoA'] = 2*0.00013293*AoA - 0.02617291
-				partials['Cd','AoA'] = -2*0.00010616*AoA + 0.02090305
-			else:
-				partials['Cl','AoA'] = 0.10334725
-				partials['Cd','AoA'] = 2*0.00016334*AoA - 0.00043427
 
 class TipAndHubLossFactor(om.Group):
 	"""
