@@ -2,7 +2,7 @@ import numpy as np
 import openmdao.api as om
 
 from MCEVS.Analyses.Power.Hover.Stay import PowerHoverStay
-from MCEVS.Analyses.Power.HoverClimb.Constant_Speed import PowerHoverClimbConstantSpeed
+from MCEVS.Analyses.Power.HoverClimb.Constant_Speed import PowerHoverClimbConstantSpeedFidelityZero, PowerHoverClimbConstantSpeedFidelityOne
 from MCEVS.Analyses.Power.HoverDescent.Constant_Speed import PowerHoverDescentConstantSpeed
 from MCEVS.Analyses.Power.Climb.Constant_Vy_Constant_Vx import PowerClimbConstantVyConstantVxWithWing, PowerClimbConstantVyConstantVxEdgewise
 from MCEVS.Analyses.Power.Descent.Constant_Vy_Constant_Vx import PowerDescentConstantVyConstantVxWithWing, PowerDescentConstantVyConstantVxEdgewise
@@ -114,9 +114,9 @@ class PowerRequirement(om.Group):
 				v_descent = segment.speed
 
 		# Unpacking vehicle parameters
-		N_lift_rotor 	   = vehicle.lift_rotor.n_rotor			# number of lift rotors
-		n_blade_lift_rotor = vehicle.lift_rotor.n_blade 		# number of blades per rotor
-		hover_FM 		   = vehicle.lift_rotor.figure_of_merit	# hover figure of merit
+		N_lift_rotor 	   		= vehicle.lift_rotor.n_rotor				# number of lift rotors
+		n_blade_lift_rotor 		= vehicle.lift_rotor.n_blade 				# number of blades per rotor
+		hover_FM 		   		= vehicle.lift_rotor.figure_of_merit		# hover figure of merit
 
 		if vehicle.configuration == 'Multirotor':
 			pass
@@ -153,11 +153,19 @@ class PowerRequirement(om.Group):
 													  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}')])
 
 			if segment.kind == 'HoverClimbConstantSpeed':
-				self.add_subsystem(f'segment_{segment.id}_power',
-									PowerHoverClimbConstantSpeed(N_rotor=N_lift_rotor, hover_FM=hover_FM, rho_air=rho_air, g=g, v_climb=v_climb),
-									promotes_inputs=['Weight|takeoff', 'LiftRotor|radius'],
-									promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
-													  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}')])
+				if fidelity['hover_climb'] == 0:
+					self.add_subsystem(f'segment_{segment.id}_power',
+										PowerHoverClimbConstantSpeedFidelityZero(N_rotor=N_lift_rotor, hover_FM=hover_FM, rho_air=rho_air, g=g, v_climb=v_climb),
+										promotes_inputs=['Weight|takeoff', 'LiftRotor|*'],
+										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
+														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}')])
+				elif fidelity['hover_climb'] == 1:
+					self.add_subsystem(f'segment_{segment.id}_power',
+										PowerHoverClimbConstantSpeedFidelityOne(vehicle=vehicle, rho_air=rho_air, g=g, v_climb=v_climb),
+										promotes_inputs=['Weight|takeoff', 'LiftRotor|*'],
+										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
+														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
+														  ('thrust_residual_square',f'LiftRotor|hover_climb|thrust_residual_square')])
 
 			if segment.kind == 'HoverDescentConstantSpeed':
 				self.add_subsystem(f'segment_{segment.id}_power',
@@ -213,9 +221,39 @@ class PowerRequirement(om.Group):
 														   'Aero|Cruise|CL', 'Propeller|Cruise|thrust_coefficient',
 														  ('Propeller|Cruise|thrust',f'Propeller|thrust_each|segment_{segment.id}')])
 
-		# ------------------------------------------#
+		# ------------------------------------------ #
+		# ---- Writing maximum thrust equations ---- #
+		# ------------------------------------------ #
+		# T_max = max(T_segment_1, ..., T_segment_n)
+
+		if vehicle.configuration == 'Multirotor':
+			max_thrust_eq = 'T_max = '
+			kwargs_T = {'T_max': {'units':'N'}}
+			for i in range(1, len(mission.segments)+1):
+				if i == len(mission.segments):
+					max_thrust_eq += f'T_segment_{i}' + (len(mission.segments)-1)*')'
+				else:
+					max_thrust_eq += f'maximum(T_segment_{i}, '
+				kwargs_T[f'T_segment_{i}'] = {'units': 'N'}
+
+		elif vehicle.configuration == 'LiftPlusCruise':
+			max_thrust_liftrotor_eq = 'T1_max = '
+			max_thrust_propeller_eq = 'T2_max = '
+			kwargs_T1 = {'T1_max':{'units':'N'}}
+			kwargs_T2 = {'T2_max':{'units':'N'}}
+			for i in range(1, len(mission.segments)+1):
+				if i == len(mission.segments):
+					max_thrust_liftrotor_eq += f'T1_segment_{i}' + (len(mission.segments)-1)*')'
+					max_thrust_propeller_eq += f'T2_segment_{i}' + (len(mission.segments)-1)*')'
+				else:
+					max_thrust_liftrotor_eq += f'maximum(T1_segment_{i}, '
+					max_thrust_propeller_eq += f'maximum(T2_segment_{i}, '
+				kwargs_T1[f'T1_segment_{i}'] = {'units': 'N'}
+				kwargs_T2[f'T2_segment_{i}'] = {'units': 'N'}
+
+		# ----------------------------------------- #
 		# ---- Writing maximum power equations ---- #
-		# ------------------------------------------#
+		# ----------------------------------------- #
 		# p_max = max(p_segment_1, ..., p_segment_n)
 
 		if vehicle.configuration == 'Multirotor':
@@ -242,6 +280,29 @@ class PowerRequirement(om.Group):
 					max_power_propeller_eq += f'maximum(p2_segment_{i}, '
 				kwargs_p1[f'p1_segment_{i}'] = {'units': 'W'}
 				kwargs_p2[f'p2_segment_{i}'] = {'units': 'W'}
+
+		# ----------------------------------------------------------------------------- #
+		# --- Calculate maximum thrust requirement per component for sizing purpose --- #
+		# ----------------------------------------------------------------------------- #
+		if vehicle.configuration == 'Multirotor':
+			max_thrust_comp = om.ExecComp(max_thrust_eq, **kwargs_T)
+			self.add_subsystem('max_thrust_req', max_thrust_comp,
+								promotes_outputs=[('T_max','LiftRotor|thrust_each|maximum')])
+
+			for i in range(1, len(mission.segments)+1):
+				self.connect(f'LiftRotor|thrust_each|segment_{i}', f'max_thrust_req.T_segment_{i}')
+
+		elif vehicle.configuration == 'LiftPlusCruise':
+			max_thrust_liftrotor_comp = om.ExecComp(max_thrust_liftrotor_eq, **kwargs_T1)
+			max_thrust_propeller_comp = om.ExecComp(max_thrust_propeller_eq, **kwargs_T2)
+			self.add_subsystem('max_thrust_liftrotor_req', max_thrust_liftrotor_comp,
+								promotes_outputs=[('T1_max','LiftRotor|thrust_each|maximum')])
+			self.add_subsystem('max_thrust_propeller_req', max_thrust_propeller_comp,
+								promotes_outputs=[('T2_max','Propeller|thrust_each|maximum')])
+			
+			for i in range(1, len(mission.segments)+1):
+				self.connect(f'LiftRotor|thrust_each|segment_{i}', f'max_thrust_liftrotor_req.T1_segment_{i}')
+				self.connect(f'Propeller|thrust_each|segment_{i}', f'max_thrust_propeller_req.T2_segment_{i}')
 
 		# ---------------------------------------------------------------------------- #
 		# --- Calculate maximum power requirement per component for sizing purpose --- #

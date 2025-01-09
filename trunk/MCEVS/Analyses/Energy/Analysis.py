@@ -24,11 +24,13 @@ class EnergyAnalysis(object):
 
 		if self.vehicle.configuration == 'Multirotor':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
 			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
 			rotor_advance_ratio 	= self.vehicle.lift_rotor.advance_ratio
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
 			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
 			r_propeller 			= self.vehicle.propeller.radius 		# m
 			c_propeller 			= self.vehicle.propeller.chord  		# m
@@ -49,17 +51,38 @@ class EnergyAnalysis(object):
 
 		if self.vehicle.configuration == 'Multirotor':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|advance_ratio', rotor_advance_ratio)
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
 			indeps.add_output('Propeller|radius', r_propeller, units='m')
 			indeps.add_output('Propeller|chord', c_propeller, units='m')
 			indeps.add_output('Wing|area', wing_area, units='m**2')
 			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
 			indeps.add_output('Propeller|advance_ratio', propeller_advance_ratio)
+
+		# Lift rotor variables needed for BEMT
+		if self.fidelity['hover_climb'] == 1:
+			n_sections = self.vehicle.lift_rotor.n_section
+			radius_list = np.array(self.vehicle.lift_rotor.r_to_R_list) * self.vehicle.lift_rotor.radius
+			chord_list = np.array(self.vehicle.lift_rotor.c_to_R_list) * self.vehicle.lift_rotor.radius
+			pitch_list = np.array(self.vehicle.lift_rotor.pitch_list)
+			for i in range(n_sections):
+				if i == 0:
+					width = 2*(radius_list[i] - r_hub_lift_rotor)
+				elif i == n_sections-1:
+					width = 2*(r_lift_rotor - radius_list[i])
+				else:
+					width = radius_list[i] - radius_list[i-1]
+				indeps.add_output(f'LiftRotor|Section{i+1}|radius', radius_list[i], units='m')
+				indeps.add_output(f'LiftRotor|Section{i+1}|chord', chord_list[i], units='m')
+				indeps.add_output(f'LiftRotor|Section{i+1}|pitch', pitch_list[i], units='deg')
+				indeps.add_output(f'LiftRotor|Section{i+1}|width', width, units='m')
+			indeps.add_output('LiftRotor|hover_climb_rpm', 1000.0, units='rpm') # rpm guess
 		
 		prob.model.add_subsystem('energy_model',
 								  EnergyConsumption(mission=self.mission,
@@ -69,8 +92,16 @@ class EnergyAnalysis(object):
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
 
-		prob.setup(check=False)
-		prob.run_model()
+		if self.fidelity['hover_climb'] == 0:
+			prob.setup(check=False)
+			prob.run_model()
+
+		elif self.fidelity['hover_climb'] == 1:
+			prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=False)
+			prob.model.add_design_var('LiftRotor|hover_climb_rpm', lower=100, upper=2000)
+			prob.model.add_objective('LiftRotor|hover_climb|thrust_residual_square')
+			prob.setup(check=False)
+			prob.run_driver()
 
 		if record:
 			record_performance_by_segments(prob, self.vehicle.configuration, self.mission)
