@@ -25,7 +25,7 @@ mission.add_segment('Cruise', kind='CruiseConstantSpeed', AoA=5, speed=cruise_sp
 mission.add_segment(name='Constant Descent', kind='DescentConstantVyConstantVx', distance_Y=304.8, speed_Y=1.524, speed=cruise_speed, n_discrete=10)
 mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', speed=1.524, distance=152.4, n_discrete=10)
 # mission.add_segment('Hover Descent', kind='HoverStay', duration=120.0, n_discrete=5)
-plot_mission_parameters(mission, print_info=False, save_fig=False)
+# plot_mission_parameters(mission, print_info=False, save_fig=False)
 
 # Constants
 constants = EarthGravityAndAtmosphere('US_Standard_1976').compute_constants(altitude=mission.takeoff_altitude)
@@ -36,14 +36,16 @@ design_var2 = {'wing_area': 16.2, 'wing_aspect_ratio': 7.32,
 			  'r_lift_rotor': 1.0, 'r_propeller': 1.0,
 			  'cruise_speed': cruise_speed, 'propeller_advance_ratio': 1.0}
 
-vehicle1 = StandardMultirotorEVTOL(design_var1, mtow=1021.6295)
-vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, mtow=1143.25918)
+vehicle1 = StandardMultirotorEVTOL(design_var1, mtow=1250.87074979)
+vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, mtow=1415.21244)
+
+# vehicle1.print_info()
 
 # Analysis
-analysis = EnergyAnalysis(vehicle=vehicle2, mission=mission, constants=constants, fidelity={'aero':1})
+analysis = EnergyAnalysis(vehicle=vehicle2, mission=mission, constants=constants, fidelity={'aero':1, 'hover_climb':1})
 results = analysis.evaluate(record=True)
 
-plot_performance_by_segments(mission=mission, vehicle=vehicle2)
+# plot_performance_by_segments(mission=mission, vehicle=vehicle1)
 
 print(f"Power|segment_1 = {results.get_val('Power|segment_1', 'kW')[0]} kW")
 print(f"Power|segment_2 = {results.get_val('Power|segment_2', 'kW')[0]} kW")
