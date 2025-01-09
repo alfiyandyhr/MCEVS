@@ -1,13 +1,14 @@
+import MCEVS
 import openvsp as vsp
 import numpy as np
-
 
 def NASA_QR_Lift_Rotor(n_lift_rotor=4, r_lift_rotor=9.159, n_blade=5, l_fuse=21.0, d_fuse_max=6.745500, boom_ids=[None]):
 
 	# --- Creating rotor hubs --- #
 
 	# Baseline params
-	l_hub  			= 1.7/21.0*l_fuse
+	# l_hub  			= 1.7/21.0*l_fuse
+	l_hub 			= 2*0.12*r_lift_rotor
 	X  				= [  0.000000,  0.343827,  0.500000,  0.759227,  1.000000 ]
 	Y  				= [  0.000000,  0.000000,  0.000000,  0.000000,  0.000000 ]
 	Z  				= [  0.000000,  0.000000,  0.000000,  0.010870,  0.000000 ]
@@ -75,11 +76,14 @@ def NASA_QR_Lift_Rotor(n_lift_rotor=4, r_lift_rotor=9.159, n_blade=5, l_fuse=21.
 
 	# --- Creating rotor blades --- #
 	Y_Rel_Rotations = [90.0, -90.0, 90.0, -90.0]
+
 	for i in range(int(n_lift_rotor)):
 		rotor_id = vsp.AddGeom('PROP', hub_ids[i])
-		vsp.SetParmVal(rotor_id, 'PropMode', 'Design', 1)
-		vsp.SetParmVal(rotor_id, 'Diameter', 'Design', 2*r_lift_rotor)
-		vsp.SetParmVal(rotor_id, 'NumBlade', 'Design', n_blade)
+		vsp.SetParmVal( rotor_id, 	'PropMode', 		'Design', 	1 			   )
+		vsp.SetParmVal( rotor_id, 	'Diameter', 		'Design', 	2*r_lift_rotor )
+		vsp.SetParmVal( rotor_id, 	'NumBlade', 		'Design', 	n_blade 	   )
+		vsp.SetParmVal( rotor_id, 	'UseBeta34Flag', 	'Design',	1   		   )
+		vsp.SetParmVal( rotor_id, 	'Beta34', 			'Design',	0.0 		   )
 
 		vsp.SetParmVal( rotor_id, 	'X_Rel_Location', 	'XForm', 	l_hub/2 		   )
 		vsp.SetParmVal( rotor_id, 	'Y_Rel_Location', 	'XForm', 	0.00 			   )
@@ -87,8 +91,76 @@ def NASA_QR_Lift_Rotor(n_lift_rotor=4, r_lift_rotor=9.159, n_blade=5, l_fuse=21.
 		vsp.SetParmVal( rotor_id, 	'Y_Rel_Rotation', 	'XForm', 	Y_Rel_Rotations[i] )
 		vsp.SetParmVal( rotor_id, 	'Sym_Planar_Flag', 	'Sym', 		0    			   )
 
-		vsp.SetParmVal( rotor_id, 	'Trans_Attach_Flag', 'Attach', 1.0)
-		vsp.SetParmVal( rotor_id, 	'Rots_Attach_Flag',  'Attach', 1.0)
+		vsp.SetParmVal( rotor_id, 	'Trans_Attach_Flag','Attach', 	1.0 )
+		vsp.SetParmVal( rotor_id, 	'Rots_Attach_Flag', 'Attach', 	1.0 )
+
+		vsp.SetParmVal( rotor_id, 	'RadiusFrac', 		'XSec_0',	0.12 )
+		vsp.SetParmVal( rotor_id, 	'RadiusFrac', 		'XSec_1',	0.75 )
+		vsp.SetParmVal( rotor_id, 	'RadiusFrac', 		'XSec_2',	1.00 )
+
+		# Change airfoil shape using BOEING-VERTOL VR-12 AIRFOIL
+		airfoil_dir = MCEVS.__file__[:-11] + 'Applications/OpenVSP/Components/Airfoils/VR12.dat'
+		rotor_surf = vsp.GetXSecSurf(rotor_id, 0)
+		xsec_num = vsp.GetNumXSec(rotor_surf)
+		for i in range(xsec_num):
+			vsp.ChangeXSecShape(rotor_surf, i, vsp.XS_FILE_AIRFOIL)
+			xsec = vsp.GetXSec(rotor_surf, i)
+			vsp.ReadFileAirfoil(xsec, airfoil_dir)
+
+		# Chord setting
+		vsp.SetParmVal( rotor_id, 	'CrvType', 			'Chord', 	0        )
+		vsp.SetParmVal( rotor_id, 	'r_0',  			'Chord', 	0.120000 )
+		vsp.SetParmVal( rotor_id, 	'r_1',  			'Chord', 	0.175000 )
+		vsp.SetParmVal( rotor_id, 	'r_2',  			'Chord', 	0.285000 )
+		vsp.SetParmVal( rotor_id, 	'r_3',  			'Chord', 	0.395000 )
+		vsp.SetParmVal( rotor_id, 	'r_4',  			'Chord', 	0.505000 )
+		vsp.SetParmVal( rotor_id, 	'r_5',  			'Chord', 	0.615000 )
+		vsp.SetParmVal( rotor_id, 	'r_6',  			'Chord', 	0.725000 )
+		vsp.SetParmVal( rotor_id, 	'r_7',  			'Chord', 	0.835000 )
+		vsp.SetParmVal( rotor_id, 	'r_8',  			'Chord', 	0.945000 )
+		vsp.SetParmVal( rotor_id, 	'r_9',  			'Chord', 	1.000000 )
+		vsp.SetParmVal( rotor_id, 	'crd_0', 			'Chord', 	0.072500 )
+		vsp.SetParmVal( rotor_id, 	'crd_1', 			'Chord', 	0.071475 )
+		vsp.SetParmVal( rotor_id, 	'crd_2', 			'Chord', 	0.069425 )
+		vsp.SetParmVal( rotor_id, 	'crd_3', 			'Chord', 	0.067375 )
+		vsp.SetParmVal( rotor_id, 	'crd_4', 			'Chord', 	0.065325 )
+		vsp.SetParmVal( rotor_id, 	'crd_5', 			'Chord', 	0.063275 )
+		vsp.SetParmVal( rotor_id, 	'crd_6', 			'Chord', 	0.061225 )
+		vsp.SetParmVal( rotor_id, 	'crd_7', 			'Chord', 	0.059175 )
+		vsp.SetParmVal( rotor_id, 	'crd_8', 			'Chord', 	0.057125 )
+		vsp.SetParmVal( rotor_id, 	'crd_9', 			'Chord', 	0.056100 )
+
+		# Twist setting
+		vsp.SetParmVal( rotor_id, 	'CrvType', 			'Twist', 	0     )
+		vsp.SetParmVal( rotor_id, 	'r_0',  			'Twist', 	0.120 )
+		vsp.SetParmVal( rotor_id, 	'r_1',  			'Twist', 	0.750 )
+		vsp.SetParmVal( rotor_id, 	'r_2',  			'Twist', 	1.000 )
+		vsp.SetParmVal( rotor_id, 	'tw_0', 			'Twist', 	7.560 )
+		vsp.SetParmVal( rotor_id, 	'tw_1', 			'Twist', 	0.000 )
+		vsp.SetParmVal( rotor_id, 	'tw_2', 			'Twist',   -3.000 )
+
+		# Thickness-to-chord ratio setting (to have the Boeing Vertol VR-12 t/c)
+		vsp.SetParmVal( rotor_id, 	'CrvType', 			'Thick', 	0       )
+		vsp.SetParmVal( rotor_id, 	'r_0',  			'Thick', 	0.12000 )
+		vsp.SetParmVal( rotor_id, 	'r_1',  			'Thick', 	0.17500 )
+		vsp.SetParmVal( rotor_id, 	'r_2',  			'Thick', 	0.28500 )
+		vsp.SetParmVal( rotor_id, 	'r_3',  			'Thick', 	0.39500 )
+		vsp.SetParmVal( rotor_id, 	'r_4',  			'Thick', 	0.50500 )
+		vsp.SetParmVal( rotor_id, 	'r_5',  			'Thick', 	0.61500 )
+		vsp.SetParmVal( rotor_id, 	'r_6',  			'Thick', 	0.72500 )
+		vsp.SetParmVal( rotor_id, 	'r_7',  			'Thick', 	0.83500 )
+		vsp.SetParmVal( rotor_id, 	'r_8',  			'Thick', 	0.94500 )
+		vsp.SetParmVal( rotor_id, 	'r_9',  			'Thick', 	1.00000 )
+		vsp.SetParmVal( rotor_id, 	'toc_0',  			'Thick', 	0.10637 )
+		vsp.SetParmVal( rotor_id, 	'toc_1',  			'Thick', 	0.10637 )
+		vsp.SetParmVal( rotor_id, 	'toc_2',  			'Thick', 	0.10637 )
+		vsp.SetParmVal( rotor_id, 	'toc_3',  			'Thick', 	0.10637 )
+		vsp.SetParmVal( rotor_id, 	'toc_4',  			'Thick', 	0.10637 )
+		vsp.SetParmVal( rotor_id, 	'toc_5',  			'Thick', 	0.10637 )
+		vsp.SetParmVal( rotor_id, 	'toc_6',  			'Thick', 	0.10637 )
+		vsp.SetParmVal( rotor_id, 	'toc_7',  			'Thick', 	0.10637 )
+		vsp.SetParmVal( rotor_id, 	'toc_8',  			'Thick', 	0.10637 )
+		vsp.SetParmVal( rotor_id, 	'toc_9',  			'Thick', 	0.10637 )
 
 def NASA_LPC_Lift_Rotor(n_lift_rotor=8, n_blade=2, r_lift_rotor=5.0, l_fuse=30.0, wing_AR=12.12761, wing_S=210.27814, boom_ids=None):
 
@@ -158,9 +230,11 @@ def NASA_LPC_Lift_Rotor(n_lift_rotor=8, n_blade=2, r_lift_rotor=5.0, l_fuse=30.0
 	for i in range(int(n_lift_rotor/2)):
 		rotor_id = vsp.AddGeom('PROP', hub_ids[i])
 		rotor_ids.append(rotor_id)
-		vsp.SetParmVal( rotor_id, 'PropMode', 'Design', 1)
-		vsp.SetParmVal( rotor_id, 'Diameter', 'Design', 2*r_lift_rotor)
-		vsp.SetParmVal( rotor_id, 'NumBlade', 'Design', n_blade)
+		vsp.SetParmVal( rotor_id, 	'PropMode', 			'Design', 	1 			   )
+		vsp.SetParmVal( rotor_id, 	'Diameter', 			'Design', 	2*r_lift_rotor )
+		vsp.SetParmVal( rotor_id, 	'NumBlade', 			'Design', 	n_blade 	   )
+		vsp.SetParmVal( rotor_id, 	'UseBeta34Flag', 		'Design',	1   		   )
+		vsp.SetParmVal( rotor_id, 	'Beta34', 				'Design',	0.0 		   )
 
 		vsp.SetParmVal( rotor_id, 	'X_Rel_Location', 		'XForm', 	0.0    )
 		vsp.SetParmVal( rotor_id, 	'Y_Rel_Location', 		'XForm',   -0.1125 )
@@ -172,6 +246,74 @@ def NASA_LPC_Lift_Rotor(n_lift_rotor=8, n_blade=2, r_lift_rotor=5.0, l_fuse=30.0
 		vsp.SetParmVal( rotor_id, 	'Rots_Attach_Flag',  	'Attach',	1.0    )
 		vsp.SetParmVal( rotor_id, 	'U_Attach_Location', 	'Attach',	0.5    )
 		vsp.SetParmVal( rotor_id, 	'V_Attach_Location', 	'Attach',	0.0    )
+
+		vsp.SetParmVal( rotor_id, 	'RadiusFrac', 			'XSec_0',	0.21 )
+		vsp.SetParmVal( rotor_id, 	'RadiusFrac', 			'XSec_1',	0.75 )
+		vsp.SetParmVal( rotor_id, 	'RadiusFrac', 			'XSec_2',	1.00 )
+
+		# Change airfoil shape using BOEING-VERTOL VR-12 AIRFOIL
+		airfoil_dir = MCEVS.__file__[:-11] + 'Applications/OpenVSP/Components/Airfoils/VR12.dat'
+		rotor_surf = vsp.GetXSecSurf(rotor_id, 0)
+		xsec_num = vsp.GetNumXSec(rotor_surf)
+		for i in range(xsec_num):
+			vsp.ChangeXSecShape(rotor_surf, i, vsp.XS_FILE_AIRFOIL)
+			xsec = vsp.GetXSec(rotor_surf, i)
+			vsp.ReadFileAirfoil(xsec, airfoil_dir)
+
+		# Chord setting
+		vsp.SetParmVal( rotor_id, 	'CrvType', 			'Chord', 	0        )
+		vsp.SetParmVal( rotor_id, 	'r_0',  			'Chord', 	0.210000 )
+		vsp.SetParmVal( rotor_id, 	'r_1',  			'Chord', 	0.259375 )
+		vsp.SetParmVal( rotor_id, 	'r_2',  			'Chord', 	0.358125 )
+		vsp.SetParmVal( rotor_id, 	'r_3',  			'Chord', 	0.456875 )
+		vsp.SetParmVal( rotor_id, 	'r_4',  			'Chord', 	0.555625 )
+		vsp.SetParmVal( rotor_id, 	'r_5',  			'Chord', 	0.654375 )
+		vsp.SetParmVal( rotor_id, 	'r_6',  			'Chord', 	0.753125 )
+		vsp.SetParmVal( rotor_id, 	'r_7',  			'Chord', 	0.851875 )
+		vsp.SetParmVal( rotor_id, 	'r_8',  			'Chord', 	0.950625 )
+		vsp.SetParmVal( rotor_id, 	'r_9',  			'Chord', 	1.000000 )
+		vsp.SetParmVal( rotor_id, 	'crd_0', 			'Chord', 	0.557000 )
+		vsp.SetParmVal( rotor_id, 	'crd_1', 			'Chord', 	0.548288 )
+		vsp.SetParmVal( rotor_id, 	'crd_2', 			'Chord', 	0.530863 )
+		vsp.SetParmVal( rotor_id, 	'crd_3', 			'Chord', 	0.513438 )
+		vsp.SetParmVal( rotor_id, 	'crd_4', 			'Chord', 	0.496013 )
+		vsp.SetParmVal( rotor_id, 	'crd_5', 			'Chord', 	0.478588 )
+		vsp.SetParmVal( rotor_id, 	'crd_6', 			'Chord', 	0.461163 )
+		vsp.SetParmVal( rotor_id, 	'crd_7', 			'Chord', 	0.443738 )
+		vsp.SetParmVal( rotor_id, 	'crd_8', 			'Chord', 	0.426313 )
+		vsp.SetParmVal( rotor_id, 	'crd_9', 			'Chord', 	0.417600 )
+
+		# Twist setting
+		vsp.SetParmVal( rotor_id, 	'CrvType', 			'Twist', 	0     )
+		vsp.SetParmVal( rotor_id, 	'r_0',  			'Twist', 	0.210 )
+		vsp.SetParmVal( rotor_id, 	'r_1',  			'Twist', 	0.750 )
+		vsp.SetParmVal( rotor_id, 	'r_2',  			'Twist', 	1.000 )
+		vsp.SetParmVal( rotor_id, 	'tw_0', 			'Twist', 	8.100 )
+		vsp.SetParmVal( rotor_id, 	'tw_1', 			'Twist', 	0.000 )
+		vsp.SetParmVal( rotor_id, 	'tw_2', 			'Twist',   -3.750 )
+
+		# Thickness-to-chord ratio setting (to have the Boeing Vertol VR-12 t/c)
+		vsp.SetParmVal( rotor_id, 	'CrvType', 			'Thick', 	0       )
+		vsp.SetParmVal( rotor_id, 	'r_0',  			'Thick', 	0.210000 )
+		vsp.SetParmVal( rotor_id, 	'r_1',  			'Thick', 	0.259375 )
+		vsp.SetParmVal( rotor_id, 	'r_2',  			'Thick', 	0.358125 )
+		vsp.SetParmVal( rotor_id, 	'r_3',  			'Thick', 	0.456875 )
+		vsp.SetParmVal( rotor_id, 	'r_4',  			'Thick', 	0.555625 )
+		vsp.SetParmVal( rotor_id, 	'r_5',  			'Thick', 	0.654375 )
+		vsp.SetParmVal( rotor_id, 	'r_6',  			'Thick', 	0.753125 )
+		vsp.SetParmVal( rotor_id, 	'r_7',  			'Thick', 	0.851875 )
+		vsp.SetParmVal( rotor_id, 	'r_8',  			'Thick', 	0.950625 )
+		vsp.SetParmVal( rotor_id, 	'r_9',  			'Thick', 	1.000000 )
+		vsp.SetParmVal( rotor_id, 	'toc_0',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_1',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_2',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_3',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_4',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_5',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_6',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_7',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_8',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_9',  			'Thick', 	0.106370 )
 
 	return hub_ids, rotor_ids
 
@@ -216,9 +358,11 @@ def NASA_LPC_Propeller(n_propeller=1, n_blade=3, r_propeller=1.0, l_fuse=30.0, f
 	for i in range(int(n_propeller)):
 		rotor_id = vsp.AddGeom('PROP', hub_ids[i])
 		rotor_ids.append(rotor_id)
-		vsp.SetParmVal( rotor_id, 'PropMode', 'Design', 1)
-		vsp.SetParmVal( rotor_id, 'Diameter', 'Design', 2*r_propeller)
-		vsp.SetParmVal( rotor_id, 'NumBlade', 'Design', n_blade)
+		vsp.SetParmVal( rotor_id, 	'PropMode', 			'Design', 	1 			  )
+		vsp.SetParmVal( rotor_id, 	'Diameter', 			'Design', 	2*r_propeller )
+		vsp.SetParmVal( rotor_id, 	'NumBlade', 			'Design', 	n_blade 	  )
+		vsp.SetParmVal( rotor_id, 	'UseBeta34Flag', 		'Design',	1   		  )
+		vsp.SetParmVal( rotor_id, 	'Beta34', 				'Design',	0.0 		  )
 
 		vsp.SetParmVal( rotor_id, 	'X_Rel_Location', 		'XForm', 	0.0    )
 		vsp.SetParmVal( rotor_id, 	'Y_Rel_Location', 		'XForm',   -0.08   )
@@ -230,23 +374,72 @@ def NASA_LPC_Propeller(n_propeller=1, n_blade=3, r_propeller=1.0, l_fuse=30.0, f
 		vsp.SetParmVal( rotor_id, 	'U_Attach_Location', 	'Attach',	0.5    )
 		vsp.SetParmVal( rotor_id, 	'V_Attach_Location', 	'Attach',	0.0    )
 
+		vsp.SetParmVal( rotor_id, 	'RadiusFrac', 			'XSec_0',	0.21 )
+		vsp.SetParmVal( rotor_id, 	'RadiusFrac', 			'XSec_1',	0.75 )
+		vsp.SetParmVal( rotor_id, 	'RadiusFrac', 			'XSec_2',	1.00 )
+
+		# Change airfoil shape using BOEING-VERTOL VR-12 AIRFOIL
+		airfoil_dir = MCEVS.__file__[:-11] + 'Applications/OpenVSP/Components/Airfoils/VR12.dat'
+		rotor_surf = vsp.GetXSecSurf(rotor_id, 0)
+		xsec_num = vsp.GetNumXSec(rotor_surf)
+		for i in range(xsec_num):
+			vsp.ChangeXSecShape(rotor_surf, i, vsp.XS_FILE_AIRFOIL)
+			xsec = vsp.GetXSec(rotor_surf, i)
+			vsp.ReadFileAirfoil(xsec, airfoil_dir)
+
+		# Chord setting
+		vsp.SetParmVal( rotor_id, 	'CrvType', 			'Chord', 	0        )
+		vsp.SetParmVal( rotor_id, 	'r_0',  			'Chord', 	0.210000 )
+		vsp.SetParmVal( rotor_id, 	'r_1',  			'Chord', 	0.259375 )
+		vsp.SetParmVal( rotor_id, 	'r_2',  			'Chord', 	0.358125 )
+		vsp.SetParmVal( rotor_id, 	'r_3',  			'Chord', 	0.456875 )
+		vsp.SetParmVal( rotor_id, 	'r_4',  			'Chord', 	0.555625 )
+		vsp.SetParmVal( rotor_id, 	'r_5',  			'Chord', 	0.654375 )
+		vsp.SetParmVal( rotor_id, 	'r_6',  			'Chord', 	0.753125 )
+		vsp.SetParmVal( rotor_id, 	'r_7',  			'Chord', 	0.851875 )
+		vsp.SetParmVal( rotor_id, 	'r_8',  			'Chord', 	0.950625 )
+		vsp.SetParmVal( rotor_id, 	'r_9',  			'Chord', 	1.000000 )
+		vsp.SetParmVal( rotor_id, 	'crd_0', 			'Chord', 	0.508600 )
+		vsp.SetParmVal( rotor_id, 	'crd_1', 			'Chord', 	0.500656 )
+		vsp.SetParmVal( rotor_id, 	'crd_2', 			'Chord', 	0.484769 )
+		vsp.SetParmVal( rotor_id, 	'crd_3', 			'Chord', 	0.468881 )
+		vsp.SetParmVal( rotor_id, 	'crd_4', 			'Chord', 	0.452994 )
+		vsp.SetParmVal( rotor_id, 	'crd_5', 			'Chord', 	0.437106 )
+		vsp.SetParmVal( rotor_id, 	'crd_6', 			'Chord', 	0.421219 )
+		vsp.SetParmVal( rotor_id, 	'crd_7', 			'Chord', 	0.405331 )
+		vsp.SetParmVal( rotor_id, 	'crd_8', 			'Chord', 	0.389444 )
+		vsp.SetParmVal( rotor_id, 	'crd_9', 			'Chord', 	0.381500 )
+
+		# Twist setting
+		vsp.SetParmVal( rotor_id, 	'CrvType', 			'Twist', 	0     )
+		vsp.SetParmVal( rotor_id, 	'r_0',  			'Twist', 	0.210 )
+		vsp.SetParmVal( rotor_id, 	'r_1',  			'Twist', 	0.750 )
+		vsp.SetParmVal( rotor_id, 	'r_2',  			'Twist', 	1.000 )
+		vsp.SetParmVal( rotor_id, 	'tw_0', 			'Twist', 	19.32 )
+		vsp.SetParmVal( rotor_id, 	'tw_1', 			'Twist', 	0.000 )
+		vsp.SetParmVal( rotor_id, 	'tw_2', 			'Twist',   -8.330 )
+
+		# Thickness-to-chord ratio setting (to have the Boeing Vertol VR-12 t/c)
+		vsp.SetParmVal( rotor_id, 	'CrvType', 			'Thick', 	0       )
+		vsp.SetParmVal( rotor_id, 	'r_0',  			'Thick', 	0.210000 )
+		vsp.SetParmVal( rotor_id, 	'r_1',  			'Thick', 	0.259375 )
+		vsp.SetParmVal( rotor_id, 	'r_2',  			'Thick', 	0.358125 )
+		vsp.SetParmVal( rotor_id, 	'r_3',  			'Thick', 	0.456875 )
+		vsp.SetParmVal( rotor_id, 	'r_4',  			'Thick', 	0.555625 )
+		vsp.SetParmVal( rotor_id, 	'r_5',  			'Thick', 	0.654375 )
+		vsp.SetParmVal( rotor_id, 	'r_6',  			'Thick', 	0.753125 )
+		vsp.SetParmVal( rotor_id, 	'r_7',  			'Thick', 	0.851875 )
+		vsp.SetParmVal( rotor_id, 	'r_8',  			'Thick', 	0.950625 )
+		vsp.SetParmVal( rotor_id, 	'r_9',  			'Thick', 	1.000000 )
+		vsp.SetParmVal( rotor_id, 	'toc_0',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_1',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_2',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_3',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_4',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_5',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_6',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_7',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_8',  			'Thick', 	0.106370 )
+		vsp.SetParmVal( rotor_id, 	'toc_9',  			'Thick', 	0.106370 )
+
 	return hub_ids, rotor_ids
-
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
