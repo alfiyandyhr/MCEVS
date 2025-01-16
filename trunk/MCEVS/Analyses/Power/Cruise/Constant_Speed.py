@@ -24,6 +24,7 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 	Parameters:
 		N_rotor		: number or rotors
 		n_blade 	: number of blades per rotor
+		Cd0 		: rotor's parasite drag coefficient
 		hover_FM	: hover figure of merit
 		rho_air		: air density [kg/m**3]
 		g 			: gravitational acceleration [m/s**2]
@@ -43,6 +44,7 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 		self.options.declare('N_rotor', types=int, desc='Number of lifting rotors')
 		self.options.declare('n_blade', types=int, desc='Number of blades per rotor')
 		self.options.declare('hover_FM', types=float, desc='Hover figure of merit')
+		self.options.declare('Cd0', types=float, desc='Rotor parasite_drag coefficient')
 		self.options.declare('rho_air', types=float, desc='Air density')
 		self.options.declare('mu_air', types=float, desc='Air dynamic viscosity')
 		self.options.declare('g', types=float, desc='Gravitational acceleration')
@@ -53,6 +55,7 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 		N_rotor = self.options['N_rotor']
 		n_blade = self.options['n_blade']
 		hover_FM = self.options['hover_FM']
+		Cd0 = self.options['Cd0']
 		rho_air = self.options['rho_air']
 		mu_air = self.options['mu_air']
 		g = self.options['g']
@@ -69,7 +72,7 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 				self.add_subsystem('parasite_drag',
 						ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
 						promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed'), ('Rotor|radius', 'LiftRotor|radius')],
-						promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|total_drag')])
+						promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|total_drag'), ('Aero|f_total','Aero|Cruise|f_total'),('Aero|f_fuselage','Aero|Cruise|f_fuselage'),('Aero|f_rotor_hub','Aero|Cruise|f_rotor_hub')])
 		
 		# Step 2: Calculate thrust required for trim and the body tilt angle
 		self.add_subsystem('trim',
@@ -108,7 +111,7 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 
 		# Step 7: Calculate profile power
 		self.add_subsystem('profile_power',
-							RotorProfilePower(rho_air=rho_air, n_blade=n_blade),
+							RotorProfilePower(rho_air=rho_air, n_blade=n_blade, Cd0=Cd0),
 							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
 											 ('Rotor|chord',	'LiftRotor|chord'),
 											 ('Rotor|mu',		'LiftRotor|advance_ratio'),
@@ -153,6 +156,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 	Parameters:
 		N_propeller	: number or propellers
 		n_blade 	: number of blades per propeller
+		Cd0 		: rotor's parasite drag coefficient
 		hover_FM	: hover figure of merit
 		rho_air		: air density [kg/m**3]
 		g 			: gravitational acceleration [m/s**2]
@@ -174,6 +178,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 		self.options.declare('N_propeller', types=int, desc='Number of propellers')
 		self.options.declare('n_blade', types=int, desc='Number of blades per propeller')
 		self.options.declare('hover_FM', types=float, desc='Hover figure of merit')
+		self.options.declare('Cd0', types=float, desc='Rotor parasite_drag coefficient')
 		self.options.declare('rho_air', types=float, desc='Air density')
 		self.options.declare('mu_air', types=float, desc='Air dynamic viscosity')
 		self.options.declare('g', types=float, desc='Gravitational acceleration')
@@ -184,6 +189,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 		vehicle = self.options['vehicle']
 		N_propeller = self.options['N_propeller']
 		n_blade = self.options['n_blade']
+		Cd0 = self.options['Cd0']
 		hover_FM = self.options['hover_FM']
 		rho_air = self.options['rho_air']
 		mu_air = self.options['mu_air']
@@ -211,12 +217,13 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 			self.add_subsystem('parasite_drag',
 								ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
 								promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed'),'Wing|area'],
-								promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|parasite_drag')])
+								promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|parasite_drag'),
+												  ('Aero|f_fuselage','Aero|Cruise|f_fuselage'),('Aero|f_rotor_hub','Aero|Cruise|f_rotor_hub')])
 
 		self.add_subsystem('total_drag',
 							WingedAeroDrag(rho_air=rho_air),
 							promotes_inputs=[('Aero|Cd0','Aero|Cruise|Cd0'), ('Aero|lift','Aero|Cruise|lift'), 'Wing|*', ('Aero|speed', 'Mission|cruise_speed')],
-							promotes_outputs=[('Aero|total_drag','Aero|Cruise|total_drag'), ('Aero|CL','Aero|Cruise|CL')])
+							promotes_outputs=[('Aero|total_drag','Aero|Cruise|total_drag'), ('Aero|CL','Aero|Cruise|CL'), ('Aero|f_total', 'Aero|Cruise|f_total')])
 
 		# Step 3: Calculate thrust required by each propeller (thrust = drag)
 		self.add_subsystem('thrust_each',
@@ -249,7 +256,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 
 		# Step 6: Calculate profile power of a rotor
 		self.add_subsystem('profile_power',
-							RotorProfilePower(rho_air=rho_air, n_blade=n_blade),
+							RotorProfilePower(rho_air=rho_air, n_blade=n_blade, Cd0=Cd0),
 							promotes_inputs=[('Rotor|radius',			'Propeller|radius'),
 											 ('Rotor|chord',			'Propeller|chord'),
 											 ('Rotor|mu', 	  			'Propeller|Cruise|mu'),

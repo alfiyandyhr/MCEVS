@@ -16,6 +16,7 @@ class PowerClimbConstantVyConstantVxEdgewise(om.Group):
 	Parameters:
 		N_rotor			: number or rotors
 		n_blade 		: number of blades per rotor
+		Cd0 			: rotor's parasite drag coefficient
 		hover_FM		: hover figure of merit
 		rho_air			: air density [kg/m**3]
 		g 				: gravitational acceleration [m/s**2]
@@ -37,6 +38,7 @@ class PowerClimbConstantVyConstantVxEdgewise(om.Group):
 		self.options.declare('N_rotor', types=int, desc='Number of lifting rotors')
 		self.options.declare('n_blade', types=int, desc='Number of blades per rotor')
 		self.options.declare('hover_FM', types=float, desc='Hover figure of merit')
+		self.options.declare('Cd0', types=float, desc='Rotor parasite_drag coefficient')
 		self.options.declare('rho_air', types=float, desc='Air density')
 		self.options.declare('mu_air', types=float, desc='Air dynamic viscosity')
 		self.options.declare('g', types=float, desc='Gravitational acceleration')
@@ -48,6 +50,7 @@ class PowerClimbConstantVyConstantVxEdgewise(om.Group):
 		vehicle = self.options['vehicle']
 		N_rotor = self.options['N_rotor']
 		n_blade = self.options['n_blade']
+		Cd0 = self.options['Cd0']
 		hover_FM = self.options['hover_FM']
 		rho_air = self.options['rho_air']
 		mu_air = self.options['mu_air']
@@ -110,7 +113,7 @@ class PowerClimbConstantVyConstantVxEdgewise(om.Group):
 
 		# Step 7: Calculate profile power
 		self.add_subsystem('profile_power',
-							RotorProfilePower(rho_air=rho_air, n_blade=n_blade),
+							RotorProfilePower(rho_air=rho_air, n_blade=n_blade, Cd0=Cd0),
 							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
 											 ('Rotor|chord',	'LiftRotor|chord'),
 											 ('Rotor|mu',		'LiftRotor|advance_ratio'),
@@ -157,6 +160,7 @@ class PowerClimbConstantVyConstantVxWithWing(om.Group):
 		N_propeller			: number of propellers
 		n_blade 			: number of blades per propeller
 		rho_air				: air density [kg/m**3]
+		Cd0 				: rotor's parasite drag coefficient
 		hover_FM			: hover figure of merit
 		g 					: gravitational acceleration [m/s**2]
 		AoA 				: aircraft's angle of attack [deg]
@@ -177,6 +181,7 @@ class PowerClimbConstantVyConstantVxWithWing(om.Group):
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
 		self.options.declare('N_propeller', types=int, desc='Number of propellers')
 		self.options.declare('n_blade', types=int, desc='Number of blades per propeller')
+		self.options.declare('Cd0', types=float, desc='Rotor parasite_drag coefficient')
 		self.options.declare('hover_FM', types=float, desc='Hover figure of merit')
 		self.options.declare('rho_air', types=float, desc='Air density')
 		self.options.declare('mu_air', types=float, desc='Air dynamic viscosity')
@@ -190,6 +195,7 @@ class PowerClimbConstantVyConstantVxWithWing(om.Group):
 		vehicle = self.options['vehicle']
 		N_propeller = self.options['N_propeller']
 		n_blade = self.options['n_blade']
+		Cd0 = self.options['Cd0']
 		hover_FM = self.options['hover_FM']
 		rho_air = self.options['rho_air']
 		mu_air = self.options['mu_air']
@@ -261,7 +267,7 @@ class PowerClimbConstantVyConstantVxWithWing(om.Group):
 
 		# Step 6: Calculate profile power of a rotor
 		self.add_subsystem('profile_power',
-							RotorProfilePower(rho_air=rho_air, n_blade=n_blade),
+							RotorProfilePower(rho_air=rho_air, n_blade=n_blade, Cd0=Cd0),
 							promotes_inputs=[('Rotor|radius',			'Propeller|radius'),
 											 ('Rotor|chord',			'Propeller|chord'),
 											 ('Rotor|mu', 	  			'Propeller|Climb|mu'),

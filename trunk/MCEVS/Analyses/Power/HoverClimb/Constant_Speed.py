@@ -118,7 +118,7 @@ class PowerHoverClimbConstantSpeedFidelityOne(om.Group):
 			input_list.append( (f'Section{i+1}|pitch', f'LiftRotor|Section{i+1}|pitch') )
 			input_list.append( (f'Section{i+1}|width', f'LiftRotor|Section{i+1}|width') )
 
-		output_list = ['Power','thrust_residual_square']
+		output_list = ['Power','thrust_residual_square', 'FM']
 
 		self.add_subsystem('BEMT_Solver',
 							BEMTSolverOMGroup(nblades=n_blade,

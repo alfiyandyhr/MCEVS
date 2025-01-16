@@ -1,5 +1,6 @@
 import numpy as np
 import openmdao.api as om
+import warnings
 
 from MCEVS.Utils.Functions import SoftMax
 
@@ -106,9 +107,11 @@ class RotorProfilePower(om.ExplicitComponent):
 		r = inputs['Rotor|radius']
 		c = inputs['Rotor|chord']
 		sigma = n_blade * c / (np.pi * r)
-
+		
 		P0_each = (sigma*Cd0/8) * (1 + 4.65*mu**2) * (np.pi * rho_air * omega**3 * r**5)
 		outputs['Rotor|profile_power'] = P0_each
+
+		# print(n_blade, rho_air, Cd0, mu, omega, sigma, P0_each)
 
 	def compute_partials(self, inputs, partials):
 		n_blade = self.options['n_blade']
@@ -161,7 +164,12 @@ class InducedPowerFactorComp(om.ExplicitComponent):
 		r = inputs['Rotor|radius']
 
 		S_disk = np.pi * r**2
-		kappa = 1/hover_FM -  P0_each * np.sqrt((2*rho_air*S_disk)/thrust**3)
+
+		with warnings.catch_warnings():
+			warnings.simplefilter("ignore")
+			# sometimes warnings pop up due to negative thrust
+			kappa = 1/hover_FM -  P0_each * np.sqrt((2*rho_air*S_disk)/thrust**3)
+
 		outputs['kappa_raw'] = kappa
 
 	def compute_partials(self, inputs, partials):
