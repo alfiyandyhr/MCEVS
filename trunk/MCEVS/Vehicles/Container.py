@@ -15,7 +15,7 @@ class LiftPlusCruiseEVTOL(object):
 	docstring for LiftPlusCruiseEVTOL
 	This is a type of eVTOL that has a fixed-wing and separate propulsion for hover and cruise.
 	"""
-	def __init__(self, mtow=None):
+	def __init__(self, mtow=None, tf_structure=0.8, tf_equipment=0.8, tf_propulsion=0.8):
 		super(LiftPlusCruiseEVTOL, self).__init__()
 		
 		self.configuration = 'LiftPlusCruise'
@@ -33,15 +33,24 @@ class LiftPlusCruiseEVTOL(object):
 		self.vertical_tail = None
 		self.boom = None
 
-		# Weight and performance
+		# Weight
 		self.weight = VehicleWeight(mtow)
-		self.Cd0 = {'climb':None, 'cruise':None, 'descent':None} # used when Cd0 is evaluated using fidelity > 0
+
+		# Aero performance, used when Cd0 is evaluated using fidelity > 0
+		self.Cd0 = {'climb':None, 'cruise':None, 'descent':None}
+		self.f_total_non_hub = {'climb':None, 'cruise': None, 'descent': None} 
+		self.f_fuselage = {'climb':None, 'cruise': None, 'descent': None} 
 
 		# Wetted area (an array of wetted area for all components) called by calc_wetted_area
 		self.S_wetted = None
 
 		# Whether or not this vehicle has been sized
 		self.is_sized = False
+
+		# Technology factors
+		self.tf_propulsion = tf_propulsion
+		self.tf_structure = tf_structure
+		self.tf_equipment = tf_equipment
 
 	def add_component(self, kind:str, **kwargs):
 
@@ -52,51 +61,55 @@ class LiftPlusCruiseEVTOL(object):
 		elif kind == 'wing':
 			self.wing = Wing(kwargs)
 			self.wing._initialize()
-			if self.weight.max_takeoff is not None:
-				self.wing._calculate_weight_given_mtow(self.weight.max_takeoff)
+			# if self.weight.max_takeoff is not None:
+			# 	self.wing._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 		elif kind == 'fuselage':
 			self.fuselage = Fuselage(kwargs)
 			self.fuselage._initialize()
-			if self.weight.max_takeoff is not None:
-				self.fuselage._calculate_weight_given_mtow(self.weight.max_takeoff)
+			# if self.weight.max_takeoff is not None:
+			# 	self.fuselage._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 		elif kind == 'landing_gear':
 			self.landing_gear = LandingGear(kwargs)
 			self.landing_gear._initialize()
-			if self.weight.max_takeoff is not None:
-				self.landing_gear._calculate_weight_given_mtow(self.weight.max_takeoff)
+			# if self.weight.max_takeoff is not None:
+			# 	self.landing_gear._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 		elif kind == 'lift_rotor':
 			self.lift_rotor = LiftRotor(kwargs)
 			self.lift_rotor._initialize()
-			self.lift_rotor._calculate_weight_given_max_power(183068.9599)
+			# self.lift_rotor._calculate_weight_given_max_power(183068.9599)
 
 		elif kind == 'propeller':
 			self.propeller = Propeller(kwargs)
 			self.propeller._initialize()
-			self.propeller._calculate_weight_given_max_power(35669.31421)
+			# self.propeller._calculate_weight_given_max_power(35669.31421)
 
 		elif kind == 'horizontal_tail':
 			self.horizontal_tail = HorizontalTail(kwargs)
 			self.horizontal_tail._initialize()
-			if self.weight.max_takeoff is not None:
-				self.horizontal_tail._calculate_weight_given_mtow(self.weight.max_takeoff)		
+			# if self.weight.max_takeoff is not None:
+			# 	self.horizontal_tail._calculate_weight_given_mtow(self.weight.max_takeoff)		
 
 		elif kind == 'vertical_tail':
 			self.vertical_tail = VerticalTail(kwargs)
 			self.vertical_tail._initialize()
-			if self.weight.max_takeoff is not None:
-				self.vertical_tail._calculate_weight_given_mtow(self.weight.max_takeoff)
+			# if self.weight.max_takeoff is not None:
+			# 	self.vertical_tail._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 		elif kind == 'boom':
 			self.boom = Boom(kwargs)
 			self.boom._initialize()
-			if self.weight.max_takeoff is not None:
-				self.boom._calculate_weight_given_mtow(self.weight.max_takeoff)	
+			# if self.weight.max_takeoff is not None:
+			# 	self.boom._calculate_weight_given_mtow(self.weight.max_takeoff)	
 
 	def print_info(self):
 		print('Vehicle type: Lift+Cruise eVTOL')
+		print('Technology factors:')
+		print(f'\tTF propulsion = {self.tf_propulsion}')
+		print(f'\tTF structure = {self.tf_structure}')
+		print(f'\tTF equipment = {self.tf_equipment}')
 		print('List of components:')
 		print(self.battery._info())
 		print(self.fuselage._info())
@@ -113,7 +126,7 @@ class MultirotorEVTOL(object):
 	docstring for MultirotorEVTOL
 	This is a type of eVTOL that has a fixed-wing and separate propulsion for hover and cruise.
 	"""
-	def __init__(self, mtow=None):
+	def __init__(self, mtow=None, tf_structure=0.8, tf_equipment=0.8, tf_propulsion=0.8):
 		super(MultirotorEVTOL, self).__init__()
 		
 		self.configuration = 'Multirotor'
@@ -127,15 +140,24 @@ class MultirotorEVTOL(object):
 		self.battery = None
 		self.boom = None
 
-		# Weight and performance
+		# Weight
 		self.weight = VehicleWeight(mtow)
-		self.Cd0 = {'climb':None, 'cruise':None, 'descent':None} # used when Cd0 is evaluated using fidelity > 0
+
+		# Aero performance, used when Cd0 is evaluated using fidelity > 0
+		self.Cd0 = {'climb':None, 'cruise':None, 'descent':None}
+		self.f_total_non_hub = {'climb':None, 'cruise': None, 'descent': None} 
+		self.f_fuselage = {'climb':None, 'cruise': None, 'descent': None} 
 
 		# Wetted area (an array of wetted area for all components) called by calc_wetted_area
 		self.S_wetted = None
 
 		# Whether or not this vehicle has been sized
 		self.is_sized = False
+
+		# Technology factors
+		self.tf_propulsion = tf_propulsion
+		self.tf_structure = tf_structure
+		self.tf_equipment = tf_equipment
 
 	def add_component(self, kind:str, **kwargs):
 
@@ -146,28 +168,32 @@ class MultirotorEVTOL(object):
 		elif kind == 'fuselage':
 			self.fuselage = Fuselage(kwargs)
 			self.fuselage._initialize()
-			if self.weight.max_takeoff is not None:
-				self.fuselage._calculate_weight_given_mtow(self.weight.max_takeoff)
+			# if self.weight.max_takeoff is not None:
+			# 	self.fuselage._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 		elif kind == 'landing_gear':
 			self.landing_gear = LandingGear(kwargs)
 			self.landing_gear._initialize()
-			if self.weight.max_takeoff is not None:
-				self.landing_gear._calculate_weight_given_mtow(self.weight.max_takeoff)
+			# if self.weight.max_takeoff is not None:
+			# 	self.landing_gear._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 		elif kind == 'lift_rotor':
 			self.lift_rotor = LiftRotor(kwargs)
 			self.lift_rotor._initialize()
-			self.lift_rotor._calculate_weight_given_max_power(151102.2955)
+			# self.lift_rotor._calculate_weight_given_max_power(151102.2955)
 
 		elif kind == 'boom': # boom is represented as a wing object in multirotor
 			self.boom = Boom(kwargs)
 			self.boom._initialize()
-			if self.weight.max_takeoff is not None:
-				self.boom._calculate_weight_given_mtow(self.weight.max_takeoff)
+			# if self.weight.max_takeoff is not None:
+			# 	self.boom._calculate_weight_given_mtow(self.weight.max_takeoff)
 
 	def print_info(self):
 		print('Vehicle type: Multirotor eVTOL')
+		print('Technology factors:')
+		print(f'\tTF propulsion = {self.tf_propulsion}')
+		print(f'\tTF structure = {self.tf_structure}')
+		print(f'\tTF equipment = {self.tf_equipment}')
 		print('List of components:')
 		print(self.battery._info())
 		print(self.fuselage._info())

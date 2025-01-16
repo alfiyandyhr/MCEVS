@@ -12,6 +12,7 @@ class Fuselage(object):
 		self.length = None
 		self.max_diameter = None
 		self.number_of_passenger = None
+		self.payload_per_pax = 100.0 # kg (default)
 		self.fineness_ratio = None
 		self.weight = None
 
@@ -24,6 +25,8 @@ class Fuselage(object):
 				self.length = float(self.kwargs[item])
 			elif item == 'max_diameter':
 				self.max_diameter = float(self.kwargs[item])
+			elif item == 'payload_per_pax':
+				self.payload_per_pax = float(self.kwargs[item])
 			elif item == 'number_of_passenger':
 				self.number_of_passenger = int(self.kwargs[item])
 			elif item == 'technology_factor':
@@ -42,7 +45,8 @@ class Fuselage(object):
 		info = '\tComponent name: Fuselage\n'
 		info += f'\t\tLength = {self.length} m\n'
 		info += f'\t\tMax diameter = {self.max_diameter} m\n'
-		info += f'\t\tNumber of passenger = {self.number_of_passenger}'
+		info += f'\t\tNumber of passenger = {self.number_of_passenger}\n'
+		info += f'\t\tPayload per pax = {self.payload_per_pax} kg'
 		return info
 
 	def print_info(self):
@@ -50,3 +54,4 @@ class Fuselage(object):
 		print(f'\tLength = {self.length} m')
 		print(f'\tMax diameter = {self.max_diameter} m')
 		print(f'\tNumber of passenger = {self.number_of_passenger}')
+		print(f'\tPayload per pax = {self.payload_per_pax} kg')
