@@ -12,20 +12,22 @@ class PropulsionWeight(om.Group):
 	"""
 	def initialize(self):
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
+		self.options.declare('tf_propulsion', types=float, desc='Technology factor for propulsion systems')
 
 	def setup(self):
 
 		vehicle = self.options['vehicle']
+		tf_propulsion = self.options['tf_propulsion']
 
 		N_lift_rotor 		= vehicle.lift_rotor.n_rotor				# number of lift rotors
 		N_blade_lift_rotor 	= vehicle.lift_rotor.n_blade 				# number of blades per lift rotor
-		tf_lift_rotor 		= vehicle.lift_rotor.technology_factor		# technology factor of lift rotors
+		# tf_lift_rotor 		= vehicle.lift_rotor.technology_factor		# technology factor of lift rotors
 
 
 		if vehicle.configuration == 'LiftPlusCruise':
 			N_propeller 		= vehicle.propeller.n_propeller 		# number of propellers
 			N_blade_propeller 	= vehicle.propeller.n_blade 			# number of blades per propeller
-			tf_propeller 		= vehicle.propeller.technology_factor	# technology factor of propellers
+			# tf_propeller 		= vehicle.propeller.technology_factor	# technology factor of propellers
 
 		# For multirotor
 		if vehicle.configuration == 'Multirotor':
@@ -33,7 +35,7 @@ class PropulsionWeight(om.Group):
 								RotorAndHubWeight(N_rotor=N_lift_rotor, tf=1.0),
 								promotes_outputs=['Weight|rotors_and_hubs'])
 			self.add_subsystem('extra_hub_weight',
-								ExtraHubWeight(N_rotor=N_lift_rotor, N_bl=N_blade_lift_rotor, tf=tf_lift_rotor),
+								ExtraHubWeight(N_rotor=N_lift_rotor, N_bl=N_blade_lift_rotor, tf=tf_propulsion),
 								promotes_inputs=[('Weight|rotors','Weight|rotors_and_hubs'), ('Rotor|radius','LiftRotor|radius'), ('Rotor|chord', 'LiftRotor|chord'), ('Rotor|rpm','LiftRotor|hover_climb_rpm')],
 								promotes_outputs=['Weight|extra_hubs'])
 			self.add_subsystem('lift_rotor_motor_weight',

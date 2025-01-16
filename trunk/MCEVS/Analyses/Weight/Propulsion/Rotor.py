@@ -1,5 +1,6 @@
 import numpy as np
 import openmdao.api as om
+import warnings
 
 class RotorAndHubWeight(om.ExplicitComponent):
 	"""
@@ -108,10 +109,13 @@ class ExtraHubWeight(om.ExplicitComponent):
 		W2 = (0.01742 * N_bl**0.66 * c * r**1.3 * v_tip**0.67) * m_to_ft2
 		W3 = (g * J / r**2) * m_to_ft3 * kg_to_lb
 
-		W_extra_hub = (W1 * (W2 + W3)**0.55) * lb_to_kg
+		with warnings.catch_warnings():
+			warnings.simplefilter("ignore")
+			
+			W_extra_hub = (W1 * (W2 + W3)**0.55) * lb_to_kg
 
 		outputs['Weight|extra_hubs'] = tf * N_rotor * W_extra_hub
-		
+
 	def compute_partials(self, inputs, partials):
 		N_rotor = self.options['N_rotor']
 		N_bl = self.options['N_bl']

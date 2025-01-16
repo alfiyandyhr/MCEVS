@@ -14,10 +14,12 @@ class StructureWeight(om.Group):
 	"""
 	def initialize(self):
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
+		self.options.declare('tf_structure', types=float, desc='Technology factor for structure systems')
 
 	def setup(self):
 
 		vehicle = self.options['vehicle']
+		tf_structure = self.options['tf_structure']
 
 		# Fuselage parameter
 		n_pax 	= vehicle.fuselage.number_of_passenger
@@ -48,19 +50,19 @@ class StructureWeight(om.Group):
 
 		# Fuselage weight
 		self.add_subsystem('fuselage_weight',
-							FuselageWeight(n_pax=n_pax,l_fuse=l_fuse,p_max=np.pi*d_max),
+							FuselageWeight(n_pax=n_pax,l_fuse=l_fuse,p_max=np.pi*d_max, tf=tf_structure),
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=['Weight|fuselage'])
 
 		# Landing gear weight
 		self.add_subsystem('landing_gear_weight',
-							LandingGearWeightNDARCFractionalMethod(gear_type=gear_type),
+							LandingGearWeightNDARCFractionalMethod(gear_type=gear_type, tf=tf_structure),
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=['Weight|landing_gear'])
 
 		# Boom weight
 		self.add_subsystem('boom_weight',
-							BoomWeight(),
+							BoomWeight(tf=tf_structure),
 							promotes_inputs=['total_req_takeoff_power'],
 							promotes_outputs=['Weight|boom'])
 
@@ -68,7 +70,7 @@ class StructureWeight(om.Group):
 		# wing is possessed by lift+cruise, tiltrotor, and tiltiwing configurations
 		if vehicle.configuration == 'LiftPlusCruise':
 			self.add_subsystem('wing_weight',
-								WingWeight(n_ult=n_ult_wing),
+								WingWeight(n_ult=n_ult_wing, tf=tf_structure),
 								promotes_inputs=['Weight|takeoff', 'Wing|area', 'Wing|aspect_ratio'],
 								promotes_outputs=['Weight|wing'])
 
@@ -78,11 +80,11 @@ class StructureWeight(om.Group):
 			indep.add_output('htail_area', val=htail_area, units='m**2')
 			indep.add_output('vtail_area', val=vtail_area, units='m**2')
 			self.add_subsystem('htail_weight',
-								HorizontalTailWeight(htail_AR=htail_AR, t_rh=t_rh),
+								HorizontalTailWeight(htail_AR=htail_AR, t_rh=t_rh, tf=tf_structure),
 								promotes_inputs=['Weight|takeoff', ('Htail|area','tail_geom.htail_area')],
 								promotes_outputs=['Weight|horizontal_tail'])
 			self.add_subsystem('vtail_weight',
-								VerticalTailWeight(vtail_AR=vtail_AR, t_rv=t_rv, vtail_sweep=vtail_sweep),
+								VerticalTailWeight(vtail_AR=vtail_AR, t_rv=t_rv, vtail_sweep=vtail_sweep, tf=tf_structure),
 								promotes_inputs=['Weight|takeoff', ('Vtail|area','tail_geom.vtail_area')],
 								promotes_outputs=['Weight|vertical_tail'])
 

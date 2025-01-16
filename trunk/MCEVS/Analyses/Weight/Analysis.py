@@ -56,11 +56,10 @@ class WeightAnalysis(object):
 	"""
 	docstring for WeightAnalysis
 	"""
-	def __init__(self, vehicle:object, mission:object, constants:object, fidelity:dict, sizing_mode=True):
+	def __init__(self, vehicle:object, mission:object, fidelity:dict, sizing_mode=True):
 		super(WeightAnalysis, self).__init__()
 		self.vehicle = vehicle
 		self.mission = mission
-		self.constants = constants
 		self.fidelity = fidelity
 		self.sizing_mode = sizing_mode
 
@@ -133,7 +132,6 @@ class WeightAnalysis(object):
 		prob.model.add_subsystem('mtow_model',
 								  MTOWEstimation(mission=self.mission,
 								  				 vehicle=self.vehicle,
-								  				 constants=self.constants,
 								  				 fidelity=self.fidelity,
 								  				 sizing_mode=self.sizing_mode),
 								  promotes_inputs=['*'],
@@ -166,8 +164,6 @@ class MTOWEstimation(om.Group):
 		Mission object 			: an object containing mission profile information
 	(vehicle definition)
 		Vehicle object 			: an object that defines the vehicle
-	(atmospheric condition)
-		Constants object 		: an object containing constant values
 	(eVTOL design variables)
 		Weight|takeoff 			: total take-off weight [kg]
 		Mission|cruise_speed 	: cruising speed of the eVTOL [m/s]
@@ -197,7 +193,6 @@ class MTOWEstimation(om.Group):
 	def initialize(self):
 		self.options.declare('mission', types=object, desc='Mission object')
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
-		self.options.declare('constants', types=object, desc='Constants object')
 		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
 		self.options.declare('sizing_mode', types=bool, desc='Whether to use in a sizing mode')
 
@@ -206,7 +201,6 @@ class MTOWEstimation(om.Group):
 		# Unpacking option objects
 		mission 	 = self.options['mission']
 		vehicle 	 = self.options['vehicle']
-		constants 	 = self.options['constants']
 		fidelity 	 = self.options['fidelity']
 		sizing_mode  = self.options['sizing_mode']
 
@@ -219,7 +213,6 @@ class MTOWEstimation(om.Group):
 		self.add_subsystem('energy',
 							EnergyConsumption(mission=mission,
 											  vehicle=vehicle,
-											  constants=constants,
 											  fidelity=fidelity),
 							promotes_inputs=['*'],
 							promotes_outputs=['*'])
@@ -244,7 +237,7 @@ class MTOWEstimation(om.Group):
 		# includes the weight of rotors, motors, and controllers
 
 		self.add_subsystem('propulsion_weight',
-							PropulsionWeight(vehicle=vehicle),
+							PropulsionWeight(vehicle=vehicle, tf_propulsion=vehicle.tf_propulsion),
 							promotes_inputs=['*'],
 							promotes_outputs=['*'])
 		if vehicle.configuration == 'Multirotor':
@@ -264,7 +257,7 @@ class MTOWEstimation(om.Group):
 		if vehicle.configuration == 'Multirotor': input_list_struct = ['Weight|takeoff']
 		elif vehicle.configuration == 'LiftPlusCruise': input_list_struct = ['Weight|takeoff', 'Wing|area', 'Wing|aspect_ratio']
 		self.add_subsystem('structure_weight',
-							StructureWeight(vehicle=vehicle),
+							StructureWeight(vehicle=vehicle, tf_structure=vehicle.tf_structure),
 							promotes_inputs=input_list_struct,
 							promotes_outputs=['Weight|*'])
 		# includes mission segment power for takeoff for sizing booms
@@ -275,7 +268,7 @@ class MTOWEstimation(om.Group):
 		# 4. Equipment weight
 		# includes avionics, flight control, anti icing, and furnishing
 		self.add_subsystem('equipment_weight',
-							EquipmentWeight(),
+							EquipmentWeight(tf_equipment=vehicle.tf_equipment),
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=['Weight|*'])
 
@@ -288,9 +281,10 @@ class MTOWEstimation(om.Group):
 		# W_equipment = W_avionics + W_flight_control + W_anti_icing + W_furnishings
 
 		# Payload weight
-		# 1 PAX = 100.0 kg
+		# 1 PAX = 100.0 kg (default)
 		n_pax = vehicle.fuselage.number_of_passenger
-		payload_weight = om.IndepVarComp('Weight|payload', val=100.0*n_pax, units='kg')
+		payload_per_pax = vehicle.fuselage.payload_per_pax
+		payload_weight = om.IndepVarComp('Weight|payload', val=n_pax*payload_per_pax, units='kg')
 		self.add_subsystem('payload', payload_weight, promotes=['*'])
 
 		# W_residual should then be driven to 0 by a nonlinear solver or treated as an optimization constraint
@@ -325,7 +319,7 @@ class MTOWEstimation(om.Group):
 
 			# Add solvers for implicit relations
 			self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=50, iprint=0, rtol=1e-3)
-			self.nonlinear_solver.options['err_on_non_converge'] = True
+			self.nonlinear_solver.options['err_on_non_converge'] = False
 			self.nonlinear_solver.options['reraise_child_analysiserror'] = True
 			self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
 			self.nonlinear_solver.linesearch.options['maxiter'] = 10

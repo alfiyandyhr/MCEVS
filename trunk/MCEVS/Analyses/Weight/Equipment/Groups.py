@@ -11,29 +11,34 @@ class EquipmentWeight(om.Group):
 	Calculates equipment weight
 		W_equipment = W_avionics + W_flight_control + W_anti_icing + W_furnishings
 	"""
+	def initialize(self):
+		self.options.declare('tf_equipment', types=float, desc='Technology factor for equipment systems')
+
 	def setup(self):
+
+		tf_equipment = self.options['tf_equipment']
 
 		# Avionics weight
 		self.add_subsystem('avionics_weight',
-							AvionicsWeight(),
+							AvionicsWeight(tf=tf_equipment),
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=['Weight|avionics'])
 
 		# Flight control weight
 		self.add_subsystem('flight_control_weight',
-							FlightControlWeight(),
+							FlightControlWeight(tf=tf_equipment),
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=['Weight|flight_control'])
 
 		# Anti icing weight
 		self.add_subsystem('anti_icing_weight',
-							AntiIcingSystemWeight(),
+							AntiIcingSystemWeight(tf=tf_equipment),
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=['Weight|anti_icing'])
 
 		# Furnishing weight
 		self.add_subsystem('furnishing_weight',
-							FurnishingWeight(),
+							FurnishingWeight(tf=tf_equipment),
 							promotes_inputs=['Weight|takeoff'],
 							promotes_outputs=['Weight|furnishings'])
 
