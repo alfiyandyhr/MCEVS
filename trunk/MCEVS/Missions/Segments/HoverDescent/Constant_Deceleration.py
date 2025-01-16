@@ -24,6 +24,9 @@ class HoverDescentConstantDeceleration():
 		self.duration = None
 		self.deceleration = None
 
+		# Constants (atmosphere and gravity)
+		self.constants = None
+
 	def _initialize(self):
 		for item in list(self.kwargs):
 			if item == 'final_speed':

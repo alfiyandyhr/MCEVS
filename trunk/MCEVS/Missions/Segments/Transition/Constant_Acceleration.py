@@ -24,6 +24,9 @@ class TransitionConstantAcceleration():
 		self.distance = None
 		self.duration = None
 
+		# Constants (atmosphere and gravity)
+		self.constants = None
+
 	def _initialize(self):
 		for item in list(self.kwargs):
 			if item == 'final_speed':
@@ -34,6 +37,8 @@ class TransitionConstantAcceleration():
 				self.duration = float(self.kwargs[item])
 			elif item == 'AoA':
 				self.AoA = float(self.kwargs[item])
+			elif item == 'constants':
+				self.constants = self.kwargs[item]
 		
 		try:
 			if self.acceleration is None:

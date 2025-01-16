@@ -21,6 +21,9 @@ class HoverDescentConstantSpeed():
 		self.distance = None
 		self.duration = None
 
+		# Constants (atmosphere and gravity)
+		self.constants = None
+
 	def _initialize(self):
 		for item in list(self.kwargs):
 			if item == 'speed':
@@ -29,6 +32,8 @@ class HoverDescentConstantSpeed():
 				self.distance = float(self.kwargs[item])
 			elif item == 'duration':
 				self.duration = float(self.kwargs[item])
+			elif item == 'constants':
+				self.constants = self.kwargs[item]
 		
 		try:
 			if self.speed is None:

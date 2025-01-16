@@ -34,6 +34,9 @@ class ClimbConstantVyConstantAx():
 		# Performance
 		self.powers = []
 
+		# Constants (atmosphere and gravity)
+		self.constants = None
+
 	def _initialize(self):
 		for item in list(self.kwargs):
 			if item == 'speed_Y':
@@ -48,6 +51,8 @@ class ClimbConstantVyConstantAx():
 				self.distance_X = float(self.kwargs[item])
 			elif item == 'duration':
 				self.duration = float(self.kwargs[item])
+			elif item == 'constants':
+				self.constants = self.kwargs[item]
 		
 		try:
 			if self.duration is None:

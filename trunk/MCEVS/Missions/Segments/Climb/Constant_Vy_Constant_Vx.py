@@ -29,6 +29,9 @@ class ClimbConstantVyConstantVx():
 
 		self.distance = None # Euclidean distance
 
+		# Constants (atmosphere and gravity)
+		self.constants = None
+
 	def _initialize(self):
 		for item in list(self.kwargs):
 			if item == 'speed_Y':
@@ -43,6 +46,8 @@ class ClimbConstantVyConstantVx():
 				self.speed = float(self.kwargs[item])
 			elif item == 'duration':
 				self.duration = float(self.kwargs[item])
+			elif item == 'constants':
+				self.constants = self.kwargs[item]
 		
 		try:
 			if self.duration is None:
