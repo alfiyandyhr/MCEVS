@@ -24,15 +24,19 @@ class ParasiteDragFidelityOne(om.Group):
 		self.add_subsystem('parasite_drag_without_rotor_hub',
 							VehicleParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name=segment_name),
 							promotes_inputs=['Aero|speed', 'Rotor|radius', 'Wing|area'],
-							promotes_outputs=['Aero|Cd0_vehicle', 'Aero|parasite_drag_vehicle'])
+							promotes_outputs=['Aero|Cd0_vehicle', 'Aero|parasite_drag_vehicle', 'Aero|f_total_non_hub', 'Aero|f_fuselage'])
 
 		self.add_subsystem('rotor_hub_parasite_drag',
 							RotorHubParasiteDragFidelityZero(vehicle=vehicle, rho_air=rho_air),
 							promotes_inputs=['Weight|takeoff', 'Aero|speed', 'Rotor|radius', 'Wing|area'],
-							promotes_outputs=['Aero|Cd0_rotor_hub', 'Aero|rotor_hub_parasite_drag'])
+							promotes_outputs=['Aero|f_rotor_hub', 'Aero|Cd0_rotor_hub', 'Aero|rotor_hub_parasite_drag'])
 
 		# Sum the vehicle parasite drag via build-up approach and empirical rotor hub drag
 		adder = om.AddSubtractComp()
+		adder.add_equation('Aero|f_total',
+							units='m**2',
+							input_names=['Aero|f_total_non_hub', 'Aero|f_rotor_hub'],
+							scaling_factors=[1., 1.])
 		adder.add_equation('Aero|Cd0',
 							input_names=['Aero|Cd0_vehicle', 'Aero|Cd0_rotor_hub'],
 							scaling_factors=[1., 1.])
@@ -43,7 +47,7 @@ class ParasiteDragFidelityOne(om.Group):
 		self.add_subsystem('total_parasite_drag',
 							adder,
 							promotes_inputs=['*'],
-							promotes_outputs=['Aero|Cd0', 'Aero|parasite_drag'])
+							promotes_outputs=['Aero|f_total', 'Aero|Cd0', 'Aero|parasite_drag'])
 
 class VehicleParasiteDragFidelityOne(om.ExplicitComponent):
 	"""
@@ -75,6 +79,8 @@ class VehicleParasiteDragFidelityOne(om.ExplicitComponent):
 		self.add_input('Wing|area', units='m**2', desc='Wing reference area')
 		self.add_output('Aero|Cd0_vehicle', desc='Parasite drag coefficient')
 		self.add_output('Aero|parasite_drag_vehicle', units='N', desc='Parasite drag')
+		self.add_output('Aero|f_total_non_hub', units='m**2', desc='Total quivalent flat plate area of vehicle without rotor hubs')
+		self.add_output('Aero|f_fuselage', units='m**2', desc='Fuselage equivalent flat plate area')
 		self.declare_partials('*', '*', method='fd')
 
 	def compute(self, inputs, outputs):
@@ -91,15 +97,21 @@ class VehicleParasiteDragFidelityOne(om.ExplicitComponent):
 			S_ref = S_wing
 
 		if vehicle.Cd0[segment_name] is None:
-			f = calc_flat_plate_drag(vehicle, rho_air, mu_air, v) # in [m**2]
+			f, f_fuselage = calc_flat_plate_drag(vehicle, rho_air, mu_air, v) # in [m**2]
 
 			CD0 = f/S_ref
 			vehicle.Cd0[segment_name] = CD0
+			vehicle.f_total_non_hub[segment_name] = f
+			vehicle.f_fuselage[segment_name] = f_fuselage
 		else:
 			CD0 = vehicle.Cd0[segment_name]
-
+			f = vehicle.f_total_non_hub[segment_name]
+			f_fuselage = vehicle.f_fuselage[segment_name]
+		
 		outputs['Aero|Cd0_vehicle'] = CD0
 		outputs['Aero|parasite_drag_vehicle'] = 0.5 * rho_air * v * v * S_ref * CD0
+		outputs['Aero|f_total_non_hub'] = f
+		outputs['Aero|f_fuselage'] = f_fuselage
 
 def calc_flat_plate_drag(vehicle:object, rho_air:float, mu_air:float, v_inf:float):
 	"""
@@ -175,14 +187,20 @@ def calc_flat_plate_drag(vehicle:object, rho_air:float, mu_air:float, v_inf:floa
 
 		# Flat plate drag
 		f = S_wetted * Q * Cf * FF
-		
-		# Parasite drag of landing gear (strut and wheel)
-		CD_pi = np.array([0.13, 0.13, 0.13, 0.13, 0.13, 0.13])
-		S_front = np.array([0.0328496, 0.0328496, 0.0328496, 0.101213, 0.101213, 0.101213])
+
+		if vehicle.landing_gear.gear_type == 'wheeled':
+			# Parasite drag of landing gear (strut and wheel)
+			CD_pi = np.array([0.13, 0.13, 0.13, 0.13, 0.13, 0.13])
+			S_front = np.array([0.0328496, 0.0328496, 0.0328496, 0.101213, 0.101213, 0.101213])
+		elif vehicle.landing_gear.gear_type == 'skid':
+			# Parasite drag of landing skid (front, side, rear)
+			CD_pi = np.array([1.01, 1.01, 1.01, 1.01, 1.01, 1.01])
+			S_front = np.array([0.0156419, 0.00823901, 0.0156419, 0.00823901, 0.0177222, 0.0177222])
 		f_LG = CD_pi * S_front
 
 		# f total
 		f_total = np.sum(f) + np.sum(f_LG)
+		f_fuselage = f[0]
 
 	elif vehicle.configuration == 'LiftPlusCruise':
 		n_components = 4 + int(vehicle.lift_rotor.n_rotor/2)
@@ -234,15 +252,17 @@ def calc_flat_plate_drag(vehicle:object, rho_air:float, mu_air:float, v_inf:floa
 
 		# print(S_wetted.shape, Q.shape, Cf.shape, FF.shape)
 		# print(S_wetted, Q, Cf, FF)
+
 		# Flat plate drag
 		f = S_wetted * Q * Cf * FF
 		
 		# Parasite drag of landing gear (strut and wheel)
 		CD_pi = np.array([0.13, 0.13, 0.13, 0.13, 0.13, 0.13])
-		S_front = np.array([0.0328496, 0.0328496, 0.0328496, 0.101213, 0.101213, 0.101213])
+		S_front = np.array([0.0333752, 0.0333752, 0.0333752, 0.101213, 0.101213, 0.101213])
 		f_LG = CD_pi * S_front
 
 		# f total
 		f_total = np.sum(f) + np.sum(f_LG)
+		f_fuselage = f[0]
 
-	return f_total
+	return f_total, f_fuselage

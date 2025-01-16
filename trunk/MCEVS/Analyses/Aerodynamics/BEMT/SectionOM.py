@@ -1,4 +1,5 @@
 from MCEVS.Analyses.Aerodynamics.BEMT.Airfoil import AirfoilCoeffs
+import warnings
 import openmdao.api as om
 import numpy as np
 
@@ -61,12 +62,12 @@ class SectionSolverOM(om.Group):
 							promotes_inputs=['phi', 'a', 'ap', 'v_inf', 'omega', 'radius'],
 							promotes_outputs=['phi_residual'])
 
-		# This drives phi_residual = 0 by varying phi. LB and UB of W_total should be given.
+		# This drives phi_residual = 0 by varying phi. LB and UB of phi should be given.
 		residual_balance = om.BalanceComp('phi',
 										   units='rad',
 										   eq_units=None,
-										   lower=0.01*np.pi,
-										   upper=0.9*np.pi,
+										   lower=0*np.pi,
+										   upper=2*np.pi,
 										   val=(0.01+0.9)/2*np.pi,
 										   rhs_val=0.0,
 										   use_mult=False)
@@ -77,7 +78,7 @@ class SectionSolverOM(om.Group):
 
 		# Add solvers for implicit relations
 		self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=200, iprint=0, rtol=1e-3)
-		self.nonlinear_solver.options['err_on_non_converge'] = True
+		self.nonlinear_solver.options['err_on_non_converge'] = False
 		self.nonlinear_solver.options['reraise_child_analysiserror'] = True
 		self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
 		self.nonlinear_solver.linesearch.options['maxiter'] = 10
@@ -188,6 +189,7 @@ class InductionFactors(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		kappa = inputs['kappa']
 		kappap = inputs['kappap']
+
 		outputs['a'] = 1.0 / (kappa - 1.0)
 		outputs['ap'] = 1.0 / (kappap + 1.0)
 		
@@ -340,7 +342,11 @@ class Prandtl(om.ExplicitComponent):
 		r = inputs['radius']
 		phi = inputs['phi']
 
-		f = nblades * dr / (2*r*np.sin(phi))
+		with warnings.catch_warnings():
+			warnings.simplefilter("ignore")
+			# --- sometimes phi can be let to zero --- #
+			f = nblades * dr / (2*r*np.sin(phi))
+
 		if (-f > 500): # exp can overflow for very large numbers
 			outputs['F'] = 1.0
 		else:

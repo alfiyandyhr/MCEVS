@@ -7,11 +7,10 @@ class EnergyAnalysis(object):
 	"""
 	docstring for EnergyAnalysis
 	"""
-	def __init__(self, vehicle:object, mission:object, constants:object, fidelity:dict):
+	def __init__(self, vehicle:object, mission:object, fidelity:dict):
 		super(EnergyAnalysis, self).__init__()
 		self.vehicle = vehicle
 		self.mission = mission
-		self.constants = constants
 		self.fidelity = fidelity
 
 	def evaluate(self, record=False):
@@ -87,7 +86,6 @@ class EnergyAnalysis(object):
 		prob.model.add_subsystem('energy_model',
 								  EnergyConsumption(mission=self.mission,
 								  					vehicle=self.vehicle,
-								  					constants=self.constants,
 								  					fidelity=self.fidelity),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
@@ -98,7 +96,7 @@ class EnergyAnalysis(object):
 
 		elif self.fidelity['hover_climb'] == 1:
 			prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=False)
-			prob.model.add_design_var('LiftRotor|hover_climb_rpm', lower=100, upper=2000)
+			prob.model.add_design_var('LiftRotor|hover_climb_rpm', lower=100, upper=3000)
 			prob.model.add_objective('LiftRotor|hover_climb|thrust_residual_square')
 			prob.setup(check=False)
 			prob.run_driver()
@@ -116,11 +114,9 @@ class EnergyConsumption(om.Group):
 	It also computes disk loading in hover and cruise.
 	Inputs:
 	(mission requirements)
-		Mission object 			: an object containing mission profile information
+		Mission object 			: an object containing mission profile information (including gravity and atmoshphere constant objects)
 	(vehicle definition)
 		Vehicle object 			: an object that defines the vehicle
-	(atmospheric condition)
-		Constants object 		: an object containing constant values
 	(eVTOL design variables)
 		Weight|takeoff 			: total take-off weight [kg]
 		Mission|cruise_speed 	: cruising speed of the eVTOL [m/s]
@@ -137,7 +133,6 @@ class EnergyConsumption(om.Group):
 	def initialize(self):
 		self.options.declare('mission', types=object, desc='Mission object')
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
-		self.options.declare('constants', types=object, desc='Constants object')
 		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
 
 	def setup(self):
@@ -145,7 +140,6 @@ class EnergyConsumption(om.Group):
 		# Unpacking option objects
 		mission 	 = self.options['mission']
 		vehicle 	 = self.options['vehicle']
-		constants 	 = self.options['constants']
 		fidelity 	 = self.options['fidelity']
 
 		# -------------------------------------------------------------#
@@ -155,23 +149,23 @@ class EnergyConsumption(om.Group):
 		self.add_subsystem('power_requirement',
 							PowerRequirement(mission=mission,
 											 vehicle=vehicle,
-											 constants=constants,
 											 fidelity=fidelity),
 							promotes_inputs=['*'],
 							promotes_outputs=['*'])
 
-		# Segment time
-		indep = self.add_subsystem('segment_time', om.IndepVarComp())
-		for id in range(1,len(mission.segments)+1):
+		# Mission variables
+		indep = self.add_subsystem('mission_var', om.IndepVarComp())
+		for id in range(1,mission.n_segments+1):
 			indep.add_output(f'segment_time_{id}', val=mission.segments[id-1].duration, units='s')
+		indep.add_output('n_repetition', val=mission.n_repetition)
 
 		# Writing energy equation from power
 		# energy_cnsmp = power_segment_1 * segment_time_1 + ... + power_segment_n * segment_time_n
 		energy_eq 	 = 'energy_cnsmp = '
 		kwargs_power = {}
 		kwargs_time  = {}
-		for i in range(1,len(mission.segments)+1):
-			if i == len(mission.segments):
+		for i in range(1,mission.n_segments+1):
+			if i == mission.n_segments:
 				energy_eq += f'power_segment_{i} * segment_time_{i}'
 			else:
 				energy_eq += f'power_segment_{i} * segment_time_{i} + '
@@ -181,21 +175,35 @@ class EnergyConsumption(om.Group):
 		# ------------------------------------------------------------#
 		# --- Calculate energy consumptions for the whole mission --- #
 		# ------------------------------------------------------------#
-		energy_comp = om.ExecComp(energy_eq,
-								  energy_cnsmp={'units': 'W * s'},
-								  **kwargs_power, **kwargs_time)
 
-		self.add_subsystem('energy', energy_comp, promotes_outputs=[('energy_cnsmp','Energy|entire_mission')])
+		# -- One mission energy --- #
+		energy_comp_one = om.ExecComp(energy_eq,
+									  energy_cnsmp={'units': 'W * s'},
+									  **kwargs_power, **kwargs_time)
 
-		for i in range(1,len(mission.segments)+1): 
-			self.connect(f'Power|segment_{i}', f'energy.power_segment_{i}')
-			self.connect(f'segment_time.segment_time_{i}', f'energy.segment_time_{i}')
+		self.add_subsystem('energy_one_mission', energy_comp_one, promotes_outputs=[('energy_cnsmp','Energy|one_mission')])
 
+		for i in range(1,mission.n_segments+1): 
+			self.connect(f'Power|segment_{i}', f'energy_one_mission.power_segment_{i}')
+			self.connect(f'mission_var.segment_time_{i}', f'energy_one_mission.segment_time_{i}')
 
+		# -- Reserve mission energy --- #
+		if len(mission.segments) == mission.n_segments: # meaning that there is no reserve mission
+			indep.add_output('Energy|reserve_mission', val=0.0, units='W * s')
 
+		else:
+			indep.add_output('reserve_segment_time', val=mission.reserve_mission_duration, units='s')
+			energy_comp_reserve = om.ExecComp('reserve_energy = reserve_power * reserve_segment_time',
+											   reserve_energy={'units':'W*s'}, reserve_power={'units':'W'}, reserve_segment_time={'units':'s'})
 
+			self.add_subsystem('reserve_energy', energy_comp_reserve,
+								promotes_inputs=[('reserve_power','Power|reserve_segment'),('reserve_segment_time','mission_var.reserve_segment_time')],
+								promotes_outputs=[('reserve_energy','Energy|reserve_mission')])
 
+		# -- Entire mission energy --- #
+		energy_comp_total = om.ExecComp('total_energy = n * energy_one_mission + reserve_energy',
+										 total_energy={'units': 'W * s'}, energy_one_mission={'units': 'W * s'}, reserve_energy={'units': 'W * s'})
 
-
-
-
+		self.add_subsystem('total_energy', energy_comp_total,
+							promotes_inputs=[('n','mission_var.n_repetition'),('energy_one_mission','Energy|one_mission'),('reserve_energy','Energy|reserve_mission')],
+							promotes_outputs=[('total_energy','Energy|entire_mission')])

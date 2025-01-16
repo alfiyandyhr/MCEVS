@@ -199,7 +199,7 @@ class RotorRevolutionFromAdvanceRatio(om.ExplicitComponent):
 		a = inputs['Rotor|alpha']
 		r = inputs['Rotor|radius']
 		mu = inputs['Rotor|mu']
-		
+
 		outputs['Rotor|omega'] = v_inf * np.cos(a) / (mu * r)
 
 	def compute_partials(self, inputs, partials):
