@@ -24,6 +24,19 @@ def Human(N_PAX:int, config:str):
 			z_pos = np.array( [  0.20,  0.20,  0.20,  0.20 ] )
 			y_rot = np.array( [  20.0,  20.0,  20.0,  20.0 ] )
 			z_rot = np.array( [  0.00,  0.00,  0.00,  0.00 ] )
+	elif N_PAX == 6:
+		if config == 'Multirotor':
+			x_pos = np.array( [  2.20,  2.20,  3.30,  3.30,  4.40,  4.40 ] )
+			y_pos = np.array( [  0.40, -0.40,  0.40, -0.40,  0.40, -0.40 ] )
+			z_pos = np.array( [ -0.45, -0.45, -0.45, -0.45, -0.45, -0.45 ] )
+			y_rot = np.array( [  20.0,  20.0,  20.0,  20.0,  20.0,  20.0 ] )
+			z_rot = np.array( [  0.00,  0.00,  0.00,  0.00,  0.00,  0.00 ] )
+		elif config == 'LiftPlusCruise':
+			x_pos = np.array( [  1.90,  1.90,  3.00,  3.00,  4.10,  4.10 ] )
+			y_pos = np.array( [  0.40, -0.40,  0.40, -0.40,  0.40, -0.40 ] )
+			z_pos = np.array( [  0.20,  0.20,  0.20,  0.20,  0.20,  0.20 ] )
+			y_rot = np.array( [  20.0,  20.0,  20.0,  20.0,  20.0,  20.0 ] )
+			z_rot = np.array( [  0.00,  0.00,  0.00,  0.00,  0.00,  0.00 ] )
 
 	human_ids = []
 	for i in range(N_PAX):

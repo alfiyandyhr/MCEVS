@@ -29,8 +29,8 @@ def NASA_LPC_Horizontal_Tail(area=19.75560, aspect_ratio=2.15182, l_fuse=30.0, f
 	# Calculating other params
 	S 	= area
 	AR 	= aspect_ratio
-	b 	= np.sqrt(S * AR)
-	rc 	= 2*S/b/(1+tr_base)
+	b 	= np.sqrt(S * AR)/2
+	rc 	= 2*S/b/(1+tr_base)/2
 	tc 	= rc * tr_base
 
 	vsp.SetParmValUpdate( htail_id, 'Span', 				'XSec_1', 	b 	 	   )

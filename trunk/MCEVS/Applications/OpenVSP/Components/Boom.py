@@ -27,9 +27,9 @@ def NASA_QR_Boom(n_lift_rotor=4, r_lift_rotor=9.159, l_fuse=21.0, d_fuse_max=6.7
 
 		for j in range(len(Span[i])):
 			# Span[i][j] 			= Span[i][j]/21.0*l_fuse/2.5*r_lift_rotor
-			Span[i][j] 			= Span[i][j]/21.0*l_fuse * 0.7
-			Root_Chord[i][j] 	= Root_Chord[i][j]/21.0*l_fuse
-			Tip_Chord[i][j] 	= Tip_Chord[i][j]/21.0*l_fuse
+			Span[i][j] 			= Span[i][j]/21.0*l_fuse * r_lift_rotor/(9.159*0.3048)
+			Root_Chord[i][j] 	= Root_Chord[i][j]/21.0*l_fuse * r_lift_rotor/(9.159*0.3048)
+			Tip_Chord[i][j] 	= Tip_Chord[i][j]/21.0*l_fuse * r_lift_rotor/(9.159*0.3048)
 
 		vsp.SetParmVal( boom_id, 'X_Rel_Location', 		'XForm', 		0.0 	 )
 		vsp.SetParmVal( boom_id, 'Y_Rel_Location', 		'XForm', 		0.0   	 )
@@ -72,10 +72,10 @@ def NASA_QR_Boom(n_lift_rotor=4, r_lift_rotor=9.159, l_fuse=21.0, d_fuse_max=6.7
 
 	return boom_ids
 
-def NASA_LPC_Boom(n_lift_rotor=4, r_lift_rotor=1.0, l_fuse=30.0, wing_AR=12.12761, wing_S=210.27814, wing_id=None):
+def NASA_LPC_Boom(l_boom:float, d_boom:float, n_lift_rotor=4, r_lift_rotor=1.0, l_fuse=30.0, wing_AR=12.12761, wing_S=210.27814, wing_id=None):
 
 	# Parameters
-	l_boom  = 1.6*8.0/30.0*l_fuse/1.6*r_lift_rotor if r_lift_rotor>=1.6 else 1.6*8.0/30.0*l_fuse
+	# l_boom  = 1.6*8.0/30.0*l_fuse/1.6*r_lift_rotor if r_lift_rotor>=1.6 else 1.6*8.0/30.0*l_fuse
 	b = np.sqrt(wing_S * wing_AR)	# wing span
 	wing_rc = 2.0 * ((5.4432819 + 4.1308305)/2 * 14.745022 / 210.27814 * wing_S) / (14.745022/25.26*b/2) / (1 + 4.1308305/5.4432819)
 	wing_c_loc = 2.0 * ((4.130830 + 3.304664)/2 * 6.626930 / 210.27814 * wing_S) / (6.6269300/25.26*b/2) / (1 + 3.304664/4.130830)
@@ -92,7 +92,7 @@ def NASA_LPC_Boom(n_lift_rotor=4, r_lift_rotor=1.0, l_fuse=30.0, wing_AR=12.1276
 		V_Attach_Locs	= [  0.50  ]
 
 	if n_lift_rotor == 8:
-		X_Rel_Locations = [ -1.148, -1.300  ]
+		X_Rel_Locations = [ -1.700, -1.900  ]
 		Y_Rel_Locations = [  0.000,  0.000  ]
 		Z_Rel_Locations = [ -0.200, -0.200  ]
 		U_Attach_Locs	= [  0.250,  0.420  ]
@@ -119,7 +119,7 @@ def NASA_LPC_Boom(n_lift_rotor=4, r_lift_rotor=1.0, l_fuse=30.0, wing_AR=12.1276
 		for i in range(1, xsec_num-1):
 			vsp.ChangeXSecShape(boom_surf, i, vsp.XS_CIRCLE)
 			xsec = vsp.GetXSec(boom_surf, i)
-			vsp.SetParmVal(	vsp.GetXSecParm(xsec, 'Circle_Diameter'), 1.0/30.0*l_fuse )
+			vsp.SetParmVal(	vsp.GetXSecParm(xsec, 'Circle_Diameter'), d_boom )
 
 	return boom_ids
 	

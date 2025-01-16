@@ -2,13 +2,14 @@ import MCEVS
 import openvsp as vsp
 import numpy as np
 
-def NASA_QR_Lift_Rotor(n_lift_rotor=4, r_lift_rotor=9.159, n_blade=5, l_fuse=21.0, d_fuse_max=6.745500, boom_ids=[None]):
+def NASA_QR_Lift_Rotor(n_lift_rotor=4, r_lift_rotor=9.159, n_blade=5, r_hub=None, l_fuse=21.0, d_fuse_max=6.745500, boom_ids=[None]):
 
 	# --- Creating rotor hubs --- #
 
 	# Baseline params
 	# l_hub  			= 1.7/21.0*l_fuse
-	l_hub 			= 2*0.12*r_lift_rotor
+	# l_hub 			= 2*0.12*r_lift_rotor
+	l_hub = r_hub
 	X  				= [  0.000000,  0.343827,  0.500000,  0.759227,  1.000000 ]
 	Y  				= [  0.000000,  0.000000,  0.000000,  0.000000,  0.000000 ]
 	Z  				= [  0.000000,  0.000000,  0.000000,  0.010870,  0.000000 ]
@@ -84,6 +85,8 @@ def NASA_QR_Lift_Rotor(n_lift_rotor=4, r_lift_rotor=9.159, n_blade=5, l_fuse=21.
 		vsp.SetParmVal( rotor_id, 	'NumBlade', 		'Design', 	n_blade 	   )
 		vsp.SetParmVal( rotor_id, 	'UseBeta34Flag', 	'Design',	1   		   )
 		vsp.SetParmVal( rotor_id, 	'Beta34', 			'Design',	0.0 		   )
+		vsp.SetParmVal( rotor_id, 	'ConstructXoC',		 'Design',	0.25 		   )
+		vsp.SetParmVal( rotor_id, 	'FeatherAxisXoC', 	'Design',	0.25 		   )
 
 		vsp.SetParmVal( rotor_id, 	'X_Rel_Location', 	'XForm', 	l_hub/2 		   )
 		vsp.SetParmVal( rotor_id, 	'Y_Rel_Location', 	'XForm', 	0.00 			   )
@@ -162,14 +165,14 @@ def NASA_QR_Lift_Rotor(n_lift_rotor=4, r_lift_rotor=9.159, n_blade=5, l_fuse=21.
 		vsp.SetParmVal( rotor_id, 	'toc_8',  			'Thick', 	0.10637 )
 		vsp.SetParmVal( rotor_id, 	'toc_9',  			'Thick', 	0.10637 )
 
-def NASA_LPC_Lift_Rotor(n_lift_rotor=8, n_blade=2, r_lift_rotor=5.0, l_fuse=30.0, wing_AR=12.12761, wing_S=210.27814, boom_ids=None):
+def NASA_LPC_Lift_Rotor(l_hub:float, d_hub:float, n_lift_rotor=8, n_blade=2, r_lift_rotor=5.0, l_fuse=30.0, wing_AR=12.12761, wing_S=210.27814, boom_ids=None):
 
 	# --- Creating rotor hubs --- #
 
 	# Parameters
-	l_hub  = 1.0/30.0*l_fuse
+	# l_hub  = 1.0/30.0*l_fuse
 	# d_hub  = 0.8*2.25/30.0*l_fuse
-	d_hub  = 2.25/10.0*r_lift_rotor
+	# d_hub  = 2.25/10.0*r_lift_rotor
 	l_boom  = 0.8*8.0/30.0*l_fuse/1.6*r_lift_rotor if r_lift_rotor>=1.6 else 0.8*8.0/30.0*l_fuse
 	d_boom = 1.0/30.0*l_fuse
 	b = np.sqrt(wing_S * wing_AR)	# wing span
@@ -235,16 +238,19 @@ def NASA_LPC_Lift_Rotor(n_lift_rotor=8, n_blade=2, r_lift_rotor=5.0, l_fuse=30.0
 		vsp.SetParmVal( rotor_id, 	'NumBlade', 			'Design', 	n_blade 	   )
 		vsp.SetParmVal( rotor_id, 	'UseBeta34Flag', 		'Design',	1   		   )
 		vsp.SetParmVal( rotor_id, 	'Beta34', 				'Design',	0.0 		   )
+		vsp.SetParmVal( rotor_id, 	'Rotate', 				'Design',	90.0 		   )
+		vsp.SetParmVal( rotor_id, 	'ConstructXoC',		 	'Design',	0.25 		   )
+		vsp.SetParmVal( rotor_id, 	'FeatherAxisXoC', 		'Design',	0.25 		   )
 
-		vsp.SetParmVal( rotor_id, 	'X_Rel_Location', 		'XForm', 	0.0    )
-		vsp.SetParmVal( rotor_id, 	'Y_Rel_Location', 		'XForm',   -0.1125 )
+		vsp.SetParmVal( rotor_id, 	'X_Rel_Location', 		'XForm', 	l_hub/2)
+		vsp.SetParmVal( rotor_id, 	'Y_Rel_Location', 		'XForm',    0.0 )
 		vsp.SetParmVal( rotor_id, 	'Z_Rel_Location', 		'XForm', 	0.0    )
 		vsp.SetParmVal( rotor_id, 	'Y_Rel_Rotation', 		'XForm', 	180.0  )
 		vsp.SetParmVal( rotor_id, 	'Sym_Ancestor', 		'Sym', 		0      )
 		vsp.SetParmVal( rotor_id, 	'Sym_Planar_Flag', 		'Sym', 		2 	   )
 		vsp.SetParmVal( rotor_id, 	'Trans_Attach_Flag', 	'Attach',	2.0    )
 		vsp.SetParmVal( rotor_id, 	'Rots_Attach_Flag',  	'Attach',	1.0    )
-		vsp.SetParmVal( rotor_id, 	'U_Attach_Location', 	'Attach',	0.5    )
+		vsp.SetParmVal( rotor_id, 	'U_Attach_Location', 	'Attach',	0.0    )
 		vsp.SetParmVal( rotor_id, 	'V_Attach_Location', 	'Attach',	0.0    )
 
 		vsp.SetParmVal( rotor_id, 	'RadiusFrac', 			'XSec_0',	0.21 )
@@ -317,14 +323,14 @@ def NASA_LPC_Lift_Rotor(n_lift_rotor=8, n_blade=2, r_lift_rotor=5.0, l_fuse=30.0
 
 	return hub_ids, rotor_ids
 
-def NASA_LPC_Propeller(n_propeller=1, n_blade=3, r_propeller=1.0, l_fuse=30.0, fuse_id=None):
+def NASA_LPC_Propeller(l_hub:float, d_hub:float, n_propeller=1, n_blade=3, r_propeller=1.0, l_fuse=30.0, fuse_id=None):
 
 	# --- Creating propeller hubs --- #
 
 	# Parameters
-	l_hub  = 1.0/30.0*l_fuse
+	# l_hub  = 1.0/30.0*l_fuse
 	# d_hub  = 0.8*2.25/30.0*l_fuse
-	d_hub  = 1.5/9.0*r_propeller
+	# d_hub  = 1.5/9.0*r_propeller
 
 	X_Rel_Locations = [ l_fuse 			]
 	Y_Rel_Locations = [ 0.0 			]
@@ -363,15 +369,17 @@ def NASA_LPC_Propeller(n_propeller=1, n_blade=3, r_propeller=1.0, l_fuse=30.0, f
 		vsp.SetParmVal( rotor_id, 	'NumBlade', 			'Design', 	n_blade 	  )
 		vsp.SetParmVal( rotor_id, 	'UseBeta34Flag', 		'Design',	1   		  )
 		vsp.SetParmVal( rotor_id, 	'Beta34', 				'Design',	0.0 		  )
+		vsp.SetParmVal( rotor_id, 	'ConstructXoC',		 	'Design',	0.25 		  )
+		vsp.SetParmVal( rotor_id, 	'FeatherAxisXoC', 		'Design',	0.25 		  )
 
-		vsp.SetParmVal( rotor_id, 	'X_Rel_Location', 		'XForm', 	0.0    )
-		vsp.SetParmVal( rotor_id, 	'Y_Rel_Location', 		'XForm',   -0.08   )
+		vsp.SetParmVal( rotor_id, 	'X_Rel_Location', 		'XForm', 	l_hub/2)
+		vsp.SetParmVal( rotor_id, 	'Y_Rel_Location', 		'XForm',    0.0    )
 		vsp.SetParmVal( rotor_id, 	'Z_Rel_Location', 		'XForm', 	0.0    )
 		vsp.SetParmVal( rotor_id, 	'Y_Rel_Rotation', 		'XForm', 	180.0  )
 		vsp.SetParmVal( rotor_id, 	'Sym_Planar_Flag', 		'Sym', 		0 	   )
 		vsp.SetParmVal( rotor_id, 	'Trans_Attach_Flag', 	'Attach',	2.0    )
 		vsp.SetParmVal( rotor_id, 	'Rots_Attach_Flag',  	'Attach',	1.0    )
-		vsp.SetParmVal( rotor_id, 	'U_Attach_Location', 	'Attach',	0.5    )
+		vsp.SetParmVal( rotor_id, 	'U_Attach_Location', 	'Attach',	0.0    )
 		vsp.SetParmVal( rotor_id, 	'V_Attach_Location', 	'Attach',	0.0    )
 
 		vsp.SetParmVal( rotor_id, 	'RadiusFrac', 			'XSec_0',	0.21 )
