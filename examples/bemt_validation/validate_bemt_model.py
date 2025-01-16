@@ -59,8 +59,8 @@ fig.suptitle('Experiment vs BEMT')
 fig.legend([r'$C_T$-exp',r'$C_T$-bemt',r'$C_T$-bemt_OM',r'$C_P$-exp',r'$C_P$-bemt',r'$C_P$-bemt_OM',r'$\eta$-exp',r'$\eta$-bemt',r'$\eta$-bemt_OM'],
 			ncols=3, loc='upper center', bbox_to_anchor=(0.5,0.94))
 plt.subplots_adjust(left=0.12, bottom=0.1, right=0.9, top=0.76, hspace=0.1)
-plt.show()
-# plt.savefig('bemt_validation.pdf',format='pdf',dpi=600)
+# plt.show()
+plt.savefig('bemt_validation.pdf',format='pdf',dpi=600)
 
 # References
 # [1] Theodorsen T., Stickle G.W. and Brevoort, M.J. “Characteristics of six propellers including the high-speed range.”

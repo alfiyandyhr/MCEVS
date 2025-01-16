@@ -36,7 +36,7 @@ design_var = {'r_lift_rotor': 1.5,
 
 vehicle = StandardMultirotorEVTOL(design_var)
 
-# vehicle.print_info()
+vehicle.print_info()
 
 # Analysis
 analysis = WeightAnalysis(vehicle=vehicle, mission=mission, constants=constants, fidelity={'aero':1, 'hover_climb':1}, sizing_mode=True)
