@@ -12,6 +12,7 @@ from MCEVS.Missions.Segments.HoverDescent.Constant_Speed import HoverDescentCons
 from MCEVS.Missions.Segments.Hover.Stay import HoverStay
 from MCEVS.Missions.Segments.Others.Constant_Power import ConstantPower
 from MCEVS.Missions.Segments.Others.Reserve_Cruise import ReserveCruise
+from MCEVS.Constants.Container import EarthGravityAndAtmosphere
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -19,9 +20,12 @@ class Mission(object):
 	"""
 	A container for a mission. Users can add segments to this container.
 	"""
-	def __init__(self, takeoff_altitude:float, n_repetition:float):
+	def __init__(self, planet:str, takeoff_altitude:float, n_repetition:float):
 		super(Mission, self).__init__()
+
+		self.planet = planet # available: 'Earth'
 		self.takeoff_altitude = takeoff_altitude # ASL (Above Sea Level)
+
 		self.curr_id = 0
 		self.segments = []
 		self.n_segments = 0 # number of segments excluding reserve segment
@@ -112,6 +116,11 @@ class Mission(object):
 		self.x, self.y = self.segments[self.curr_id-1]._calc_position(self.x, self.y, t_next)
 		self.vx, self.vy = self.segments[self.curr_id-1]._calc_velocity(self.vx, self.vy, t_next)
 		self.ax, self.ay = self.segments[self.curr_id-1]._calc_acceleration(self.ax, self.ay, t_next)
+
+		# Calculate atmosphere and gravity constants
+		if kind not in ['ConstantPower', 'NoCreditDescent', 'ReserveCruise']:
+			curr_alt = np.mean(self.y[-1]) + self.takeoff_altitude
+			self.segments[self.curr_id-1].constants = EarthGravityAndAtmosphere('US_Standard_1976').compute_constants(altitude=curr_alt)
 
 		# Append the time list
 		self.t.append(t_next)

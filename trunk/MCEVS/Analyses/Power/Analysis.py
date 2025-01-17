@@ -21,7 +21,7 @@ class PowerAnalysis(object):
 		self.fidelity = fidelity
 
 	def evaluate(self, record=False):
-		# print('### --- Solving for energy requirement --- ###')
+		# print('### --- Solving for power requirement --- ###')
 
 		# MTOW should be defined if not in sizing mode
 		mtow = self.vehicle.weight.max_takeoff 		# kg
@@ -30,13 +30,16 @@ class PowerAnalysis(object):
 
 		if self.vehicle.configuration == 'Multirotor':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
 			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
 			rotor_advance_ratio 	= self.vehicle.lift_rotor.advance_ratio
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
+			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
 			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
 			r_propeller 			= self.vehicle.propeller.radius 		# m
+			c_propeller 			= self.vehicle.propeller.chord  		# m
 			wing_area 				= self.vehicle.wing.area 				# m**2
 			wing_aspect_ratio 		= self.vehicle.wing.aspect_ratio
 			propeller_advance_ratio = self.vehicle.propeller.advance_ratio
@@ -54,26 +57,56 @@ class PowerAnalysis(object):
 
 		if self.vehicle.configuration == 'Multirotor':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|advance_ratio', rotor_advance_ratio)
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
 			indeps.add_output('Propeller|radius', r_propeller, units='m')
+			indeps.add_output('Propeller|chord', c_propeller, units='m')
 			indeps.add_output('Wing|area', wing_area, units='m**2')
 			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
 			indeps.add_output('Propeller|advance_ratio', propeller_advance_ratio)
-		
-		prob.model.add_subsystem('energy_model',
+
+		# Lift rotor variables needed for BEMT
+		if self.fidelity['hover_climb'] == 1:
+			n_sections = self.vehicle.lift_rotor.n_section
+			radius_list = np.array(self.vehicle.lift_rotor.r_to_R_list) * self.vehicle.lift_rotor.radius
+			chord_list = np.array(self.vehicle.lift_rotor.c_to_R_list) * self.vehicle.lift_rotor.radius
+			pitch_list = np.array(self.vehicle.lift_rotor.pitch_list)
+			for i in range(n_sections):
+				if i == 0:
+					width = 2*(radius_list[i] - r_hub_lift_rotor)
+				elif i == n_sections-1:
+					width = 2*(r_lift_rotor - radius_list[i])
+				else:
+					width = radius_list[i] - radius_list[i-1]
+				indeps.add_output(f'LiftRotor|Section{i+1}|radius', radius_list[i], units='m')
+				indeps.add_output(f'LiftRotor|Section{i+1}|chord', chord_list[i], units='m')
+				indeps.add_output(f'LiftRotor|Section{i+1}|pitch', pitch_list[i], units='deg')
+				indeps.add_output(f'LiftRotor|Section{i+1}|width', width, units='m')
+			indeps.add_output('LiftRotor|hover_climb_rpm', 1000.0, units='rpm') # rpm guess
+
+		prob.model.add_subsystem('power_model',
 								  PowerRequirement(mission=self.mission,
 								  				   vehicle=self.vehicle,
 								  				   fidelity=self.fidelity),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
 
-		prob.setup(check=False)
-		prob.run_model()
+		if self.fidelity['hover_climb'] == 0:
+			prob.setup(check=False)
+			prob.run_model()
+
+		elif self.fidelity['hover_climb'] == 1:
+			prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=False)
+			prob.model.add_design_var('LiftRotor|hover_climb_rpm', lower=100, upper=3000)
+			prob.model.add_objective('LiftRotor|hover_climb|thrust_residual_square')
+			prob.setup(check=False)
+			prob.run_driver()
 		
 		if record:
 			record_performance_by_segments(prob, self.vehicle.configuration, self.mission)
@@ -108,14 +141,15 @@ class PowerRequirement(om.Group):
 		# Unpacking vehicle parameters
 		N_lift_rotor 	   		= vehicle.lift_rotor.n_rotor				# number of lift rotors
 		n_blade_lift_rotor 		= vehicle.lift_rotor.n_blade 				# number of blades per rotor
-		hover_FM 		   		= vehicle.lift_rotor.figure_of_merit		# hover figure of merit
 
 		if vehicle.configuration == 'Multirotor':
-			Cd0 = vehicle.lift_rotor.Cd0
+			Cd0 			  = vehicle.lift_rotor.Cd0
+			hover_FM 		  = vehicle.lift_rotor.figure_of_merit		# hover figure of merit
 		elif vehicle.configuration == 'LiftPlusCruise':
-			N_propeller 	  = vehicle.propeller.n_propeller	# number of propellers
-			n_blade_propeller = vehicle.propeller.n_blade 		# number of blades per propeller
+			N_propeller 	  = vehicle.propeller.n_propeller			# number of propellers
+			n_blade_propeller = vehicle.propeller.n_blade 				# number of blades per propeller
 			Cd0 			  = vehicle.propeller.Cd0
+			hover_FM 		  = vehicle.propeller.figure_of_merit		# hover figure of merit
 		else:
 			raise RuntimeError('eVTOL configuration is not available.')
 
