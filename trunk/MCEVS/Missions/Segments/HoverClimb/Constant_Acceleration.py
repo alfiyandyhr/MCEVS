@@ -37,8 +37,6 @@ class HoverClimbConstantAcceleration():
 				self.duration = float(self.kwargs[item])
 			elif item == 'acceleration':
 				self.acceleration = float(self.kwargs[item])
-			elif item == 'constants':
-				self.constants = self.kwargs[item]
 		
 		try:
 			if self.acceleration is None:

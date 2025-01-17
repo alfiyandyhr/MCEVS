@@ -23,8 +23,7 @@ class HoverStay():
 		for item in list(self.kwargs):
 			if item == 'duration':
 				self.duration = float(self.kwargs[item])
-			elif item == 'constants':
-				self.constants = self.kwargs[item]
+				
 		if self.duration is None:
 			raise NameError("Need to define the duration of hover.")
 

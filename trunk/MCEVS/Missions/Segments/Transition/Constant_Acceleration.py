@@ -37,9 +37,7 @@ class TransitionConstantAcceleration():
 				self.duration = float(self.kwargs[item])
 			elif item == 'AoA':
 				self.AoA = float(self.kwargs[item])
-			elif item == 'constants':
-				self.constants = self.kwargs[item]
-		
+				
 		try:
 			if self.acceleration is None:
 				if self.duration is None:

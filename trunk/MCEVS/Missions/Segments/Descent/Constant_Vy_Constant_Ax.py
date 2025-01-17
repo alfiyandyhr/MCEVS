@@ -48,8 +48,6 @@ class DescentConstantVyConstantAx():
 				self.distance_X = float(self.kwargs[item])
 			elif item == 'duration':
 				self.duration = float(self.kwargs[item])
-			elif item == 'constants':
-				self.constants = self.kwargs[item]
 		
 		try:
 			if self.duration is None:

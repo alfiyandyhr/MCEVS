@@ -35,8 +35,6 @@ class CruiseConstantSpeed():
 				self.duration = float(self.kwargs[item])
 			elif item == 'AoA':
 				self.AoA = float(self.kwargs[item])
-			elif item == 'constants':
-				self.constants = self.kwargs[item]
 		
 		try:
 			if self.speed is None:
