@@ -88,7 +88,7 @@ class PowerAnalysis(object):
 				indeps.add_output(f'LiftRotor|Section{i+1}|chord', chord_list[i], units='m')
 				indeps.add_output(f'LiftRotor|Section{i+1}|pitch', pitch_list[i], units='deg')
 				indeps.add_output(f'LiftRotor|Section{i+1}|width', width, units='m')
-			indeps.add_output('LiftRotor|hover_climb_rpm', 1000.0, units='rpm') # rpm guess
+			indeps.add_output('LiftRotor|HoverClimb|RPM', 1000.0, units='rpm') # rpm guess
 
 		prob.model.add_subsystem('power_model',
 								  PowerRequirement(mission=self.mission,
@@ -103,8 +103,8 @@ class PowerAnalysis(object):
 
 		elif self.fidelity['hover_climb'] == 1:
 			prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=False)
-			prob.model.add_design_var('LiftRotor|hover_climb_rpm', lower=100, upper=3000)
-			prob.model.add_objective('LiftRotor|hover_climb|thrust_residual_square')
+			prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10, upper=5000)
+			prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square')
 			prob.setup(check=False)
 			prob.run_driver()
 		
@@ -139,8 +139,8 @@ class PowerRequirement(om.Group):
 				v_descent = segment.speed
 
 		# Unpacking vehicle parameters
-		N_lift_rotor 	   		= vehicle.lift_rotor.n_rotor				# number of lift rotors
-		n_blade_lift_rotor 		= vehicle.lift_rotor.n_blade 				# number of blades per rotor
+		N_lift_rotor 	   		= vehicle.lift_rotor.n_rotor			# number of lift rotors
+		n_blade_lift_rotor 		= vehicle.lift_rotor.n_blade 			# number of blades per rotor
 
 		if vehicle.configuration == 'Multirotor':
 			Cd0 			  = vehicle.lift_rotor.Cd0
@@ -202,8 +202,8 @@ class PowerRequirement(om.Group):
 										promotes_inputs=['Weight|takeoff', 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
-														  ('thrust_residual_square',f'LiftRotor|hover_climb|thrust_residual_square'),
-														  ('FM','LiftRotor|hover_climb_FM')])
+														  ('thrust_residual_square',f'LiftRotor|HoverClimb|thrust_residual_square'),
+														  ('FM','LiftRotor|HoverClimb|FM')])
 
 			if segment.kind == 'HoverDescentConstantSpeed':
 				self.add_subsystem(f'segment_{segment.id}_power',

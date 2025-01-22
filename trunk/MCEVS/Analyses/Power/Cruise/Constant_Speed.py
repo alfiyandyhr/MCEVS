@@ -92,14 +92,19 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 							promotes_inputs=[('Thrust_all','Thrust_all_cruise')],
 							promotes_outputs=[('Rotor|thrust', 'LiftRotor|Cruise|thrust')])
 
-		# Step 5: Calculate rotor omega given the advance ratio mu
-		self.add_subsystem('rotor_revolution',
-							RotorRevolutionFromAdvanceRatio(),
+		# Step 5: Calculate rotor omega from RPM
+		self.add_subsystem('rpm2omega',
+							om.ExecComp('omega = rpm * 2*pi/60.0', omega={'units':'rad/s'}, rpm={'units':'rpm'}),
+							promotes_inputs=[('rpm','LiftRotor|Cruise|RPM')],
+							promotes_outputs=[('omega','LiftRotor|Cruise|omega')])
+
+		self.add_subsystem('mu',
+							RotorAdvanceRatio(),
 							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
 											 ('Rotor|alpha',	'LiftRotor|Cruise|alpha'),
-											 ('Rotor|mu',		'LiftRotor|advance_ratio'),
+											 ('Rotor|omega',	'LiftRotor|Cruise|omega'),
 											 ('v_inf',			'Mission|cruise_speed')],
-							promotes_outputs=[('Rotor|omega', 	'LiftRotor|Cruise|omega')])
+							promotes_outputs=[('Rotor|mu',		'LiftRotor|Cruise|mu')])
 
 		# Step 6: Calculate the thrust coefficient Ct
 		self.add_subsystem('Ct',
@@ -114,14 +119,14 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 							RotorProfilePower(rho_air=rho_air, n_blade=n_blade, Cd0=Cd0),
 							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
 											 ('Rotor|chord',	'LiftRotor|chord'),
-											 ('Rotor|mu',		'LiftRotor|advance_ratio'),
+											 ('Rotor|mu',		'LiftRotor|Cruise|mu'),
 											 ('Rotor|omega',	'LiftRotor|Cruise|omega')],
 							promotes_outputs=[('Rotor|profile_power', 'LiftRotor|Cruise|profile_power')])
 
 		# Step 8: Calculate induced power
 		self.add_subsystem('rotor_inflow',
 							RotorInflow(),
-							promotes_inputs=[('Rotor|mu', 					'LiftRotor|advance_ratio'),
+							promotes_inputs=[('Rotor|mu', 					'LiftRotor|Cruise|mu'),
 											 ('Rotor|alpha', 				'LiftRotor|Cruise|alpha'),
 											 ('Rotor|thrust_coefficient', 	'LiftRotor|Cruise|thrust_coefficient'),],
 							promotes_outputs=[('Rotor|lambda', 				'LiftRotor|Cruise|lambda')])
@@ -231,12 +236,11 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 							promotes_inputs=[('Thrust_all', 'Aero|Cruise|total_drag')],
 							promotes_outputs=[('Rotor|thrust','Propeller|Cruise|thrust')])
 
-		# Step 4: Calculate rotor omega given propeller advance ratio J;
-		# freestream speed = eVTOL cruise speed
-		self.add_subsystem('prop_revolution',
-							PropellerRevolutionFromAdvanceRatio(),
-							promotes_inputs=['Propeller|radius', 'Propeller|advance_ratio', ('v_inf', 'Mission|cruise_speed')],
-							promotes_outputs=[('Propeller|omega','Propeller|Cruise|omega')])
+		# Step 4: Calculate rotor omega from RPM
+		self.add_subsystem('rpm2omega',
+							om.ExecComp('omega = rpm * 2*pi/60.0', omega={'units':'rad/s'}, rpm={'units':'rpm'}),
+							promotes_inputs=[('rpm','Propeller|Cruise|RPM')],
+							promotes_outputs=[('omega','Propeller|Cruise|omega')])
 
 		# Step 5: Calculate rotor advance ratio mu and thrust coefficient Ct
 		# Treating propeller as a rotor

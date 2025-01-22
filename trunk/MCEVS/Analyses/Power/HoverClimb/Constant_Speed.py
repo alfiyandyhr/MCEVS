@@ -107,10 +107,11 @@ class PowerHoverClimbConstantSpeedFidelityOne(om.Group):
 							promotes_outputs=[('T_req','LiftRotor|thrust')])
 
 		input_list = [('T_req','LiftRotor|thrust'),
-					  ('rpm', 'LiftRotor|hover_climb_rpm'),
+					  ('rpm', 'LiftRotor|HoverClimb|RPM'),
 					  ('v_inf','hover_climb.v_inf'),
 					  ('blade_radius','LiftRotor|radius'),
-					  ('hub_radius','LiftRotor|hub_radius')]
+					  ('hub_radius','LiftRotor|hub_radius'),
+					  ('global_twist','LiftRotor|global_twist')]
 
 		for i in range(len(airfoil_list)):
 			input_list.append( (f'Section{i+1}|radius', f'LiftRotor|Section{i+1}|radius') )

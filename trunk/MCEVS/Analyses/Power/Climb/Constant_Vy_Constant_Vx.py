@@ -94,14 +94,19 @@ class PowerClimbConstantVyConstantVxEdgewise(om.Group):
 							promotes_inputs=[('Thrust_all','Thrust_all_climb')],
 							promotes_outputs=[('Rotor|thrust', 'LiftRotor|Climb|thrust')])
 
-		# Step 5: Calculate rotor omega given the advance ratio mu
-		self.add_subsystem('rotor_revolution',
-							RotorRevolutionFromAdvanceRatio(),
+		# Step 5: Calculate rotor omega and advance ratio from RPM
+		self.add_subsystem('rpm2omega',
+							om.ExecComp('omega = rpm * 2*pi/60.0', omega={'units':'rad/s'}, rpm={'units':'rpm'}),
+							promotes_inputs=[('rpm','LiftRotor|Climb|RPM')],
+							promotes_outputs=[('omega','LiftRotor|Climb|omega')])
+
+		self.add_subsystem('mu',
+							RotorAdvanceRatio(),
 							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
 											 ('Rotor|alpha',	'LiftRotor|Climb|alpha'),
-											 ('Rotor|mu',		'LiftRotor|advance_ratio'),
+											 ('Rotor|omega',	'LiftRotor|Climb|omega'),
 											 ('v_inf',			'climb.climb_airspeed')],
-							promotes_outputs=[('Rotor|omega', 	'LiftRotor|Climb|omega')])
+							promotes_outputs=[('Rotor|mu',		'LiftRotor|Climb|mu')])
 
 		# Step 6: Calculate the thrust coefficient Ct
 		self.add_subsystem('Ct',
@@ -116,14 +121,14 @@ class PowerClimbConstantVyConstantVxEdgewise(om.Group):
 							RotorProfilePower(rho_air=rho_air, n_blade=n_blade, Cd0=Cd0),
 							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
 											 ('Rotor|chord',	'LiftRotor|chord'),
-											 ('Rotor|mu',		'LiftRotor|advance_ratio'),
+											 ('Rotor|mu',		'LiftRotor|Climb|mu'),
 											 ('Rotor|omega',	'LiftRotor|Climb|omega')],
 							promotes_outputs=[('Rotor|profile_power', 'LiftRotor|Climb|profile_power')])
 
 		# Step 8: Calculate induced power
 		self.add_subsystem('rotor_inflow',
 							RotorInflow(),
-							promotes_inputs=[('Rotor|mu', 					'LiftRotor|advance_ratio'),
+							promotes_inputs=[('Rotor|mu', 					'LiftRotor|Climb|mu'),
 											 ('Rotor|alpha', 				'LiftRotor|Climb|alpha'),
 											 ('Rotor|thrust_coefficient', 	'LiftRotor|Climb|thrust_coefficient'),],
 							promotes_outputs=[('Rotor|lambda', 				'LiftRotor|Climb|lambda')])
@@ -242,12 +247,11 @@ class PowerClimbConstantVyConstantVxWithWing(om.Group):
 							promotes_inputs=['Thrust_all'],
 							promotes_outputs=[('Rotor|thrust','Propeller|Climb|thrust')])
 
-		# Step 4: Calculate rotor omega given propeller advance ratio J;
-		# freestream speed = eVTOL cruise speed
-		self.add_subsystem('prop_revolution',
-							PropellerRevolutionFromAdvanceRatio(),
-							promotes_inputs=['Propeller|radius', 'Propeller|advance_ratio', ('v_inf', 'climb.climb_airspeed')],
-							promotes_outputs=[('Propeller|omega','Propeller|Climb|omega')])
+		# Step 4: Calculate propeller omega from RPM
+		self.add_subsystem('rpm2omega',
+							om.ExecComp('omega = rpm * 2*pi/60.0', omega={'units':'rad/s'}, rpm={'units':'rpm'}),
+							promotes_inputs=[('rpm','Propeller|Climb|RPM')],
+							promotes_outputs=[('omega','Propeller|Climb|omega')])
 
 		# Step 5: Calculate rotor advance ratio mu and thrust coefficient Ct
 		# Treating propeller as a rotor

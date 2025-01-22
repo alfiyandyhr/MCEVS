@@ -25,7 +25,6 @@ class EnergyAnalysis(object):
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
 			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
 			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
-			rotor_advance_ratio 	= self.vehicle.lift_rotor.advance_ratio
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
@@ -35,7 +34,6 @@ class EnergyAnalysis(object):
 			c_propeller 			= self.vehicle.propeller.chord  		# m
 			wing_area 				= self.vehicle.wing.area 				# m**2
 			wing_aspect_ratio 		= self.vehicle.wing.aspect_ratio
-			propeller_advance_ratio = self.vehicle.propeller.advance_ratio
 
 		for segment in self.mission.segments:
 			if segment.kind == 'CruiseConstantSpeed':
@@ -46,13 +44,29 @@ class EnergyAnalysis(object):
 		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
 		indeps.add_output('Weight|takeoff', mtow, units='kg')
-		indeps.add_output('Mission|cruise_speed', cruise_speed, units='m/s')
+
+		for segment in self.mission.segments:
+			if segment.kind == 'CruiseConstantSpeed':
+				indeps.add_output('Mission|cruise_speed', segment.speed, units='m/s')
+				if self.vehicle.configuration == 'Multirotor':
+					indeps.add_output('LiftRotor|Cruise|RPM', vehicle.lift_rotor.RPM['cruise'], units='RPM')
+				elif self.vehicle.configuration == 'LiftPlusCruise':
+					indeps.add_output('Propeller|Cruise|RPM', vehicle.propeller.RPM['cruise'], units='RPM')
+			if segment.kind == 'ClimbConstantVyConstantVx':
+				if self.vehicle.configuration == 'Multirotor':
+					indeps.add_output('LiftRotor|Climb|RPM', vehicle.lift_rotor.RPM['climb'], units='RPM')
+				elif self.vehicle.configuration == 'LiftPlusCruise':
+					indeps.add_output('Propeller|Climb|RPM', vehicle.propeller.RPM['climb'], units='RPM')		
+			if segment.kind == 'DescentConstantVyConstantVx':
+				if self.vehicle.configuration == 'Multirotor':
+					indeps.add_output('LiftRotor|Descent|RPM', vehicle.lift_rotor.RPM['descent'], units='RPM')
+				elif self.vehicle.configuration == 'LiftPlusCruise':
+					indeps.add_output('Propeller|Descent|RPM', vehicle.propeller.RPM['descent'], units='RPM')
 
 		if self.vehicle.configuration == 'Multirotor':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
-			indeps.add_output('LiftRotor|advance_ratio', rotor_advance_ratio)
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
@@ -62,7 +76,6 @@ class EnergyAnalysis(object):
 			indeps.add_output('Propeller|chord', c_propeller, units='m')
 			indeps.add_output('Wing|area', wing_area, units='m**2')
 			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
-			indeps.add_output('Propeller|advance_ratio', propeller_advance_ratio)
 
 		# Lift rotor variables needed for BEMT
 		if self.fidelity['hover_climb'] == 1:
@@ -81,7 +94,7 @@ class EnergyAnalysis(object):
 				indeps.add_output(f'LiftRotor|Section{i+1}|chord', chord_list[i], units='m')
 				indeps.add_output(f'LiftRotor|Section{i+1}|pitch', pitch_list[i], units='deg')
 				indeps.add_output(f'LiftRotor|Section{i+1}|width', width, units='m')
-			indeps.add_output('LiftRotor|hover_climb_rpm', 1000.0, units='rpm') # rpm guess
+			indeps.add_output('LiftRotor|HoverClimb|RPM', 1000.0, units='rpm') # rpm guess
 		
 		prob.model.add_subsystem('energy_model',
 								  EnergyConsumption(mission=self.mission,
@@ -96,8 +109,8 @@ class EnergyAnalysis(object):
 
 		elif self.fidelity['hover_climb'] == 1:
 			prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=False)
-			prob.model.add_design_var('LiftRotor|hover_climb_rpm', lower=100, upper=3000)
-			prob.model.add_objective('LiftRotor|hover_climb|thrust_residual_square')
+			prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10, upper=5000)
+			prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square')
 			prob.setup(check=False)
 			prob.run_driver()
 
