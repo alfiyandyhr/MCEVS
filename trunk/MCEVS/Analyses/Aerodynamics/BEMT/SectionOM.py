@@ -32,8 +32,8 @@ class SectionSolverOM(om.Group):
 							promotes_outputs=['F'])
 
 		self.add_subsystem('AoA_calc',
-							om.ExecComp('AoA = pitch - phi * 180/pi', AoA={'units':'deg'}, pitch={'units':'deg'}, phi={'units':'rad'}),
-							promotes_inputs=['pitch','phi'],
+							om.ExecComp('AoA = global_twist + local_pitch - phi * 180/pi', AoA={'units':'deg'}, global_twist={'units':'deg'}, local_pitch={'units':'deg'}, phi={'units':'rad'}),
+							promotes_inputs=['global_twist','local_pitch','phi'],
 							promotes_outputs=['AoA'])
 
 		self.add_subsystem('airfoil_coeffs',

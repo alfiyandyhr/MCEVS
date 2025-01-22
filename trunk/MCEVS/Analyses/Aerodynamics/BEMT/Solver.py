@@ -246,7 +246,7 @@ class BEMTSolverOMGroup(om.Group):
 		rho = self.options['rho']
 		trim_rpm = self.options['trim_rpm']
 
-		self.add_subsystem(f'rpm2omega',
+		self.add_subsystem('rpm2omega',
 							om.ExecComp('omega = rpm * 2*pi/60.0', omega={'units':'rad/s'}, rpm={'units':'rpm'}),
 							promotes_inputs=['rpm'],
 							promotes_outputs=['omega'])
@@ -255,10 +255,10 @@ class BEMTSolverOMGroup(om.Group):
 
 		for i in range(len(airfoil_list)):
 
-			input_list = ['v_inf','omega','blade_radius','hub_radius',
+			input_list = ['v_inf','omega','blade_radius','hub_radius','global_twist',
 						   ('phi',f'Section{i+1}|phi'),
 						   ('radius',f'Section{i+1}|radius'),
-						   ('pitch',f'Section{i+1}|pitch'),
+						   ('local_pitch',f'Section{i+1}|pitch'),
 						   ('chord',f'Section{i+1}|chord')]
 
 			output_list = [('dr_tip',f'Section{i+1}|dr_tip'),
