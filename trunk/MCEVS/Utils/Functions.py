@@ -1,5 +1,6 @@
 import numpy as np
 import openmdao.api as om
+import warnings
 
 class SoftMax(om.ExplicitComponent):
 	"""
@@ -24,7 +25,10 @@ class SoftMax(om.ExplicitComponent):
 		f1 = inputs['f1']
 		f2 = inputs['f2']
 		rho = self.options['rho']
-		tmp = np.exp(rho * f1) + np.exp(rho * f2)
+
+		with warnings.catch_warnings():
+			warnings.simplefilter("ignore")
+			tmp = np.exp(rho * f1) + np.exp(rho * f2)
 
 		outputs['fmax'] = (1/rho) * np.log(tmp)
 

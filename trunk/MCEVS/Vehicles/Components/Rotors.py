@@ -21,12 +21,13 @@ class LiftRotor(object):
 		self.n_section = None
 		self.r_to_R_list = None
 		self.c_to_R_list = None
+		self.global_twist = 0.0
 		self.pitch_list = None
 
 		# Weight and performance
 		self.weight = None
 		self.figure_of_merit = None
-		self.advance_ratio = None
+		self.RPM = None
 		self.Cd0 = None
 
 		# Hub info
@@ -53,6 +54,8 @@ class LiftRotor(object):
 				self.c_to_R_list = self.kwargs[item]
 			elif item == 'pitch_list':
 				self.pitch_list = self.kwargs[item]
+			elif item == 'global_twist':
+				self.global_twist = float(self.kwargs[item])
 			elif item == 'radius':
 				self.radius = float(self.kwargs[item])
 			elif item == 'hub_radius':
@@ -67,8 +70,8 @@ class LiftRotor(object):
 				self.Cd0 = float(self.kwargs[item])
 			elif item == 'figure_of_merit':
 				self.figure_of_merit = float(self.kwargs[item])
-			elif item == 'advance_ratio':
-				self.advance_ratio = float(self.kwargs[item])
+			elif item == 'RPM':
+				self.RPM = self.kwargs[item]
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
 
@@ -90,13 +93,14 @@ class LiftRotor(object):
 		info += f'\t\tSection r/R = {np.round(self.r_to_R_list,4)}\n'
 		info += f'\t\tSection c/R = {np.round(self.c_to_R_list,4)}\n'
 		info += f'\t\tSection pitch = {np.round(self.pitch_list,4)}\n'
+		info += f'\t\tGlobal twist = {np.round(self.global_twist,4)}\n'
 		info += f'\t\tSolidity = {self.solidity}\n'
 		info += f'\t\tRadius = {self.radius} m\n'
 		info += f'\t\tHub radius = {self.hub_radius} m\n'
 		info += f'\t\tChord = {self.chord} m\n'
 		info += f'\t\tCd0 = {self.Cd0}\n'
 		info += f'\t\tFigure of Merit = {self.figure_of_merit}\n'
-		info += f'\t\tAdvance ratio = {self.advance_ratio}'
+		info += f'\t\tRPM = {self.RPM}'
 		return info
 
 	def print_info(self):
@@ -108,13 +112,14 @@ class LiftRotor(object):
 		print(f'\tSection r/R = {np.round(self.r_to_R_list,4)}')
 		print(f'\tSection c/R = {np.round(self.c_to_R_list,4)}')
 		print(f'\tSection pitch = {np.round(self.pitch_list,4)}')
+		print(f'\tGlobal twist = {np.round(self.global_twist,4)}')
 		print(f'\tSolidity = {self.solidity}')
 		print(f'\tRadius = {self.radius} m')
 		print(f'\tHub radius = {self.hub_radius} m')
 		print(f'\tChord = {self.chord} m')
 		print(f'\tCd0 = {self.Cd0}')
 		print(f'\tFigure of Merit = {self.figure_of_merit}')
-		print(f'\tAdvance ratio = {self.advance_ratio}')
+		print(f'\tRPM = {self.RPM}')
 
 class Propeller(object):
 	"""
@@ -138,12 +143,13 @@ class Propeller(object):
 		self.r_to_R_list = None
 		self.c_to_R_list = None
 		self.pitch_list = None
+		self.global_twist = 0.0
 
 		# Weight and performance
 		self.weight = None
 		self.Cd0 = None
 		self.figure_of_merit = None
-		self.advance_ratio = None
+		self.RPM = None
 
 		# Hub info
 		self.hub_radius = None
@@ -169,6 +175,8 @@ class Propeller(object):
 				self.c_to_R_list = self.kwargs[item]
 			elif item == 'pitch_list':
 				self.pitch_list = self.kwargs[item]
+			elif item == 'global_twist':
+				self.global_twist = float(self.kwargs[item])
 			elif item == 'radius':
 				self.radius = float(self.kwargs[item])
 			elif item == 'hub_radius':
@@ -183,8 +191,8 @@ class Propeller(object):
 				self.Cd0 = float(self.kwargs[item])
 			elif item == 'figure_of_merit':
 				self.figure_of_merit = float(self.kwargs[item])
-			elif item == 'advance_ratio':
-				self.advance_ratio = float(self.kwargs[item])
+			elif item == 'RPM':
+				self.RPM = self.kwargs[item]
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
 
@@ -206,13 +214,14 @@ class Propeller(object):
 		info += f'\t\tSection r/R = {np.round(self.r_to_R_list,4)}\n'
 		info += f'\t\tSection c/R = {np.round(self.c_to_R_list,4)}\n'
 		info += f'\t\tSection pitch = {np.round(self.pitch_list,4)}\n'
+		info += f'\t\tGlobal twist = {np.round(self.global_twist,4)}\n'
 		info += f'\t\tSolidity = {self.solidity}\n'
 		info += f'\t\tRadius = {self.radius} m\n'
 		info += f'\t\tHub radius = {self.hub_radius} m\n'
 		info += f'\t\tChord = {self.chord} m\n'
 		info += f'\t\tCd0 = {self.Cd0}\n'
 		info += f'\t\tFigure of Merit = {self.figure_of_merit}\n'
-		info += f'\t\tAdvance ratio = {self.advance_ratio}'
+		info += f'\t\tRPM = {self.RPM}'
 		return info
 
 	def print_info(self):
@@ -224,13 +233,14 @@ class Propeller(object):
 		print(f'\t\tSection r/R = {np.round(self.r_to_R_list,4)}')
 		print(f'\t\tSection c/R = {np.round(self.c_to_R_list,4)}')
 		print(f'\t\tSection pitch = {np.round(self.pitch_list,4)}')
+		print(f'\tGlobal twist = {np.round(self.global_twist,4)}')
 		print(f'\tSolidity = {self.solidity} m')
 		print(f'\tRadius = {self.radius} m')
 		print(f'\t\tHub radius = {self.hub_radius} m')
 		print(f'\tChord = {self.chord} m')
 		print(f'\tCd0 = {self.Cd0}')
 		print(f'\t\tFigure of Merit = {self.figure_of_merit}')
-		print(f'\tAdvance ratio = {self.advance_ratio}')
+		print(f'\tRPM = {self.RPM}')
 
 
 

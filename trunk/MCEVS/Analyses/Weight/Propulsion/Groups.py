@@ -36,7 +36,7 @@ class PropulsionWeight(om.Group):
 								promotes_outputs=['Weight|rotors_and_hubs'])
 			self.add_subsystem('extra_hub_weight',
 								ExtraHubWeight(N_rotor=N_lift_rotor, N_bl=N_blade_lift_rotor, tf=tf_propulsion),
-								promotes_inputs=[('Weight|rotors','Weight|rotors_and_hubs'), ('Rotor|radius','LiftRotor|radius'), ('Rotor|chord', 'LiftRotor|chord'), ('Rotor|rpm','LiftRotor|hover_climb_rpm')],
+								promotes_inputs=[('Weight|rotors','Weight|rotors_and_hubs'), ('Rotor|radius','LiftRotor|radius'), ('Rotor|chord', 'LiftRotor|chord'), ('Rotor|rpm','LiftRotor|HoverClimb|RPM')],
 								promotes_outputs=['Weight|extra_hubs'])
 			self.add_subsystem('lift_rotor_motor_weight',
 								MotorWeight(N_motor=N_lift_rotor), 			# one rotor typically has one motor
