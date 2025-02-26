@@ -77,6 +77,7 @@ class RotorAdvanceRatio(om.ExplicitComponent):
 		omega = inputs['Rotor|omega']
 
 		outputs['Rotor|mu'] = v_inf * np.cos(a) / (omega * r)
+		# print(v_inf, a/np.pi*180, r, omega)
 
 	def compute_partials(self, inputs, partials):
 		v_inf = inputs['v_inf']
@@ -88,6 +89,45 @@ class RotorAdvanceRatio(om.ExplicitComponent):
 		partials['Rotor|mu', 'Rotor|alpha'] = - v_inf * np.sin(a) / (omega * r) 
 		partials['Rotor|mu', 'Rotor|omega'] = - v_inf * np.cos(a) / (omega**2 * r)
 		partials['Rotor|mu', 'Rotor|radius'] = - v_inf * np.cos(a) / (omega * r**2)
+
+class PropellerAdvanceRatio(om.ExplicitComponent):
+	"""
+	Computes the propeller advance ratio
+		J = V / (n * D)
+	Inputs:
+		v_inf					: freestream velocity [m/s]
+		Propeller|radius		: propeller's radius [m]
+		Propeller|omega 		: propeller's angular velocity [rad/s]
+	Outputs:
+		Propeller|advance_ratio : propeller's advance ratio
+	"""
+	def setup(self):
+		self.add_input('v_inf', units='m/s', desc='Freestream velocity')
+		self.add_input('Propeller|radius', units='m', desc='Propeller radius')
+		self.add_input('Propeller|omega', units='rad/s', desc='Propeller angular velocity')
+		self.add_output('Propeller|advance_ratio', desc='Advance ratio of propeller')
+		self.declare_partials('*', '*')
+
+	def compute(self, inputs, outputs):
+		v_inf = inputs['v_inf']		# in [m/s]
+		r = inputs['Propeller|radius']	# in [m]
+		omega = inputs['Propeller|omega'] # in [rad/s]
+
+		n = omega / (2 * np.pi) # in [rev/s]
+
+		outputs['Propeller|advance_ratio'] = v_inf / (2 * n * r)
+
+	def compute_partials(self, inputs, partials):
+		v_inf = inputs['v_inf']		# in [m/s]
+		r = inputs['Propeller|radius']	# in [m]
+		omega = inputs['Propeller|omega'] # in [rad/s]
+
+		n = omega / (2 * np.pi) # in [rev/s]
+		dn_domega = 1 / (2 * np.pi)
+
+		partials['Propeller|advance_ratio', 'v_inf'] = 1.0 / (2 * n * r)
+		partials['Propeller|advance_ratio', 'Propeller|radius'] = v_inf / (2 * n) * (-1/r**2)
+		partials['Propeller|advance_ratio', 'Propeller|omega'] = v_inf / (2 * r) * (-1/n**2) * dn_domega
 
 class InducedVelocity(om.ExplicitComponent):
 	"""
