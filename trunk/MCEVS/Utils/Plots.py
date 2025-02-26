@@ -80,16 +80,21 @@ def plot_mission_parameters(mission:object, print_info=False, save_fig=False):
 
 def plot_performance_by_segments(mission:object, vehicle:object):
 
+	# Constant segments
+	constant_segments = ['HoverClimbConstantSpeed', 'ClimbConstantVyConstantVx', 'CruiseConstantSpeed', 'DescentConstantVyConstantVx', 'HoverDescentConstantSpeed', 'HoverStay']
+
 	# Preprocessing data
 	t = np.array([])
+
+	for i, segment in enumerate(mission.segments):
+		if segment.kind in constant_segments:
+			t = np.concatenate((t, mission.t[i]))
 	
 	if vehicle.configuration == 'LiftPlusCruise':
 
 		P_propeller, P_lift_rotor = np.array([]), np.array([])
 		DL_propeller, DL_lift_rotor = np.array([]), np.array([])
 
-		for t_segment in mission.t:
-			t = np.concatenate((t, t_segment))
 		for P in mission.P['Propeller']:
 			P_propeller = np.concatenate((P_propeller, P))
 		for P in mission.P['LiftRotor']:
@@ -130,8 +135,6 @@ def plot_performance_by_segments(mission:object, vehicle:object):
 
 		P_lift_rotor, DL_lift_rotor = np.array([]), np.array([])
 
-		for t_segment in mission.t:
-			t = np.concatenate((t, t_segment))
 		for P in mission.P['LiftRotor']:
 			P_lift_rotor = np.concatenate((P_lift_rotor, P))
 		for DL in mission.DL['LiftRotor']:
@@ -153,13 +156,4 @@ def plot_performance_by_segments(mission:object, vehicle:object):
 		axs[1].set_xlabel('Time ($min$)')
 
 		plt.show()
-
-
-
-
-
-
-
-
-
-
+		

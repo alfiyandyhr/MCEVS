@@ -32,7 +32,7 @@ mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', spee
 
 # Design and operation variables
 design_var = {'r_lift_rotor': 4.0}
-operation_var = {'RPM': {'cruise':450.0}, 'cruise_speed': cruise_speed}
+operation_var = {'RPM_lift_rotor': {'cruise':450.0}}
 
 # Technology factors
 tfs = {'tf_structure':0.8, 'tf_propulsion':0.8, 'tf_equipment':0.8}
@@ -42,7 +42,7 @@ vehicle = StandardMultirotorEVTOL(design_var, operation_var, tfs, n_pax=6, paylo
 # vehicle.print_info()
 
 # Analysis
-analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity={'aero':1, 'hover_climb':1}, sizing_mode=True, solved_by='optimization')
+analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity={'aero':1, 'hover_climb':0}, sizing_mode=True, solved_by='optimization')
 results = analysis.evaluate(record=True, value_guess={'hover_climb_RPM':500.0, 'mtow':2500.0})
 
 # plot_performance_by_segments(mission=mission, vehicle=vehicle)

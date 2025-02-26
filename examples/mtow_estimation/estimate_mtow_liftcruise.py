@@ -32,7 +32,7 @@ mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', spee
 
 # Design and operation variables
 design_var = {'wing_area': 20.0, 'wing_aspect_ratio': 12.0, 'r_lift_rotor': 1.524, 'r_propeller': 1.37}
-operation_var = {'RPM': {'cruise':370.0}, 'cruise_speed': cruise_speed}
+operation_var = {'RPM_propeller': {'cruise':370.0}}
 
 # Technology factors
 tfs = {'tf_structure':0.8, 'tf_propulsion':0.8, 'tf_equipment':0.8}
