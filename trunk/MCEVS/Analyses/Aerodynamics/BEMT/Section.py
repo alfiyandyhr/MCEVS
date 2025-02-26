@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.interpolate import Akima1DInterpolator
 from MCEVS.Analyses.Aerodynamics.BEMT.Airfoil import load_airfoil
 
 class Section(object):
@@ -95,25 +96,33 @@ class Section(object):
 		return self.dT, self.dQ
 
 def initialize_sections(sectionDict, rotorDict):
-	
+
+	# Interpolation
+	dr = (rotorDict['diameter']/2 - rotorDict['hub_radius']) / sectionDict['n_sections']
+	r_i = rotorDict['hub_radius'] + dr/2
+	r_f = rotorDict['diameter']/2 - dr/2
+	radius_list = np.linspace(r_i, r_f, sectionDict['n_sections'])
+	chord_list = Akima1DInterpolator(sectionDict['radius_list'], sectionDict['chord_list'], method='makima', extrapolate=True)(radius_list)
+	pitch_list = Akima1DInterpolator(sectionDict['radius_list'], sectionDict['pitch_list'], method='makima', extrapolate=True)(radius_list)
+
 	section_list = []
 
-	for i in range(len(sectionDict['airfoil_list'])):
+	for i in range(sectionDict['n_sections']):
 		
 		airfoil = load_airfoil(sectionDict['airfoil_list'][i])
 
 		if i==0:
-			width = sectionDict['radius_list'][i] - rotorDict['hub_radius']
+			width = radius_list[i] - rotorDict['hub_radius']
 		else:
-			width = sectionDict['radius_list'][i] - sectionDict['radius_list'][i-1]
+			width = radius_list[i] - radius_list[i-1]
 
-		radius = sectionDict['radius_list'][i]
+		radius = radius_list[i]
 
-		chord = sectionDict['chord_list'][i]
+		chord = chord_list[i]
 
-		pitch = (sectionDict['pitch_list'][i] + rotorDict['global_twist']) * np.pi/180.0
+		pitch = (pitch_list[i] + rotorDict['global_twist']) * np.pi/180.0
 
-		solidity = rotorDict['nblades'] * sectionDict['chord_list'][i] / (2 * np.pi * sectionDict['radius_list'][i])
+		solidity = rotorDict['nblades'] * chord_list[i] / (2 * np.pi * radius_list[i])
 
 		section = Section(airfoil=airfoil,
 						  width=width,

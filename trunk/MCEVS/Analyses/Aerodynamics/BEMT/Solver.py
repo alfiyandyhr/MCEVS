@@ -1,6 +1,7 @@
 import numpy as np
 import openmdao.api as om
 from scipy.optimize import bisect
+from scipy.interpolate import Akima1DInterpolator
 from MCEVS.Analyses.Aerodynamics.BEMT.Rotor import initialize_rotor, RotorPerformanceCoeffs
 from MCEVS.Analyses.Aerodynamics.BEMT.Section import initialize_sections
 from MCEVS.Analyses.Aerodynamics.BEMT.SectionOM import SectionSolverOM, SectionForces
@@ -108,6 +109,19 @@ class BEMTSolverOM(object):
 	"""
 	def __init__(self, rotorDict:dict, sectionDict:dict, fluidDict:dict):
 		super(BEMTSolverOM, self).__init__()
+
+		# Interpolation
+		dr = (rotorDict['diameter']/2 - rotorDict['hub_radius']) / sectionDict['n_sections']
+		r_i = rotorDict['hub_radius'] + dr/2
+		r_f = rotorDict['diameter']/2 - dr/2
+		radius_list = np.linspace(r_i, r_f, sectionDict['n_sections'])
+		chord_list = Akima1DInterpolator(sectionDict['radius_list'], sectionDict['chord_list'], method='makima', extrapolate=True)(radius_list)
+		pitch_list = Akima1DInterpolator(sectionDict['radius_list'], sectionDict['pitch_list'], method='makima', extrapolate=True)(radius_list)
+
+		sectionDict['radius_list'] = radius_list
+		sectionDict['chord_list'] = chord_list
+		sectionDict['pitch_list'] = pitch_list
+
 		self.rotorDict = rotorDict
 		self.sectionDict = sectionDict
 		self.fluidDict = fluidDict

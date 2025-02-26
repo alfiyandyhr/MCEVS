@@ -66,8 +66,8 @@ class SectionSolverOM(om.Group):
 		residual_balance = om.BalanceComp('phi',
 										   units='rad',
 										   eq_units=None,
-										   lower=0*np.pi,
-										   upper=2*np.pi,
+										   lower=0.01*np.pi,
+										   upper=0.9*np.pi,
 										   val=(0.01+0.9)/2*np.pi,
 										   rhs_val=0.0,
 										   use_mult=False)
@@ -173,6 +173,76 @@ class SectionForces(om.ExplicitComponent):
 		partials['dQ','radius'] = (0.5*nblades*chord*rho*U**2*CQ*width) + (0.5*nblades*chord*rho*CQ*radius*width*(2*U)*dU_dradius)
 		partials['dQ','width'] = 0.5 * nblades * chord * rho * U**2 * CQ * radius
 		partials['dQ','chord'] = 0.5 * nblades * rho * U**2 * CQ * radius * width
+
+class SectionLocalRadiusChordWidth(om.ExplicitComponent):
+	"""
+	Inputs: r_to_R, c_to_R, w_to_R, rotor_radius
+	Outputs: local_radius, local_chord
+	"""
+	def setup(self):
+		self.add_input('r_to_R', units=None)
+		self.add_input('c_to_R', units=None)
+		self.add_input('w_to_R', units=None)
+		self.add_input('rotor_radius', units='m')
+		self.add_output('local_radius', units='m')
+		self.add_output('local_chord', units='m')
+		self.add_output('local_width', units='m')
+		self.declare_partials('*','*')
+
+	def compute(self, inputs, outputs):
+		r_to_R = inputs['r_to_R']
+		c_to_R = inputs['c_to_R']
+		w_to_R = inputs['w_to_R']
+		rotor_radius = inputs['rotor_radius']
+
+		outputs['local_radius'] = r_to_R * rotor_radius
+		outputs['local_chord'] = c_to_R * rotor_radius
+		outputs['local_width'] = w_to_R * rotor_radius
+		
+	def compute_partials(self, inputs, partials):
+		r_to_R = inputs['r_to_R']
+		c_to_R = inputs['c_to_R']
+		w_to_R = inputs['w_to_R']
+		rotor_radius = inputs['rotor_radius']
+
+		partials['local_radius', 'r_to_R'] = rotor_radius
+		partials['local_radius', 'c_to_R'] = 0.0
+		partials['local_radius', 'w_to_R'] = 0.0
+		partials['local_radius', 'rotor_radius'] = r_to_R
+		partials['local_chord', 'r_to_R'] = 0.0
+		partials['local_chord', 'c_to_R'] = rotor_radius
+		partials['local_chord', 'w_to_R'] = 0.0
+		partials['local_chord', 'rotor_radius'] = c_to_R
+		partials['local_width', 'r_to_R'] = 0.0
+		partials['local_width', 'c_to_R'] = 0.0
+		partials['local_width', 'w_to_R'] = rotor_radius
+		partials['local_width', 'rotor_radius'] = w_to_R
+
+class SectionLocalPitch(om.ExplicitComponent):
+	"""
+	Inputs: gradient, r, R
+	Outputs: local_pitch
+	"""
+	def setup(self):
+		self.add_input('gradient', units='deg')
+		self.add_input('r_to_R', units=None)
+		self.add_output('local_pitch', units='deg')
+		self.declare_partials('*','*')
+
+	def compute(self, inputs, outputs):
+		m = inputs['gradient']
+		r_to_R = inputs['r_to_R']
+
+		# local pitch is zero at r/R = 0.75
+		outputs['local_pitch'] = m * r_to_R + (-m*0.75)
+		
+	def compute_partials(self, inputs, partials):
+		m = inputs['gradient']
+		r_to_R = inputs['r_to_R']
+
+		# local pitch is zero at r/R = 0.75
+		partials['local_pitch','gradient'] = (r_to_R - 0.75)
+		partials['local_pitch','r_to_R'] = m
 
 class InductionFactors(om.ExplicitComponent):
 	"""
