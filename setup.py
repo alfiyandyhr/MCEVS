@@ -7,5 +7,5 @@ setup(
 	license="",
 	packages=["MCEVS"],
 	package_dir={"" : "trunk"},
-	install_requires=["numpy", "openmdao>=3.16.0", "matplotlib", "pymoo>=0.6.0.1"]
+	install_requires=["numpy", "pandas", "matplotlib", "scipy", "openmdao>=3.16.0", "pymoo>=0.6.0.1"]
 	)
