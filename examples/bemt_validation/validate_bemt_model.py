@@ -13,17 +13,23 @@ results_dict = {'J':[], 'CT':[], 'CP':[], 'eta':[]}
 resultsOM_dict = {'J':[], 'CT':[], 'CP':[], 'eta':[]}
 
 rotorDict = {'nblades': 3, 'diameter': 3.054, 'hub_radius': 0.375, 'global_twist':0.0}
-sectionDict = {'airfoil_list': ['CLARKY', 'CLARKY', 'CLARKY', 'CLARKY', 'CLARKY', 'CLARKY', 'CLARKY'],
+sectionDict = {'n_sections': 10,
+			   'airfoil_list': 10*['CLARKY'],
 			   'radius_list': [0.525, 0.675, 0.825, 0.975, 1.125, 1.275, 1.425],
 			   'chord_list': [0.18, 0.225, 0.225, 0.21, 0.1875, 0.1425, 0.12],
 			   'pitch_list': [17.0, 17.0, 17.0, 17.0, 17.0, 17.0, 17.0]}
+sectionDictOM = {'n_sections': 7,
+				 'airfoil_list': 7*['CLARKY'],
+				 'radius_list': [0.525, 0.675, 0.825, 0.975, 1.125, 1.275, 1.425],
+				 'chord_list': [0.18, 0.225, 0.225, 0.21, 0.1875, 0.1425, 0.12],
+				 'pitch_list': [17.0, 17.0, 17.0, 17.0, 17.0, 17.0, 17.0]}
 fluidDict = {'rho': 1.225, 'mu':1.81E-5}
 
 for v_inf in v_infs:
 	print(f'Solving for v_inf = {v_inf} m/s')
 	solver = BEMTSolver(rotorDict, sectionDict, fluidDict)
 	results = solver.run(v_inf=float(v_inf), rpm=1100.0)
-	solverOM = BEMTSolverOM(rotorDict, sectionDict, fluidDict)
+	solverOM = BEMTSolverOM(rotorDict, sectionDictOM, fluidDict)
 	resultsOM = solverOM.run(v_inf=float(v_inf), rpm=1100.0)
 
 	results_dict['J'].append(results['J'])
@@ -59,8 +65,8 @@ fig.suptitle('Experiment vs BEMT')
 fig.legend([r'$C_T$-exp',r'$C_T$-bemt',r'$C_T$-bemt_OM',r'$C_P$-exp',r'$C_P$-bemt',r'$C_P$-bemt_OM',r'$\eta$-exp',r'$\eta$-bemt',r'$\eta$-bemt_OM'],
 			ncols=3, loc='upper center', bbox_to_anchor=(0.5,0.94))
 plt.subplots_adjust(left=0.12, bottom=0.1, right=0.9, top=0.76, hspace=0.1)
-# plt.show()
-plt.savefig('bemt_validation.pdf',format='pdf',dpi=600)
+plt.show()
+# plt.savefig('bemt_validation.pdf',format='pdf',dpi=600)
 
 # References
 # [1] Theodorsen T., Stickle G.W. and Brevoort, M.J. “Characteristics of six propellers including the high-speed range.”

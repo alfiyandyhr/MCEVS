@@ -7,7 +7,9 @@ from MCEVS.Utils.Plots import plot_mission_parameters, plot_performance_by_segme
 import numpy as np
 
 # Mission requirement
-mission_range = 30000 # m
+# mission_range = 96000 # m
+# cruise_speed = 50.0 # m/s
+mission_range = 50000 # m
 cruise_speed = 30.0 # m/s
 payload_weight = 400.0
 
