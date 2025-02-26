@@ -1,0 +1,43 @@
+...Comp Geom...
+12 Num Comps
+16 Total Num Meshes
+7816 Total Num Tris
+
+Theo_Area   Wet_Area   Theo_Vol    Wet_Vol  Name
+   36.371     33.730     12.901     12.780  FuselageGeom   
+   40.360     38.199      2.876      2.876  WingGeom       
+    4.387      4.224      0.319      0.319  FuselageGeom   
+    4.387      4.224      0.319      0.319  FuselageGeom   
+    4.387      4.325      0.319      0.319  FuselageGeom   
+    4.387      4.325      0.319      0.319  FuselageGeom   
+    7.576      6.985      0.332      0.327  WingGeom       
+    6.106      5.321      0.366      0.341  WingGeom       
+    0.194      0.137      0.005      0.004  WingGeom       
+    0.630      0.611      0.031      0.031  BORGeom        
+    0.194      0.139      0.005      0.004  WingGeom       
+    0.630      0.612      0.031      0.031  BORGeom        
+    0.194      0.139      0.005      0.004  WingGeom       
+    0.630      0.612      0.031      0.031  BORGeom        
+-------------------------------------------------
+  110.431    103.584     17.859     17.704  Totals         
+
+Tag_Theo_Area   Tag_Wet_Area    Tag_Name
+       36.371         33.730    FuselageGeom_S_Surf0
+       20.180         19.099    WingGeom_S_Surf0
+       20.180         19.099    WingGeom_S_Surf1
+        4.387          4.224    FuselageGeom_S_Surf0
+        4.387          4.224    FuselageGeom_S_Surf1
+        4.387          4.325    FuselageGeom_S_Surf0
+        4.387          4.325    FuselageGeom_S_Surf1
+        3.788          3.493    WingGeom_S_Surf0
+        3.788          3.493    WingGeom_S_Surf1
+        6.106          5.321    WingGeom_S_Surf0
+        0.194          0.137    WingGeom_S_Surf0
+        0.630          0.611    BORGeom_S_Surf0
+        0.194          0.139    WingGeom_S_Surf0
+        0.630          0.612    BORGeom_S_Surf0
+        0.194          0.139    WingGeom_S_Surf0
+        0.630          0.612    BORGeom_S_Surf0
+WARNING: 2 open meshes merged
+     Merged: WingGeom
+     Merged: WingGeom
