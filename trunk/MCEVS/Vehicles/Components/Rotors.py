@@ -14,15 +14,17 @@ class LiftRotor(object):
 		self.n_blade = None
 		self.solidity = None
 		self.radius = None
-		self.chord = None
+		self.mean_c_to_R = None
 
 		# Section info
 		self.airfoil = None
 		self.n_section = None
 		self.r_to_R_list = None
 		self.c_to_R_list = None
+		self.w_to_R_list = None
 		self.global_twist = 0.0
 		self.pitch_list = None
+		self.pitch_linear_grad = None
 
 		# Weight and performance
 		self.weight = None
@@ -52,16 +54,20 @@ class LiftRotor(object):
 				self.r_to_R_list = self.kwargs[item]
 			elif item == 'c_to_R_list':
 				self.c_to_R_list = self.kwargs[item]
+			elif item == 'w_to_R_list':
+				self.w_to_R_list = self.kwargs[item]
 			elif item == 'pitch_list':
 				self.pitch_list = self.kwargs[item]
+			elif item == 'pitch_linear_grad':
+				self.pitch_linear_grad = float(self.kwargs[item])
 			elif item == 'global_twist':
 				self.global_twist = float(self.kwargs[item])
 			elif item == 'radius':
 				self.radius = float(self.kwargs[item])
 			elif item == 'hub_radius':
 				self.hub_radius = float(self.kwargs[item])
-			elif item == 'chord':
-				self.chord = float(self.kwargs[item])
+			elif item == 'mean_c_to_R':
+				self.mean_c_to_R = float(self.kwargs[item])
 			elif item == 'hub_length':
 				self.hub_length = float(self.kwargs[item])
 			elif item == 'hub_max_diameter':
@@ -75,7 +81,7 @@ class LiftRotor(object):
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
 
-		self.solidity = self.n_blade * self.chord / (np.pi * self.radius)
+		self.solidity = self.n_blade * self.mean_c_to_R / np.pi
 
 	def _calculate_weight_given_max_power(self, p_max):
 		k_prop = 0.144 # for piston engines; 0.108 for turboprops
@@ -92,12 +98,14 @@ class LiftRotor(object):
 		info += f'\t\tSection airfoil = {self.airfoil}\n'
 		info += f'\t\tSection r/R = {np.round(self.r_to_R_list,4)}\n'
 		info += f'\t\tSection c/R = {np.round(self.c_to_R_list,4)}\n'
+		info += f'\t\tSection w/R = {np.round(self.w_to_R_list,4)}\n'
 		info += f'\t\tSection pitch = {np.round(self.pitch_list,4)}\n'
+		info += f'\t\tPitch linear grad = {self.pitch_linear_grad}\n'
 		info += f'\t\tGlobal twist = {np.round(self.global_twist,4)}\n'
 		info += f'\t\tSolidity = {self.solidity}\n'
 		info += f'\t\tRadius = {self.radius} m\n'
 		info += f'\t\tHub radius = {self.hub_radius} m\n'
-		info += f'\t\tChord = {self.chord} m\n'
+		info += f'\t\tMean c_to_R = {self.mean_c_to_R}\n'
 		info += f'\t\tCd0 = {self.Cd0}\n'
 		info += f'\t\tFigure of Merit = {self.figure_of_merit}\n'
 		info += f'\t\tRPM = {self.RPM}'
@@ -111,12 +119,14 @@ class LiftRotor(object):
 		print(f'\tSection airfoil = {self.airfoil}')
 		print(f'\tSection r/R = {np.round(self.r_to_R_list,4)}')
 		print(f'\tSection c/R = {np.round(self.c_to_R_list,4)}')
+		print(f'\tSection w/R = {np.round(self.w_to_R_list,4)}')
 		print(f'\tSection pitch = {np.round(self.pitch_list,4)}')
+		print(f'\tPitch linear grad = {self.self.pitch_linear_grad}')
 		print(f'\tGlobal twist = {np.round(self.global_twist,4)}')
 		print(f'\tSolidity = {self.solidity}')
 		print(f'\tRadius = {self.radius} m')
 		print(f'\tHub radius = {self.hub_radius} m')
-		print(f'\tChord = {self.chord} m')
+		print(f'\tMean c_to_R = {self.mean_c_to_R}')
 		print(f'\tCd0 = {self.Cd0}')
 		print(f'\tFigure of Merit = {self.figure_of_merit}')
 		print(f'\tRPM = {self.RPM}')
@@ -135,15 +145,17 @@ class Propeller(object):
 		self.n_blade = None
 		self.solidity = None
 		self.radius = None
-		self.chord = None
+		self.mean_c_to_R = None
 
 		# Section info
 		self.airfoil = None
 		self.n_section = None
 		self.r_to_R_list = None
 		self.c_to_R_list = None
+		self.w_to_R_list = None
 		self.pitch_list = None
 		self.global_twist = 0.0
+		self.pitch_linear_grad = None
 
 		# Weight and performance
 		self.weight = None
@@ -173,16 +185,20 @@ class Propeller(object):
 				self.r_to_R_list = self.kwargs[item]
 			elif item == 'c_to_R_list':
 				self.c_to_R_list = self.kwargs[item]
+			elif item == 'w_to_R_list':
+				self.w_to_R_list = self.kwargs[item]
 			elif item == 'pitch_list':
 				self.pitch_list = self.kwargs[item]
+			elif item == 'pitch_linear_grad':
+				self.pitch_linear_grad = float(self.kwargs[item])
 			elif item == 'global_twist':
 				self.global_twist = float(self.kwargs[item])
 			elif item == 'radius':
 				self.radius = float(self.kwargs[item])
 			elif item == 'hub_radius':
 				self.hub_radius = float(self.kwargs[item])
-			elif item == 'chord':
-				self.chord = float(self.kwargs[item])
+			elif item == 'mean_c_to_R':
+				self.mean_c_to_R = float(self.kwargs[item])
 			elif item == 'hub_length':
 				self.hub_length = float(self.kwargs[item])
 			elif item == 'hub_max_diameter':
@@ -196,7 +212,7 @@ class Propeller(object):
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
 
-		self.solidity = self.n_blade * self.chord / (np.pi * self.radius)
+		self.solidity = self.n_blade * self.mean_c_to_R / np.pi
 
 	def _calculate_weight_given_max_power(self, p_max):
 		k_prop = 0.144 # for piston engines; 0.108 for turboprops
@@ -213,12 +229,14 @@ class Propeller(object):
 		info += f'\t\tSection airfoil = {self.airfoil}\n'
 		info += f'\t\tSection r/R = {np.round(self.r_to_R_list,4)}\n'
 		info += f'\t\tSection c/R = {np.round(self.c_to_R_list,4)}\n'
+		info += f'\t\tSection w/R = {np.round(self.w_to_R_list,4)}\n'
 		info += f'\t\tSection pitch = {np.round(self.pitch_list,4)}\n'
+		info += f'\t\tPitch linear grad = {self.pitch_linear_grad}\n'
 		info += f'\t\tGlobal twist = {np.round(self.global_twist,4)}\n'
 		info += f'\t\tSolidity = {self.solidity}\n'
 		info += f'\t\tRadius = {self.radius} m\n'
 		info += f'\t\tHub radius = {self.hub_radius} m\n'
-		info += f'\t\tChord = {self.chord} m\n'
+		info += f'\t\tMean c_to_R = {self.mean_c_to_R}\n'
 		info += f'\t\tCd0 = {self.Cd0}\n'
 		info += f'\t\tFigure of Merit = {self.figure_of_merit}\n'
 		info += f'\t\tRPM = {self.RPM}'
@@ -228,18 +246,20 @@ class Propeller(object):
 		print('Component name: Propeller')
 		print(f'\tNumber of propeller(s) = {self.n_propeller} m')
 		print(f'\tNumber of blade(s) per propeller = {self.n_blade}')
-		print(f'\t\tNumber of section(s) per blade = {self.n_section}')
-		print(f'\t\tSection airfoil = {self.airfoil}')
-		print(f'\t\tSection r/R = {np.round(self.r_to_R_list,4)}')
-		print(f'\t\tSection c/R = {np.round(self.c_to_R_list,4)}')
-		print(f'\t\tSection pitch = {np.round(self.pitch_list,4)}')
+		print(f'\tNumber of section(s) per blade = {self.n_section}')
+		print(f'\tSection airfoil = {self.airfoil}')
+		print(f'\tSection r/R = {np.round(self.r_to_R_list,4)}')
+		print(f'\tSection c/R = {np.round(self.c_to_R_list,4)}')
+		print(f'\tSection w/R = {np.round(self.w_to_R_list,4)}')
+		print(f'\tSection pitch = {np.round(self.pitch_list,4)}')
+		print(f'\tPitch linear grad = {np.round(self.self.pitch_linear_grad,4)}')
 		print(f'\tGlobal twist = {np.round(self.global_twist,4)}')
 		print(f'\tSolidity = {self.solidity} m')
 		print(f'\tRadius = {self.radius} m')
-		print(f'\t\tHub radius = {self.hub_radius} m')
-		print(f'\tChord = {self.chord} m')
+		print(f'\tHub radius = {self.hub_radius} m')
+		print(f'\tMean c_to_R = {self.mean_c_to_R}')
 		print(f'\tCd0 = {self.Cd0}')
-		print(f'\t\tFigure of Merit = {self.figure_of_merit}')
+		print(f'\tFigure of Merit = {self.figure_of_merit}')
 		print(f'\tRPM = {self.RPM}')
 
 
