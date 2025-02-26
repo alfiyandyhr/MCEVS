@@ -1,7 +1,7 @@
 import numpy as np
 import openmdao.api as om
 
-from MCEVS.Analyses.Weight.Propulsion.Rotor import RotorAndHubWeight, ExtraHubWeight
+from MCEVS.Analyses.Weight.Propulsion.Rotor import RotorAndHubWeight, ExtraHubWeight, ExtraHubWeightWithFixedVtip
 from MCEVS.Analyses.Weight.Propulsion.Motor import MotorWeight
 from MCEVS.Analyses.Weight.Propulsion.Controller import MotorControllerWeight
 
@@ -12,11 +12,13 @@ class PropulsionWeight(om.Group):
 	"""
 	def initialize(self):
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
+		self.options.declare('fidelity', types=object, desc='Fidelity dictionary')
 		self.options.declare('tf_propulsion', types=float, desc='Technology factor for propulsion systems')
 
 	def setup(self):
 
 		vehicle = self.options['vehicle']
+		fidelity = self.options['fidelity']
 		tf_propulsion = self.options['tf_propulsion']
 
 		N_lift_rotor 		= vehicle.lift_rotor.n_rotor				# number of lift rotors
@@ -32,43 +34,53 @@ class PropulsionWeight(om.Group):
 		# For multirotor
 		if vehicle.configuration == 'Multirotor':
 			self.add_subsystem('lift_rotor_weight',
-								RotorAndHubWeight(N_rotor=N_lift_rotor, tf=1.0),
+								RotorAndHubWeight(N_rotor=N_lift_rotor, tf=tf_propulsion),
 								promotes_outputs=['Weight|rotors_and_hubs'])
-			self.add_subsystem('extra_hub_weight',
-								ExtraHubWeight(N_rotor=N_lift_rotor, N_bl=N_blade_lift_rotor, tf=tf_propulsion),
-								promotes_inputs=[('Weight|rotors','Weight|rotors_and_hubs'), ('Rotor|radius','LiftRotor|radius'), ('Rotor|chord', 'LiftRotor|chord'), ('Rotor|rpm','LiftRotor|HoverClimb|RPM')],
-								promotes_outputs=['Weight|extra_hubs'])
+			if fidelity['hover_climb'] == 0:
+				self.add_subsystem('extra_hub_weight',
+									ExtraHubWeightWithFixedVtip(N_rotor=N_lift_rotor, N_bl=N_blade_lift_rotor, tf=tf_propulsion, v_tip=550*0.3048),
+									promotes_inputs=[('Weight|rotors','Weight|rotors_and_hubs'), ('Rotor|radius','LiftRotor|radius'), ('Rotor|chord', 'LiftRotor|chord')],
+									promotes_outputs=['Weight|extra_hubs'])
+			elif fidelity['hover_climb'] == 1:
+				self.add_subsystem('extra_hub_weight',
+									ExtraHubWeight(N_rotor=N_lift_rotor, N_bl=N_blade_lift_rotor, tf=tf_propulsion),
+									promotes_inputs=[('Weight|rotors','Weight|rotors_and_hubs'), ('Rotor|radius','LiftRotor|radius'), ('Rotor|chord', 'LiftRotor|chord'), ('Rotor|rpm','LiftRotor|HoverClimb|RPM')],
+									promotes_outputs=['Weight|extra_hubs'])
 			self.add_subsystem('lift_rotor_motor_weight',
-								MotorWeight(N_motor=N_lift_rotor), 			# one rotor typically has one motor
+								MotorWeight(N_motor=N_lift_rotor, tf=tf_propulsion), # one rotor typically has one motor
 								promotes_outputs=['Weight|motors'])
 			self.add_subsystem('lift_rotor_controller_weight',
-								MotorControllerWeight(N_motor=N_lift_rotor),
-								promotes_outputs=['Weight|controllers']) 	# one motor has one controller
+								MotorControllerWeight(N_motor=N_lift_rotor, tf=tf_propulsion), # one motor has one controller
+								promotes_outputs=['Weight|controllers']) 	
 			
-			input_names = ['Weight|rotors_and_hubs', 'Weight|extra_hubs', 'Weight|motors', 'Weight|controllers']
-			sfs = [1., 1., 1., 1.]
+			if fidelity['hover_climb'] == 0:
+				input_names = ['Weight|rotors_and_hubs', 'Weight|extra_hubs', 'Weight|motors', 'Weight|controllers']
+				sfs = [1., 1., 1., 1.]
+			elif fidelity['hover_climb'] == 1:
+				input_names = ['Weight|rotors_and_hubs', 'Weight|extra_hubs', 'Weight|motors', 'Weight|controllers']
+				sfs = [1., 1., 1., 1.]			
 
 		elif vehicle.configuration == 'LiftPlusCruise':
 			# Lift rotors
 			self.add_subsystem('lift_rotor_weight',
-								RotorAndHubWeight(N_rotor=N_lift_rotor, tf=1.0),
+								RotorAndHubWeight(N_rotor=N_lift_rotor, tf=tf_propulsion),
 								promotes_outputs=[('Weight|rotors_and_hubs', 'W_rotors_and_hubs_lift_rotor')])
 			self.add_subsystem('lift_rotor_motor_weight',
-								MotorWeight(N_motor=N_lift_rotor), 			# one rotor typically has one motor
+								MotorWeight(N_motor=N_lift_rotor, tf=tf_propulsion), # one rotor typically has one motor
 								promotes_outputs=[('Weight|motors', 'W_motors_lift_rotor')])
 			self.add_subsystem('lift_rotor_controller_weight',
-								MotorControllerWeight(N_motor=N_lift_rotor),
-								promotes_outputs=[('Weight|controllers', 'W_controllers_lift_rotor')]) # one motor has one controller
+								MotorControllerWeight(N_motor=N_lift_rotor, tf=tf_propulsion), # one motor has one controller
+								promotes_outputs=[('Weight|controllers', 'W_controllers_lift_rotor')])
 
 			# Cruising rotors
 			self.add_subsystem('propeller_weight',
-								RotorAndHubWeight(N_rotor=N_propeller, tf=1.0),
+								RotorAndHubWeight(N_rotor=N_propeller, tf=tf_propulsion),
 								promotes_outputs=[('Weight|rotors_and_hubs', 'W_rotors_and_hubs_propeller')])
 			self.add_subsystem('propeller_motor_weight',
-								MotorWeight(N_motor=N_propeller), # one rotor typically has one motor
+								MotorWeight(N_motor=N_propeller, tf=tf_propulsion), # one rotor typically has one motor
 								promotes_outputs=[('Weight|motors', 'W_motors_propeller')])
 			self.add_subsystem('propeller_controller_weight',
-								MotorControllerWeight(N_motor=N_propeller),
+								MotorControllerWeight(N_motor=N_propeller, tf=tf_propulsion),
 								promotes_outputs=[('Weight|controllers', 'W_controllers_propeller')]) # one motor has one controller
 
 			# Sum both systems weight

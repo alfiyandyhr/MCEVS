@@ -159,6 +159,109 @@ class ExtraHubWeight(om.ExplicitComponent):
 		partials['Weight|extra_hubs','Rotor|chord'] = tf * N_rotor * dW_dc
 		partials['Weight|extra_hubs','Rotor|rpm'] = tf * N_rotor * dW_drpm
 
+class ExtraHubWeightWithFixedVtip(om.ExplicitComponent):
+	"""
+	Computes extra hub weight for multirotor and helicopter
+	Parameters:
+		N_rotor				: number of rotors
+		N_bl				: number of blades per rotor
+		g 					: gravitational acceleration [m/s**2]
+		tf 					: technology factor (a reduction due to the use of composites, e.g., 0.8)
+		v_tip 				: rotor tip speed [m/s]
+	Inputs:
+		Weight|rotors 		: rotor weight [kg]
+		Rotor|radius 		: rotor radius [m]
+		Rotor|chord 		: rotor chord [m]
+		Rotor|rpm 	 		: rotor rpm [RPM]
+	Outputs:
+		Weight|extra_hubs	: weight of extra hubs [kg]
+	Notes:
+		> Extra hubs to penalize the heavier hub weights of multirotor/helicopter due to high speed loading
+	Source:  
+    		
+    """
+	def initialize(self):
+		self.options.declare('N_rotor', types=int, desc='Number of rotors')
+		self.options.declare('N_bl', types=int, desc='Number of blades per rotor')
+		self.options.declare('v_tip', types=float, desc='Rotor tip speed')
+		self.options.declare('g', types=float, default=9.80665, desc='Gravitational acceleration')
+		self.options.declare('tf', types=float, default=0.8, desc='Technology factor')
+
+	def setup(self):
+		self.add_input('Weight|rotors', units='kg', desc='Rotor weight')
+		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
+		self.add_input('Rotor|chord', units='m', desc='Rotor chord')
+		self.add_output('Weight|extra_hubs', units='kg', desc='Weight of extra hubs')
+		self.declare_partials('*', '*')
+
+	def compute(self, inputs, outputs):
+		N_rotor = self.options['N_rotor']
+		N_bl = self.options['N_bl']
+		v_tip = self.options['v_tip']
+		g = self.options['g']
+		tf = self.options['tf']
+		W_rotors = inputs['Weight|rotors']
+		r = inputs['Rotor|radius']
+		c = inputs['Rotor|chord']
+
+		m_to_ft1 = 3.28084**1.5 * 3.28084**0.43
+		m_to_ft2 = 3.28084 * 3.28084**1.3 * 3.28084**0.67
+		m_to_ft3 = 3.28084
+		kg_to_lb = 2.20462
+		lb_to_kg = 0.453592
+
+		# Polar moment of inertia of rotor's disk
+		W_rotor = W_rotors / N_rotor
+		J = 0.5 * W_rotor * r**2
+
+		# Divided into three terms
+		W1 = (0.0037 * N_bl**0.28 * r**1.5 * v_tip**0.43) * m_to_ft1
+		W2 = (0.01742 * N_bl**0.66 * c * r**1.3 * v_tip**0.67) * m_to_ft2
+		W3 = (g * J / r**2) * m_to_ft3 * kg_to_lb
+
+		with warnings.catch_warnings():
+			warnings.simplefilter("ignore")
+			
+			W_extra_hub = (W1 * (W2 + W3)**0.55) * lb_to_kg
+
+		outputs['Weight|extra_hubs'] = tf * N_rotor * W_extra_hub
+
+	def compute_partials(self, inputs, partials):
+		N_rotor = self.options['N_rotor']
+		N_bl = self.options['N_bl']
+		v_tip = self.options['v_tip']
+		g = self.options['g']
+		tf = self.options['tf']
+		W_rotors = inputs['Weight|rotors']
+		r = inputs['Rotor|radius']
+		c = inputs['Rotor|chord']
+
+		m_to_ft1 = 3.28084**1.5 * 3.28084**0.43
+		m_to_ft2 = 3.28084 * 3.28084**1.3 * 3.28084**0.67
+		m_to_ft3 = 3.28084
+		kg_to_lb = 2.20462
+		lb_to_kg = 0.453592
+
+		# Divided into three terms
+		W1 = 0.0037 * N_bl**0.28 * r**1.5 * v_tip**0.43 * m_to_ft1
+		W2 = 0.01742 * N_bl**0.66 * c * r**1.3 * v_tip**0.67 * m_to_ft2
+		W3 = 0.5 * W_rotors / N_rotor * g * m_to_ft3 * kg_to_lb
+
+		dW1_dr = 0.0037 * N_bl**0.28 * 1.5*r**0.5 * v_tip**0.43 * m_to_ft1
+		dW2_dc = 0.01742 * N_bl**0.66 * r**1.3 * v_tip**0.67 * m_to_ft2
+		dW2_dr = 0.01742 * N_bl**0.66 * c * 1.3*r**0.3 * v_tip**0.67 * m_to_ft2
+		dW3_dWr = 0.5 / N_rotor * g * m_to_ft3 * kg_to_lb
+
+		W = W1 * (W2 + W3)**0.55 * lb_to_kg
+
+		dW_dWr = W1 * 0.55*(W2 + W3)**(-0.45) * dW3_dWr * lb_to_kg
+		dW_dr = (dW1_dr * (W2 + W3)**0.55 + W1 * 0.55*(W2 + W3)**(-0.45) * dW2_dr) * lb_to_kg
+		dW_dc = W1 * 0.55*(W2 + W3)**(-0.45) * dW2_dc * lb_to_kg
+
+		partials['Weight|extra_hubs','Weight|rotors'] = tf * N_rotor * dW_dWr
+		partials['Weight|extra_hubs','Rotor|radius'] = tf * N_rotor * dW_dr
+		partials['Weight|extra_hubs','Rotor|chord'] = tf * N_rotor * dW_dc
+
 class RotorWeightRoskamMethod(om.ExplicitComponent):
 	"""
 	Computes rotors weight
