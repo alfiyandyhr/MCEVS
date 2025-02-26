@@ -162,7 +162,7 @@ class PowerRequirement(om.Group):
 		for segment in mission.segments:
 
 			# Unpacking constants for each segment that needs them
-			if segment.kind not in ['ConstantPower','NoCreditDescent','ReserveCruise']:
+			if segment.kind not in ['ConstantPower','NoCreditClimb','NoCreditDescent','ReserveCruise']:
 				ids_for_max_p.append(segment.id) 	# segment id for calculating maximum power
 				rho_air = segment.constants['rho'] 	# air density
 				mu_air 	= segment.constants['mu'] 	# air dynamic viscosity
@@ -171,7 +171,7 @@ class PowerRequirement(om.Group):
 			# LiftPlusCruise's propellers do not work during hover, hoverclimb, or hoverdescent
 			# and its lift rotor does not work during cruise, climb, descent, or constant power segment
 			if vehicle.configuration == 'LiftPlusCruise':
-				if segment.kind in ['HoverStay', 'HoverClimbConstantSpeed', 'HoverDescentConstantSpeed', 'ConstantPower', 'NoCreditDescent']:
+				if segment.kind in ['HoverStay', 'HoverClimbConstantSpeed', 'HoverDescentConstantSpeed', 'ConstantPower', 'NoCreditClimb', 'NoCreditDescent']:
 					zero_p = om.IndepVarComp(f'Power|Propeller|segment_{segment.id}', val=0.0, units='W')
 					self.add_subsystem(f'zero_p_{segment.id}', zero_p, promotes=['*'])
 					zero_t = om.IndepVarComp(f'Propeller|thrust_each|segment_{segment.id}', val=0.0, units='N')
@@ -195,22 +195,23 @@ class PowerRequirement(om.Group):
 										PowerHoverClimbConstantSpeedFidelityZero(N_rotor=N_lift_rotor, hover_FM=hover_FM, rho_air=rho_air, g=g, v_climb=v_climb),
 										promotes_inputs=['Weight|takeoff', 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
-														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}')])
+														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
+														  ('FM','LiftRotor|HoverClimb|FM'), ('LiftRotor|T_to_P', 'LiftRotor|HoverClimb|T_to_P')])
 				elif fidelity['hover_climb'] == 1:
 					self.add_subsystem(f'segment_{segment.id}_power',
 										PowerHoverClimbConstantSpeedFidelityOne(vehicle=vehicle, rho_air=rho_air, g=g, v_climb=v_climb),
 										promotes_inputs=['Weight|takeoff', 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
-														  ('thrust_residual_square',f'LiftRotor|HoverClimb|thrust_residual_square'),
-														  ('FM','LiftRotor|HoverClimb|FM')])
+														  ('thrust_residual_square','LiftRotor|HoverClimb|thrust_residual_square'), ('J','LiftRotor|HoverClimb|J'),
+														  ('FM','LiftRotor|HoverClimb|FM'),('CT','LiftRotor|HoverClimb|thrust_coefficient')])
 
 			if segment.kind == 'HoverDescentConstantSpeed':
 				self.add_subsystem(f'segment_{segment.id}_power',
 									PowerHoverDescentConstantSpeed(N_rotor=N_lift_rotor, hover_FM=hover_FM, rho_air=rho_air, g=g, v_descent=v_descent),
 									promotes_inputs=['Weight|takeoff', 'LiftRotor|radius'],
 									promotes_outputs=[('Power|HoverDescentConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
-													  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}')])
+													  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'), ('LiftRotor|T_to_P', 'LiftRotor|HoverDescent|T_to_P')])
 			
 			if segment.kind == 'ClimbConstantVyConstantVx':
 				if vehicle.configuration == 'Multirotor':
@@ -242,8 +243,7 @@ class PowerRequirement(om.Group):
 										promotes_outputs=[('Power|DescentConstantVyConstantVx', f'Power|Propeller|segment_{segment.id}'),
 														  ('Propeller|Descent|thrust',f'Propeller|thrust_each|segment_{segment.id}')])
 
-			if segment.kind == 'NoCreditDescent':
-
+			if segment.kind in ['NoCreditClimb', 'NoCreditDescent']:
 				self.add_subsystem(f'segment_{segment.id}_power',
 									om.ExecComp(['zero_power = 0.0','zero_thrust = 0.0'], zero_power={'units':'W'}, zero_thrust={'units':'N'}),
 									promotes_outputs=[('zero_power', f'Power|LiftRotor|segment_{segment.id}'), ('zero_thrust', f'LiftRotor|thrust_each|segment_{segment.id}')])
@@ -254,18 +254,18 @@ class PowerRequirement(om.Group):
 					self.add_subsystem(f'segment_{segment.id}_power',
 										PowerCruiseConstantSpeedEdgewise(vehicle=vehicle, N_rotor=N_lift_rotor, n_blade=n_blade_lift_rotor, Cd0=Cd0, hover_FM=hover_FM, rho_air=rho_air, mu_air=mu_air, g=g, fidelity=fidelity),
 										promotes_inputs=['Weight|*', 'Mission|*', 'LiftRotor|*'],
-										promotes_outputs=[('Power|CruiseConstantSpeed', f'Power|LiftRotor|segment_{segment.id}'),
-														  ('LiftRotor|Cruise|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
-														  'Aero|Cruise|total_drag','Aero|Cruise|f_total','Aero|Cruise|f_fuselage','Aero|Cruise|f_rotor_hub'])
+										promotes_outputs=[('Power|CruiseConstantSpeed', f'Power|LiftRotor|segment_{segment.id}'), 'LiftRotor|Cruise|T_to_P',
+														  ('LiftRotor|Cruise|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'), 'LiftRotor|Cruise|mu',
+														  'Aero|Cruise|total_drag','Aero|Cruise|Cd0','Aero|Cruise|f_total','Aero|Cruise|f_fuselage','Aero|Cruise|f_rotor_hub'])
 
 				elif vehicle.configuration == 'LiftPlusCruise':
 					self.add_subsystem(f'segment_{segment.id}_power',
 										PowerCruiseConstantSpeedWithWing(vehicle=vehicle, N_propeller=N_propeller, n_blade=n_blade_propeller, rho_air=rho_air, mu_air=mu_air, Cd0=Cd0, hover_FM=hover_FM, g=g, AoA=AoA, fidelity=fidelity),
 										promotes_inputs=['Weight|*', 'Mission|*', 'Wing|*', 'Propeller|*'],
-										promotes_outputs=[('Power|CruiseConstantSpeed', f'Power|Propeller|segment_{segment.id}'),
-														   'Aero|Cruise|CL', 'Propeller|Cruise|thrust_coefficient',
+										promotes_outputs=[('Power|CruiseConstantSpeed', f'Power|Propeller|segment_{segment.id}'), 'Propeller|Cruise|T_to_P',
+														   'Aero|Cruise|CL', 'Propeller|Cruise|thrust_coefficient', 'Propeller|Cruise|J',
 														  ('Propeller|Cruise|thrust',f'Propeller|thrust_each|segment_{segment.id}'),
-														  'Aero|Cruise|total_drag','Aero|Cruise|f_total','Aero|Cruise|f_fuselage','Aero|Cruise|f_rotor_hub'])
+														  'Aero|Cruise|total_drag','Aero|Cruise|Cd0','Aero|Cruise|f_total','Aero|Cruise|f_fuselage','Aero|Cruise|f_rotor_hub'])
 			if segment.kind == 'ConstantPower':
 
 				self.add_subsystem(f'segment_{segment.id}_power',

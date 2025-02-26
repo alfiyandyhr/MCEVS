@@ -149,14 +149,14 @@ class PowerClimbConstantVyConstantVxEdgewise(om.Group):
 
 		# Step 9: Calculate total power required
 		self.add_subsystem('power_req',
-							PowerForwardComp(N_rotor=N_rotor),
+							PowerForwardComp(N_rotor=N_rotor, g=g),
 							promotes_inputs=[('Rotor|thrust',			'LiftRotor|Climb|thrust'),
 											 ('Rotor|profile_power',	'LiftRotor|Climb|profile_power'),
 											 ('Rotor|alpha',			'LiftRotor|Climb|alpha'),
 											 ('Rotor|kappa',			'LiftRotor|Climb|kappa'),
 											 ('v_induced','LiftRotor|Climb|v_induced'),
 											 ('v_inf', 'climb.climb_airspeed')],
-							promotes_outputs=[('Power|forward','Power|ClimbConstantVyConstantVx')])
+							promotes_outputs=[('Power|forward','Power|ClimbConstantVyConstantVx'),('Rotor|T_to_P','LiftRotor|Climb|T_to_P')])
 
 class PowerClimbConstantVyConstantVxWithWing(om.Group):
 	"""
@@ -306,13 +306,13 @@ class PowerClimbConstantVyConstantVxWithWing(om.Group):
 
 		# Step 8: Calculate total power required for winged forward flight
 		self.add_subsystem('power_req',
-							PowerForwardComp(N_rotor=N_propeller),
+							PowerForwardComp(N_rotor=N_propeller, g=g),
 							promotes_inputs=[('Rotor|thrust', 'Propeller|Climb|thrust'),
 											 ('Rotor|profile_power', 'Propeller|Climb|profile_power'),
 											 ('Rotor|alpha', 'Propeller|Climb|alpha'),
 											 ('Rotor|kappa', 'Propeller|Climb|kappa'),
 											 ('v_induced','Propeller|Climb|v_induced'),
 											 ('v_inf', 'climb.climb_airspeed')],
-							promotes_outputs=[('Power|forward','Power|ClimbConstantVyConstantVx')])
+							promotes_outputs=[('Power|forward','Power|ClimbConstantVyConstantVx'), ('Rotor|T_to_P','Propeller|Climb|T_to_P')])
 
 

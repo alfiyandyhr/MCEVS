@@ -11,7 +11,7 @@ from MCEVS.Analyses.Stability.Trim import MultirotorConstantCruiseTrim
 from MCEVS.Analyses.Aerodynamics.Rotor import ThrustOfEachRotor
 from MCEVS.Analyses.Aerodynamics.Rotor import RotorRevolutionFromAdvanceRatio
 from MCEVS.Analyses.Aerodynamics.Rotor import PropellerRevolutionFromAdvanceRatio
-from MCEVS.Analyses.Aerodynamics.Rotor import RotorAdvanceRatio
+from MCEVS.Analyses.Aerodynamics.Rotor import RotorAdvanceRatio, PropellerAdvanceRatio
 from MCEVS.Analyses.Aerodynamics.Rotor import ThrustCoefficient
 from MCEVS.Analyses.Aerodynamics.Rotor import RotorInflow
 from MCEVS.Analyses.Aerodynamics.Rotor import InducedVelocity
@@ -147,13 +147,13 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 
 		# Step 9: Calculate total power required
 		self.add_subsystem('power_req',
-							PowerForwardComp(N_rotor=N_rotor),
+							PowerForwardComp(N_rotor=N_rotor, g=g),
 							promotes_inputs=[('Rotor|thrust',			'LiftRotor|Cruise|thrust'),
 											 ('Rotor|profile_power',	'LiftRotor|Cruise|profile_power'),
 											 ('Rotor|alpha',			'LiftRotor|Cruise|alpha'),
 											 ('Rotor|kappa',			'LiftRotor|Cruise|kappa'),
 											 'v_induced', ('v_inf', 'Mission|cruise_speed')],
-							promotes_outputs=[('Power|forward','Power|CruiseConstantSpeed')])
+							promotes_outputs=[('Power|forward','Power|CruiseConstantSpeed'), ('Rotor|T_to_P','LiftRotor|Cruise|T_to_P')])
 
 class PowerCruiseConstantSpeedWithWing(om.Group):
 	"""
@@ -236,11 +236,16 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 							promotes_inputs=[('Thrust_all', 'Aero|Cruise|total_drag')],
 							promotes_outputs=[('Rotor|thrust','Propeller|Cruise|thrust')])
 
-		# Step 4: Calculate rotor omega from RPM
+		# Step 4: Calculate rotor omega from RPM and propeller advance ratio
 		self.add_subsystem('rpm2omega',
 							om.ExecComp('omega = rpm * 2*pi/60.0', omega={'units':'rad/s'}, rpm={'units':'rpm'}),
 							promotes_inputs=[('rpm','Propeller|Cruise|RPM')],
 							promotes_outputs=[('omega','Propeller|Cruise|omega')])
+
+		self.add_subsystem('J',
+							PropellerAdvanceRatio(),
+							promotes_inputs=[('v_inf', 'Mission|cruise_speed'), 'Propeller|radius', ('Propeller|omega', 'Propeller|Cruise|omega')],
+							promotes_outputs=[('Propeller|advance_ratio', 'Propeller|Cruise|J')])
 
 		# Step 5: Calculate rotor advance ratio mu and thrust coefficient Ct
 		# Treating propeller as a rotor
@@ -295,10 +300,10 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 
 		# Step 8: Calculate total power required for winged forward flight
 		self.add_subsystem('power_req',
-							PowerForwardComp(N_rotor=N_propeller),
+							PowerForwardComp(N_rotor=N_propeller, g=g),
 							promotes_inputs=[('Rotor|thrust', 'Propeller|Cruise|thrust'),
 											 ('Rotor|profile_power', 'Propeller|Cruise|profile_power'),
 											 ('Rotor|alpha', 'Propeller|Cruise|alpha'),
 											 ('Rotor|kappa', 'Propeller|Cruise|kappa'),
 											 'v_induced', ('v_inf', 'Mission|cruise_speed')],
-							promotes_outputs=[('Power|forward','Power|CruiseConstantSpeed')])
+							promotes_outputs=[('Power|forward','Power|CruiseConstantSpeed'), ('Rotor|T_to_P','Propeller|Cruise|T_to_P')])

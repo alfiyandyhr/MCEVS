@@ -25,11 +25,13 @@ class EnergyAnalysis(object):
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
 			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
 			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
+			global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  # deg
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
 			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
 			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
+			global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  # deg
 			r_propeller 			= self.vehicle.propeller.radius 		# m
 			c_propeller 			= self.vehicle.propeller.chord  		# m
 			wing_area 				= self.vehicle.wing.area 				# m**2
@@ -49,29 +51,31 @@ class EnergyAnalysis(object):
 			if segment.kind == 'CruiseConstantSpeed':
 				indeps.add_output('Mission|cruise_speed', segment.speed, units='m/s')
 				if self.vehicle.configuration == 'Multirotor':
-					indeps.add_output('LiftRotor|Cruise|RPM', vehicle.lift_rotor.RPM['cruise'], units='RPM')
+					indeps.add_output('LiftRotor|Cruise|RPM', self.vehicle.lift_rotor.RPM['cruise'], units='rpm')
 				elif self.vehicle.configuration == 'LiftPlusCruise':
-					indeps.add_output('Propeller|Cruise|RPM', vehicle.propeller.RPM['cruise'], units='RPM')
+					indeps.add_output('Propeller|Cruise|RPM', self.vehicle.propeller.RPM['cruise'], units='rpm')
 			if segment.kind == 'ClimbConstantVyConstantVx':
 				if self.vehicle.configuration == 'Multirotor':
-					indeps.add_output('LiftRotor|Climb|RPM', vehicle.lift_rotor.RPM['climb'], units='RPM')
+					indeps.add_output('LiftRotor|Climb|RPM', self.vehicle.lift_rotor.RPM['climb'], units='rpm')
 				elif self.vehicle.configuration == 'LiftPlusCruise':
-					indeps.add_output('Propeller|Climb|RPM', vehicle.propeller.RPM['climb'], units='RPM')		
+					indeps.add_output('Propeller|Climb|RPM', self.vehicle.propeller.RPM['climb'], units='rpm')		
 			if segment.kind == 'DescentConstantVyConstantVx':
 				if self.vehicle.configuration == 'Multirotor':
-					indeps.add_output('LiftRotor|Descent|RPM', vehicle.lift_rotor.RPM['descent'], units='RPM')
+					indeps.add_output('LiftRotor|Descent|RPM', self.vehicle.lift_rotor.RPM['descent'], units='rpm')
 				elif self.vehicle.configuration == 'LiftPlusCruise':
-					indeps.add_output('Propeller|Descent|RPM', vehicle.propeller.RPM['descent'], units='RPM')
+					indeps.add_output('Propeller|Descent|RPM', self.vehicle.propeller.RPM['descent'], units='rpm')
 
 		if self.vehicle.configuration == 'Multirotor':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|global_twist', global_twist_lift_rotor, units='deg')
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|global_twist', global_twist_lift_rotor, units='deg')
 			indeps.add_output('Propeller|radius', r_propeller, units='m')
 			indeps.add_output('Propeller|chord', c_propeller, units='m')
 			indeps.add_output('Wing|area', wing_area, units='m**2')
@@ -90,6 +94,7 @@ class EnergyAnalysis(object):
 					width = 2*(r_lift_rotor - radius_list[i])
 				else:
 					width = radius_list[i] - radius_list[i-1]
+
 				indeps.add_output(f'LiftRotor|Section{i+1}|radius', radius_list[i], units='m')
 				indeps.add_output(f'LiftRotor|Section{i+1}|chord', chord_list[i], units='m')
 				indeps.add_output(f'LiftRotor|Section{i+1}|pitch', pitch_list[i], units='deg')
@@ -113,6 +118,7 @@ class EnergyAnalysis(object):
 			prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square')
 			prob.setup(check=False)
 			prob.run_driver()
+			# prob.run_model()
 
 		if record:
 			record_performance_by_segments(prob, self.vehicle.configuration, self.mission)
