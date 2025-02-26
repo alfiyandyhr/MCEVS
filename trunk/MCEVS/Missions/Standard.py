@@ -1,5 +1,29 @@
 from MCEVS.Missions.Container import Mission
 
+def StandardMissionProfile(mission_range, cruise_speed):
+
+	# Hover climb config
+	hover_climb_speed = 500*0.3048/60 # m/s; 500 ft/min
+	hover_climb_distance = 1000*0.3048 # m; 1000 ft
+
+	# Hover descent config
+	hover_descent_speed = 300*0.3048/60 # m/s; 300 ft/min
+	hover_descent_distance = 1000*0.3048 # m; 1000 ft
+
+	# No credit climb/descent
+	no_credit_distance = (6500-6000)*0.3048 # m; 500 ft
+
+	# Take-off from 5000 ft ASL
+	mission = Mission(planet='Earth', takeoff_altitude=5000*0.3048, n_repetition=1)
+	mission.add_segment(name='Hover Climb', kind='HoverClimbConstantSpeed', speed=hover_climb_speed, distance=hover_climb_distance, n_discrete=10)
+	mission.add_segment(name='No Credit Climb', kind='NoCreditClimb', distance_Y=no_credit_distance, distance_X=0.0, n_discrete=10)
+	mission.add_segment('Cruise', kind='CruiseConstantSpeed', speed=cruise_speed, distance=mission_range, AoA=5.0, n_discrete=10)
+	mission.add_segment(name='No Credit Descent', kind='NoCreditDescent', distance_Y=no_credit_distance, distance_X=0.0, n_discrete=10)
+	mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', speed=hover_descent_speed, distance=hover_descent_distance, n_discrete=10)
+	# plot_mission_parameters(mission, print_info=False)
+
+	return mission
+
 def UberMissionProfile(v_stall=40.0):
 	mission_range = 96560.6 # m
 	cruise_speed = 67.056 # m/s
@@ -82,7 +106,7 @@ def SimplifiedUberMissionProfile(mission_range, cruise_speed):
 
 	return mission
 
-def StandardMissionProfile(mission_range, cruise_speed):
+def StandardMissionProfileOld(mission_range, cruise_speed):
 
 	# Constant climb
 	C_distance_X = (cruise_speed/2) * (304.8/2.54)

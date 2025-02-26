@@ -2,6 +2,7 @@ from MCEVS.Missions.Segments.HoverClimb.Constant_Speed import HoverClimbConstant
 from MCEVS.Missions.Segments.HoverClimb.Constant_Acceleration import HoverClimbConstantAcceleration
 from MCEVS.Missions.Segments.Climb.Constant_Vy_Constant_Vx import ClimbConstantVyConstantVx
 from MCEVS.Missions.Segments.Climb.Constant_Vy_Constant_Ax import ClimbConstantVyConstantAx
+from MCEVS.Missions.Segments.Climb.No_Credit import NoCreditClimb
 from MCEVS.Missions.Segments.Transition.Constant_Acceleration import TransitionConstantAcceleration
 from MCEVS.Missions.Segments.Cruise.Constant_Speed import CruiseConstantSpeed
 from MCEVS.Missions.Segments.Descent.Constant_Vy_Constant_Vx import DescentConstantVyConstantVx
@@ -93,6 +94,9 @@ class Mission(object):
 
 		elif kind == 'DescentConstantVyConstantAx':
 			self.segments.append(DescentConstantVyConstantAx(id=self.curr_id, name=name, initial_speed_X=self.vx[-1][-1], n_discrete=n_discrete, kwargs=kwargs))
+
+		elif kind == 'NoCreditClimb':
+			self.segments.append(NoCreditClimb(id=self.curr_id, name=name, n_discrete=n_discrete, kwargs=kwargs))
 
 		elif kind == 'NoCreditDescent':
 			self.segments.append(NoCreditDescent(id=self.curr_id, name=name, n_discrete=n_discrete, kwargs=kwargs))
