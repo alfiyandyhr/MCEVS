@@ -8,4 +8,9 @@ After defining the mission requirements and vehicle specifications, a Newton sol
 
 Additionally, users can conduct an optimization procedure using either a gradient-based or gradient-free method. This optimization process aims to identify the most efficient design variables, whether geometric or operational, that lead to a lighter MTOW for the aircraft.
 
+To install:
+1. Clone the repository
+2. Go to MCEVS folder that contains "setup.py"
+3. Run "pip install -e ."
+
 Author: @alfiyandyhr
