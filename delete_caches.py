@@ -48,6 +48,8 @@ folders.append('trunk/MCEVS/Vehicles/__pycache__')
 folders.append('trunk/MCEVS/Vehicles/Components/__pycache__')
 
 folders.append('examples/power_estimation/reports/')
+folders.append('examples/power_estimation/power_vs_speed/multirotor/reports/')
+folders.append('examples/power_estimation/power_vs_speed/liftcruise/reports/')
 folders.append('examples/bemt_validation/reports/')
 folders.append('examples/energy_estimation/reports/')
 folders.append('examples/mtow_estimation/reports/')
