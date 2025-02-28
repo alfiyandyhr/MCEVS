@@ -7,8 +7,8 @@ import sys
 
 # Mission requirement
 mission_range = 96000 # m
-cruise_speed_list = np.arange(90.0, 310.0, 10) # km/h
-# cruise_speed_list = [10, 50]
+# cruise_speed_list = np.arange(90.0, 310.0, 10) # km/h
+cruise_speed_list = [10, 50]
 payload_per_pax = 100.0 # kg
 
 # Hover climb config
