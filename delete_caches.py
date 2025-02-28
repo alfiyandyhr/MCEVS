@@ -114,6 +114,11 @@ folders.append('examples/range_speed_sweep/liftcruise/Unnamed_CompGeom.txt')
 
 for folder in folders:
 	try:
-		os.system(f'rm -r {folder}')
+		if os.name == 'posix':
+			os.system(f'rm -r {folder}')
+		elif os.name == 'nt':
+			folder = folder.replace('/','\\')
+			os.system(f'del /s /q {folder}')
+			os.system(f'rmdir /s /q {folder}')
 	except:
 		pass
