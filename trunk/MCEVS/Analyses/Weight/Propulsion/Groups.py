@@ -41,7 +41,7 @@ class PropulsionWeight(om.Group):
 									ExtraHubWeightWithFixedVtip(N_rotor=N_lift_rotor, N_bl=N_blade_lift_rotor, tf=tf_propulsion, v_tip=550*0.3048),
 									promotes_inputs=[('Weight|rotors','Weight|rotors_and_hubs'), ('Rotor|radius','LiftRotor|radius'), ('Rotor|chord', 'LiftRotor|chord')],
 									promotes_outputs=['Weight|extra_hubs'])
-			elif fidelity['hover_climb'] == 1:
+			elif fidelity['hover_climb'] == 2:
 				self.add_subsystem('extra_hub_weight',
 									ExtraHubWeight(N_rotor=N_lift_rotor, N_bl=N_blade_lift_rotor, tf=tf_propulsion),
 									promotes_inputs=[('Weight|rotors','Weight|rotors_and_hubs'), ('Rotor|radius','LiftRotor|radius'), ('Rotor|chord', 'LiftRotor|chord'), ('Rotor|rpm','LiftRotor|HoverClimb|RPM')],
@@ -56,7 +56,7 @@ class PropulsionWeight(om.Group):
 			if fidelity['hover_climb'] == 0:
 				input_names = ['Weight|rotors_and_hubs', 'Weight|extra_hubs', 'Weight|motors', 'Weight|controllers']
 				sfs = [1., 1., 1., 1.]
-			elif fidelity['hover_climb'] == 1:
+			elif fidelity['hover_climb'] == 2:
 				input_names = ['Weight|rotors_and_hubs', 'Weight|extra_hubs', 'Weight|motors', 'Weight|controllers']
 				sfs = [1., 1., 1., 1.]			
 

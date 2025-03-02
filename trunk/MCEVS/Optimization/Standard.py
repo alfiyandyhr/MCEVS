@@ -15,21 +15,21 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 
 		problem.add_objective('Weight|takeoff')
 
-		if fidelity['hover_climb'] == 1: problem.add_design_var('Weight|takeoff', 1000.0, 10000.0, 2199.60290727, 'kg')
+		if fidelity['hover_climb'] == 2: problem.add_design_var('Weight|takeoff', 1000.0, 10000.0, 2199.60290727, 'kg')
 		else: problem.add_design_var('Weight|takeoff', 100.0, 10000.0, mtow_guess, 'kg')
 		problem.add_design_var('LiftRotor|radius', 1.0, 5.0, vehicle.lift_rotor.radius, 'm')
 		problem.add_design_var('LiftRotor|Cruise|RPM', 100.0, 1500.0, vehicle.lift_rotor.RPM['cruise'], 'rpm')
 		if speed_as_design_var: problem.add_design_var('Mission|cruise_speed', 72*1000/3600, 576*1000/3600, mission.segments[2].speed, 'm/s')
 
 		problem.add_constraint('LiftRotor|Cruise|mu', 0.01, 0.5, None)
-		if fidelity['hover_climb'] == 1: problem.add_constraint('Weight|residual', -0.001, 0.001, 'kg')
+		if fidelity['hover_climb'] == 2: problem.add_constraint('Weight|residual', -0.001, 0.001, 'kg')
 		else: problem.add_constraint('Weight|residual', 0.0, 0.0, 'kg')
 		problem.add_constraint('LiftRotor|Cruise|thrust_coefficient', 0.0, 0.14*vehicle.lift_rotor.solidity)
 		problem.add_constraint('LiftRotor|HoverClimb|T_to_P', 0.0, 12.0)
 		problem.add_constraint('LiftRotor|Cruise|T_to_P', 0.0, 12.0)
 		problem.add_constraint('LiftRotor|HoverDescent|T_to_P', 0.0, 12.0)
 
-		if fidelity['hover_climb'] == 1:
+		if fidelity['hover_climb'] == 2:
 			problem.add_design_var('LiftRotor|global_twist', 0.0, 20.0, 7.864577821145281, 'deg')
 			problem.add_design_var('LiftRotor|HoverClimb|RPM', 100.0, 1500.0, 354.7642145353529, 'rpm')
 			problem.add_constraint('LiftRotor|HoverClimb|thrust_residual_square', 0.0, 0.001, None)
@@ -87,7 +87,7 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 
 		problem.add_objective('Weight|takeoff')
 
-		if fidelity['hover_climb'] == 1: problem.add_design_var('Weight|takeoff', 1000.0, 5000.0, 2321.3720591, 'kg')
+		if fidelity['hover_climb'] == 2: problem.add_design_var('Weight|takeoff', 1000.0, 5000.0, 2321.3720591, 'kg')
 		else: problem.add_design_var('Weight|takeoff', 100.0, 10000.0, mtow_guess, 'kg')
 		problem.add_design_var('Wing|area', 6.0, 30.0, vehicle.wing.area, 'm**2')
 		problem.add_design_var('Wing|aspect_ratio', 4.0, 12.0, vehicle.wing.aspect_ratio, None)
@@ -97,7 +97,7 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 		if speed_as_design_var: problem.add_design_var('Mission|cruise_speed', 72*1000/3600, 576*1000/3600, mission.segments[2].speed, 'm/s')
 
 		# problem.add_constraint('Propeller|Cruise|J', 0.01, 1.3, None)
-		if fidelity['hover_climb'] == 1: problem.add_constraint('Weight|residual', -0.001, 0.001, 'kg')
+		if fidelity['hover_climb'] == 2: problem.add_constraint('Weight|residual', -0.001, 0.001, 'kg')
 		else: problem.add_constraint('Weight|residual', 0.0, 0.0, 'kg')
 		problem.add_constraint('Aero|Cruise|CL', 0.0, 0.9)
 		problem.add_constraint('Propeller|Cruise|thrust_coefficient', 0.0, 0.14*vehicle.propeller.solidity)
@@ -107,7 +107,7 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 
 		problem.add_constraint('LiftRotor|clearance_constraint', -1000.0, 0.0)
 
-		if fidelity['hover_climb'] == 1:
+		if fidelity['hover_climb'] == 2:
 			problem.add_design_var('LiftRotor|global_twist', 0.0, 20.0, 27.5441473039643, 'deg')
 			problem.add_design_var('LiftRotor|HoverClimb|RPM', 100.0, 1500.0, 567.940229619118, 'rpm')
 			problem.add_constraint('LiftRotor|HoverClimb|thrust_residual_square', 0.0, 0.001, None)

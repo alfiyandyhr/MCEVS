@@ -159,7 +159,7 @@ class DesignProblem(object):
 			self.default_input_values['Wing|aspect_ratio'] = [self.vehicle.wing.aspect_ratio, None]
 
 		# Variables needed for BEMT
-		if self.fidelity['hover_climb'] == 1:
+		if self.fidelity['hover_climb'] == 2:
 			n_sections = self.vehicle.lift_rotor.n_section
 			r_to_R_list = self.vehicle.lift_rotor.r_to_R_list
 			c_to_R_list = self.vehicle.lift_rotor.c_to_R_list

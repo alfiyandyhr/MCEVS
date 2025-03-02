@@ -127,7 +127,7 @@ class WeightAnalysis(object):
 			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
 
 		# Variables needed for BEMT
-		if self.fidelity['hover_climb'] == 1:
+		if self.fidelity['hover_climb'] == 2:
 			n_sections = self.vehicle.lift_rotor.n_section
 			r_to_R_list = self.vehicle.lift_rotor.r_to_R_list
 			c_to_R_list = self.vehicle.lift_rotor.c_to_R_list
@@ -202,7 +202,7 @@ class WeightAnalysis(object):
 					prob.setup(check=False)
 					prob.run_driver()
 
-				elif self.fidelity['hover_climb'] == 1:
+				elif self.fidelity['hover_climb'] == 2:
 					prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10, upper=5000)
 					prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000)
 					prob.model.add_design_var('LiftRotor|global_twist', lower=0.0, upper=100.0)
@@ -218,7 +218,7 @@ class WeightAnalysis(object):
 					prob.setup(check=False)
 					prob.run_model()
 
-				elif self.fidelity['hover_climb'] == 1:
+				elif self.fidelity['hover_climb'] == 2:
 					prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
 					prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10, upper=5000)
 					prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square')

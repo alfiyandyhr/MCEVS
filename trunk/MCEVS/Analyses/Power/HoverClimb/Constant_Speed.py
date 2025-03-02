@@ -79,7 +79,7 @@ class PowerHoverClimbConstantSpeedFidelityZero(om.ExplicitComponent):
 		partials['FM', 'Weight|takeoff'] == 0.0
 		partials['FM', 'LiftRotor|radius'] == 0.0
 
-class PowerHoverClimbConstantSpeedFidelityOne(om.Group):
+class PowerHoverClimbConstantSpeedFidelityTwo(om.Group):
 	"""
 	Computes the power required for hover climb with constant speed using BEMT
 	Parameters:

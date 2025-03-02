@@ -153,7 +153,8 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 											 ('Rotor|alpha',			'LiftRotor|Cruise|alpha'),
 											 ('Rotor|kappa',			'LiftRotor|Cruise|kappa'),
 											 'v_induced', ('v_inf', 'Mission|cruise_speed')],
-							promotes_outputs=[('Power|forward','Power|CruiseConstantSpeed'), ('Rotor|T_to_P','LiftRotor|Cruise|T_to_P')])
+							promotes_outputs=[('Power|forward','Power|CruiseConstantSpeed'), ('Rotor|T_to_P','LiftRotor|Cruise|T_to_P'),
+											  'Power|profile_power', 'Power|induced_power', 'Power|propulsive_power'])
 
 class PowerCruiseConstantSpeedWithWing(om.Group):
 	"""
@@ -306,4 +307,5 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 											 ('Rotor|alpha', 'Propeller|Cruise|alpha'),
 											 ('Rotor|kappa', 'Propeller|Cruise|kappa'),
 											 'v_induced', ('v_inf', 'Mission|cruise_speed')],
-							promotes_outputs=[('Power|forward','Power|CruiseConstantSpeed'), ('Rotor|T_to_P','Propeller|Cruise|T_to_P')])
+							promotes_outputs=[('Power|forward','Power|CruiseConstantSpeed'), ('Rotor|T_to_P','Propeller|Cruise|T_to_P'),
+											   'Power|profile_power', 'Power|induced_power', 'Power|propulsive_power'])

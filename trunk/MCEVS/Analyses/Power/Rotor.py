@@ -40,6 +40,9 @@ class PowerForwardComp(om.ExplicitComponent):
 		self.add_input('v_inf', units='m/s', desc='Freestream velocity')
 		self.add_input('v_induced', units='m/s', desc='Induced velocity')
 		self.add_output('Power|forward', units='W', desc='Power required for forward flight (sum of all rotors)')
+		self.add_output('Power|profile_power', units='W', desc='Profile power (sum of all rotors)')
+		self.add_output('Power|induced_power', units='W', desc='Induced power (sum of all rotors)')
+		self.add_output('Power|propulsive_power', units='W', desc='Propulsive power (sum of all rotors)')
 		self.add_output('Rotor|T_to_P', units='g/W', desc='Thrust to power ratio of a single rotor/propeller')
 		self.declare_partials('*', '*')
 
@@ -54,7 +57,11 @@ class PowerForwardComp(om.ExplicitComponent):
 		v_ind = inputs['v_induced']
 
 		power_fwd_each = P0 + T_rotor * (k*v_ind + v_inf*np.sin(a))
+
 		outputs['Power|forward'] = N_rotor * power_fwd_each
+		outputs['Power|profile_power'] = N_rotor * P0
+		outputs['Power|induced_power'] = N_rotor * T_rotor * k * v_ind
+		outputs['Power|propulsive_power'] = N_rotor * T_rotor * v_inf*np.sin(a)
 		outputs['Rotor|T_to_P'] = (T_rotor / g * 1000.0) / power_fwd_each
 		# print(N_rotor, g, P0, T_rotor, a, k, v_inf, v_ind, outputs['Rotor|T_to_P'])
 
@@ -82,6 +89,27 @@ class PowerForwardComp(om.ExplicitComponent):
 		partials['Power|forward', 'Rotor|kappa'] = N_rotor * dP_dk
 		partials['Power|forward', 'v_inf'] = N_rotor * dP_dv1
 		partials['Power|forward', 'v_induced'] = N_rotor * dP_dv2
+
+		partials['Power|profile_power', 'Rotor|thrust'] = 0.0
+		partials['Power|profile_power', 'Rotor|profile_power'] = N_rotor
+		partials['Power|profile_power', 'Rotor|alpha'] = 0.0
+		partials['Power|profile_power', 'Rotor|kappa'] = 0.0
+		partials['Power|profile_power', 'v_inf'] = 0.0
+		partials['Power|profile_power', 'v_induced'] = 0.0
+
+		partials['Power|induced_power', 'Rotor|thrust'] = N_rotor * k * v_ind
+		partials['Power|induced_power', 'Rotor|profile_power'] = 0.0
+		partials['Power|induced_power', 'Rotor|alpha'] = 0.0
+		partials['Power|induced_power', 'Rotor|kappa'] = N_rotor * T_rotor * v_ind
+		partials['Power|induced_power', 'v_inf'] = 0.0
+		partials['Power|induced_power', 'v_induced'] = N_rotor * T_rotor * k
+
+		partials['Power|propulsive_power', 'Rotor|thrust'] = N_rotor * v_inf*np.sin(a)
+		partials['Power|propulsive_power', 'Rotor|profile_power'] = 0.0
+		partials['Power|propulsive_power', 'Rotor|alpha'] = N_rotor * T_rotor * v_inf*np.cos(a)
+		partials['Power|propulsive_power', 'Rotor|kappa'] = 0.0
+		partials['Power|propulsive_power', 'v_inf'] = N_rotor * T_rotor * np.sin(a)
+		partials['Power|propulsive_power', 'v_induced'] = 0.0
 
 		partials['Rotor|T_to_P', 'Rotor|thrust'] = (1 / g * 1000.0) / power_fwd_each + (T_rotor / g * 1000.0) * (-1/power_fwd_each**2) * dP_dT
 		partials['Rotor|T_to_P', 'Rotor|profile_power'] = (T_rotor / g * 1000.0) * (-1/power_fwd_each**2) * dP_dP0
