@@ -61,6 +61,8 @@ class PowerAnalysis(object):
 		for segment in self.mission.segments:
 			if segment.kind == 'HoverClimbConstantSpeed':
 				indeps.add_output('Mission|hover_climb_speed', segment.speed, units='m/s')
+			if segment.kind == 'HoverDescentConstantSpeed':
+				indeps.add_output('Mission|hover_descent_speed', segment.speed, units='m/s')
 			if segment.kind == 'CruiseConstantSpeed':
 				indeps.add_output('Mission|cruise_speed', segment.speed, units='m/s')
 				if self.vehicle.configuration == 'Multirotor':
@@ -168,7 +170,8 @@ class PowerRequirement(om.Group):
 			if segment.kind == 'CruiseConstantSpeed':
 				AoA = segment.AoA
 			if segment.kind == 'HoverClimbConstantSpeed':
-				v_climb = segment.speed
+				# v_climb = segment.speed
+				pass
 			if segment.kind == 'HoverDescentConstantSpeed':
 				v_descent = segment.speed
 
@@ -228,10 +231,10 @@ class PowerRequirement(om.Group):
 			if segment.kind == 'HoverClimbConstantSpeed':
 				if fidelity['hover_climb'] == 0:
 					self.add_subsystem(f'segment_{segment.id}_power',
-										PowerHoverClimbConstantSpeedFidelityZero(N_rotor=N_lift_rotor, hover_FM=hover_FM_lift_rotor, rho_air=rho_air, g=g, v_climb=v_climb),
-										promotes_inputs=['Weight|takeoff', 'LiftRotor|*'],
+										PowerHoverClimbConstantSpeedFidelityZero(N_rotor=N_lift_rotor, hover_FM=hover_FM_lift_rotor, rho_air=rho_air, g=g),
+										promotes_inputs=['Weight|takeoff', 'Mission|hover_climb_speed', 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
-														  ('LiftRotor|HoverClimb|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
+														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
 														  ('FM','LiftRotor|HoverClimb|FM'), ('LiftRotor|T_to_P', 'LiftRotor|HoverClimb|T_to_P')])
 
 				elif fidelity['hover_climb'] == 1:
@@ -240,13 +243,12 @@ class PowerRequirement(om.Group):
 										promotes_inputs=['Weight|takeoff', 'Mission|hover_climb_speed', 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 														  ('LiftRotor|HoverClimb|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
-														  'LiftRotor|HoverClimb|thrust_coefficient'])
-														  # ('FM','LiftRotor|HoverClimb|FM'),('CT','LiftRotor|HoverClimb|thrust_coefficient')])
+														  'LiftRotor|HoverClimb|FM','LiftRotor|HoverClimb|thrust_coefficient'])
 
 				elif fidelity['hover_climb'] == 2:
 					self.add_subsystem(f'segment_{segment.id}_power',
-										PowerHoverClimbConstantSpeedFidelityTwo(vehicle=vehicle, rho_air=rho_air, g=g, v_climb=v_climb),
-										promotes_inputs=['Weight|takeoff', 'LiftRotor|*'],
+										PowerHoverClimbConstantSpeedFidelityTwo(vehicle=vehicle, rho_air=rho_air, g=g),
+										promotes_inputs=['Weight|takeoff', 'Mission|hover_climb_speed', 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
 														  ('thrust_residual_square','LiftRotor|HoverClimb|thrust_residual_square'), ('J','LiftRotor|HoverClimb|J'),
@@ -254,8 +256,8 @@ class PowerRequirement(om.Group):
 
 			if segment.kind == 'HoverDescentConstantSpeed':
 				self.add_subsystem(f'segment_{segment.id}_power',
-									PowerHoverDescentConstantSpeed(N_rotor=N_lift_rotor, hover_FM=hover_FM_lift_rotor, rho_air=rho_air, g=g, v_descent=v_descent),
-									promotes_inputs=['Weight|takeoff', 'LiftRotor|radius'],
+									PowerHoverDescentConstantSpeed(N_rotor=N_lift_rotor, hover_FM=hover_FM_lift_rotor, rho_air=rho_air, g=g),
+									promotes_inputs=['Weight|takeoff', 'Mission|hover_descent_speed', 'LiftRotor|radius'],
 									promotes_outputs=[('Power|HoverDescentConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 													  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'), ('LiftRotor|T_to_P', 'LiftRotor|HoverDescent|T_to_P')])
 			

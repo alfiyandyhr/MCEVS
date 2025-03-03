@@ -93,6 +93,8 @@ class WeightAnalysis(object):
 		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
 		for segment in self.mission.segments:
+			if segment.kind == 'HoverClimbConstantSpeed':
+				indeps.add_output('Mission|hover_climb_speed', segment.speed, units='m/s')
 			if segment.kind == 'CruiseConstantSpeed':
 				indeps.add_output('Mission|cruise_speed', segment.speed, units='m/s')
 				if self.vehicle.configuration == 'Multirotor':
