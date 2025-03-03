@@ -1,5 +1,8 @@
 import numpy as np
 import openmdao.api as om
+from MCEVS.Analyses.Aerodynamics.Rotor import ThrustOfEachRotor, RotorAdvanceRatio, ThrustCoefficient, RotorInflow, InducedVelocity
+from MCEVS.Analyses.Power.Rotor import RotorProfilePower, PowerForwardComp, InducedPowerFactor
+
 from MCEVS.Analyses.Aerodynamics.BEMT.Solver import BEMTSolverOMGroup
 from MCEVS.Analyses.Aerodynamics.BEMT.SectionOM import SectionLocalPitch, SectionLocalRadiusChordWidth
 
@@ -78,6 +81,131 @@ class PowerHoverClimbConstantSpeedFidelityZero(om.ExplicitComponent):
 		partials['LiftRotor|T_to_P', 'LiftRotor|radius'] = ( W_takeoff * 1000.0 ) * (-1/P_total**2) * dP_dr
 		partials['FM', 'Weight|takeoff'] == 0.0
 		partials['FM', 'LiftRotor|radius'] == 0.0
+
+class PowerHoverClimbConstantSpeedFidelityOne(om.Group):
+	"""
+	Computes the power required for hover climb with constant speed
+	Parameters:
+		N_rotor		 	: number or lift rotors
+		hover_FM	 	: hover figure of merit
+		rho_air		 	: air density [kg/m**3]
+		g 			 	: gravitational acceleration [m/s**2]
+	Inputs:
+		Weight|takeoff  			: total take-off weight [kg]
+		LiftRotor|radius			: lift rotor radius [m]
+		Mission|hover_climb_speed 	: hover climb speed [m/s]
+	Outputs:
+		Power|HoverClimbConstantSpeed	: power required for hover climb [W]
+		LiftRotor|thrust 				: thrust produced by each rotor during hover climb [N]
+	"""
+	def initialize(self):
+		self.options.declare('N_rotor', types=int, desc='Number of rotors')
+		self.options.declare('n_blade', types=int, desc='Number of blades per rotor')
+		self.options.declare('hover_FM', types=float, desc='Hover figure of merit')
+		self.options.declare('Cd0', types=float, desc='Rotor parasite_drag coefficient')
+		self.options.declare('rho_air', types=float, desc='Air density')
+		self.options.declare('g', types=float, desc='Gravitational acceleration')
+
+	def setup(self):
+		N_rotor = self.options['N_rotor']
+		n_blade = self.options['n_blade']
+		Cd0 = self.options['Cd0']
+		hover_FM = self.options['hover_FM']
+		rho_air = self.options['rho_air']
+		g = self.options['g']
+
+		# Step 1: Total thrust is equal to weight (drag is considered negligible)
+		indep = self.add_subsystem('hover_climb', om.IndepVarComp())
+		indep.add_output('g', val=g)
+		thrust_comp = om.ExecComp('thrust = weight * g', thrust={'units':'N'}, weight={'units':'kg'})
+		self.add_subsystem('total_thrust',
+							thrust_comp,
+							promotes_inputs=[('weight', 'Weight|takeoff'), ('g', 'hover_climb.g')],
+							promotes_outputs=[('thrust', 'Thrust_all')])
+
+		# Step 2: Calculate thrust required by each rotor
+		self.add_subsystem('thrust_each',
+							ThrustOfEachRotor(N_rotor=N_rotor),
+							promotes_inputs=['Thrust_all'],
+							promotes_outputs=[('Rotor|thrust','LiftRotor|HoverClimb|thrust')])
+
+		# Step 3: Calculate rotor omega from RPM
+		self.add_subsystem('rpm2omega',
+							om.ExecComp('omega = rpm * 2*pi/60.0', omega={'units':'rad/s'}, rpm={'units':'rpm'}),
+							promotes_inputs=[('rpm','LiftRotor|HoverClimb|RPM')],
+							promotes_outputs=[('omega','LiftRotor|HoverClimb|omega')])
+
+		# Step 4: Rotor advance ratio
+		self.add_subsystem('mu',
+							RotorAdvanceRatio(),
+							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
+											 ('Rotor|alpha',	'LiftRotor|HoverClimb|alpha'),
+											 ('Rotor|omega',	'LiftRotor|HoverClimb|omega'),
+											 ('v_inf',			'Mission|hover_climb_speed')],
+							promotes_outputs=[('Rotor|mu',		'LiftRotor|HoverClimb|mu')])
+
+		# Rotor tilt angle is 90 deg
+		self.set_input_defaults('LiftRotor|HoverClimb|alpha', val=90.0, units='deg')
+
+		# Step 5: Calculate thrust coefficient
+		self.add_subsystem('Ct',
+							ThrustCoefficient(rho_air=rho_air),
+							promotes_inputs=[('Rotor|thrust', 				'LiftRotor|HoverClimb|thrust'),
+											 ('Rotor|radius', 				'LiftRotor|radius'),
+											 ('Rotor|omega',  				'LiftRotor|HoverClimb|omega')],
+							promotes_outputs=[('Rotor|thrust_coefficient',  'LiftRotor|HoverClimb|thrust_coefficient')])
+
+		# Step 6: Calculate profile power of a rotor
+		self.add_subsystem('profile_power',
+							RotorProfilePower(rho_air=rho_air, n_blade=n_blade, Cd0=Cd0),
+							promotes_inputs=[('Rotor|radius',			'LiftRotor|radius'),
+											 ('Rotor|chord',			'LiftRotor|chord'),
+											 ('Rotor|mu', 	  			'LiftRotor|HoverClimb|mu'),
+											 ('Rotor|omega',  			'LiftRotor|HoverClimb|omega')],
+							promotes_outputs=[('Rotor|profile_power', 	'LiftRotor|HoverClimb|profile_power')])
+
+		# Step 7: Calculate induced power
+		self.add_subsystem('rotor_inflow',
+							RotorInflow(),
+							promotes_inputs=[('Rotor|mu',   			  'LiftRotor|HoverClimb|mu'),
+											 ('Rotor|alpha',			  'LiftRotor|HoverClimb|alpha'),
+											 ('Rotor|thrust_coefficient', 'LiftRotor|HoverClimb|thrust_coefficient')],
+							promotes_outputs=[('Rotor|lambda',			  'LiftRotor|HoverClimb|lambda')])
+
+		self.add_subsystem('v_induced',
+							InducedVelocity(),
+							promotes_inputs=[('Rotor|radius',	'LiftRotor|radius'),
+											 ('Rotor|alpha',	'LiftRotor|HoverClimb|alpha'),
+											 ('Rotor|omega',	'LiftRotor|HoverClimb|omega'),
+											 ('Rotor|lambda',	'LiftRotor|HoverClimb|lambda'),
+											 ('v_inf',			'Mission|hover_climb_speed')],
+							promotes_outputs=['v_induced'])
+		self.add_subsystem('kappa',
+							InducedPowerFactor(hover_FM=hover_FM, rho_air=rho_air),
+							promotes_inputs=[('Rotor|thrust',			'LiftRotor|HoverClimb|thrust'),
+											 ('Rotor|profile_power',	'LiftRotor|HoverClimb|profile_power'),
+											 ('Rotor|radius',			'LiftRotor|radius'),],
+							promotes_outputs=[('Rotor|kappa','LiftRotor|HoverClimb|kappa')])
+
+		# Step 8: Calculate total power required for winged forward flight
+		self.add_subsystem('power_req',
+							PowerForwardComp(N_rotor=N_rotor, g=g),
+							promotes_inputs=[('Rotor|thrust', 			'LiftRotor|HoverClimb|thrust'),
+											 ('Rotor|profile_power',	'LiftRotor|HoverClimb|profile_power'),
+											 ('Rotor|alpha', 			'LiftRotor|HoverClimb|alpha'),
+											 ('Rotor|kappa', 			'LiftRotor|HoverClimb|kappa'),
+											 'v_induced', ('v_inf', 'Mission|hover_climb_speed')],
+							promotes_outputs=[('Power|forward','Power|HoverClimbConstantSpeed'), ('Rotor|T_to_P','LiftRotor|HoverClimb|T_to_P')])
+
+		# # Step 9: Calculate figure of merit
+		# self.add_subsystem('power_req',
+		# 					FigureOfMerit(N_rotor=N_rotor, g=g),
+		# 					promotes_inputs=[('Rotor|thrust', 			'LiftRotor|HoverClimb|thrust'),
+		# 									 ('Rotor|profile_power',	'LiftRotor|HoverClimb|profile_power'),
+		# 									 ('Rotor|alpha', 			'LiftRotor|HoverClimb|alpha'),
+		# 									 ('Rotor|kappa', 			'LiftRotor|HoverClimb|kappa'),
+		# 									 'v_induced', ('v_inf', 'Mission|hover_climb_speed')],
+		# 					promotes_outputs=[('Power|forward','Power|HoverClimbConstantSpeed'), ('Rotor|T_to_P','LiftRotor|HoverClimb|T_to_P')])
 
 class PowerHoverClimbConstantSpeedFidelityTwo(om.Group):
 	"""

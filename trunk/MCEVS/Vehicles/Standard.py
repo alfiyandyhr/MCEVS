@@ -129,7 +129,7 @@ def StandardLiftPlusCruiseEVTOL(design_var:dict,
 		vehicle.add_component(kind='lift_rotor', n_rotor=8, n_blade=2, n_section=8, airfoil='BOEING_VERTOL_VR12_Viterna_for_NASA_LPC',
 							  radius=r_lift_rotor, hub_radius=0.21*r_lift_rotor, mean_c_to_R=mean_c_to_R1, r_to_R_list=r_to_R_list1, c_to_R_list=c_to_R_list1, w_to_R_list=w_to_R_list1,
 							  pitch_list=pitch_list1, global_twist=global_twist1, hub_length=0.3048, hub_max_diameter=2.25*0.3048,
-							  figure_of_merit=0.75, RPM=RPM_lift_rotor)
+							  figure_of_merit=0.75, Cd0=0.0089, RPM=RPM_lift_rotor)
 		vehicle.add_component(kind='propeller', n_propeller=1, n_blade=6, n_section=8, airfoil='BOEING_VERTOL_VR12_Viterna_for_NASA_LPC',
 							  radius=r_propeller, hub_radius=0.21*r_propeller, mean_c_to_R=mean_c_to_R2, r_to_R_list=r_to_R_list2, c_to_R_list=c_to_R_list2, w_to_R_list=w_to_R_list2,
 							  pitch_list=pitch_list2, global_twist=global_twist2, hub_length=0.3048, hub_max_diameter=1.5*0.3048,
