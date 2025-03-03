@@ -61,10 +61,12 @@ for i, cruise_speed in enumerate(cruise_speed_list):
 	analysis = PowerAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity)
 	results = analysis.evaluate(record=True)
 
-	cruise_power_list[i] = results.get_val('Power|segment_3', 'kW')[0]
+	results_dict = {'total_cruise_power': results.get_val('Power|segment_3', 'kW')[0]}
 
-plt.plot(cruise_speed_list, cruise_power_list, '-o')
-plt.xlabel('Cruise speed [km/h]')
-plt.ylabel('Cruise power [kW]')
-plt.grid()
-plt.show()
+	cruise_power_list[i] = 
+
+# plt.plot(cruise_speed_list, cruise_power_list, '-o')
+# plt.xlabel('Cruise speed [km/h]')
+# plt.ylabel('Cruise power [kW]')
+# plt.grid()
+# plt.show()

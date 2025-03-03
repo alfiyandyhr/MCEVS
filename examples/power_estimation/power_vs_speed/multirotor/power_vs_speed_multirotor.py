@@ -3,12 +3,13 @@ from MCEVS.Missions.Container import Mission
 from MCEVS.Analyses.Power.Analysis import PowerAnalysis
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import sys
 
 # Mission requirement
 mission_range = 96000 # m
-# cruise_speed_list = np.arange(10.0, 310.0, 10) # km/h
-cruise_speed_list = [10, 50]
+cruise_speed_list = np.arange(10.0, 310.0, 10) # km/h
+# cruise_speed_list = [10, 50]
 payload_per_pax = 100.0 # kg
 
 # Hover climb config
@@ -21,9 +22,6 @@ hover_descent_distance = 1000*0.3048 # m; 1000 ft
 
 # No credit climb/descent
 no_credit_distance = (6500-6000)*0.3048 # m; 500 ft
-
-# List of cruise powers
-cruise_power_list = np.zeros_like(cruise_speed_list)
 
 for i, cruise_speed in enumerate(cruise_speed_list):
 	print(f'Solving power for cruise speed = {cruise_speed} km/h')
@@ -61,11 +59,13 @@ for i, cruise_speed in enumerate(cruise_speed_list):
 	analysis = PowerAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity)
 	results = analysis.evaluate(record=False)
 
-	cruise_power_list[i] = results.get_val('Power|segment_3', 'kW')[0]
+	results_dict = {'cruise_speed': cruise_speed,
+					'cruise_power': results.get_val('Power|segment_3', 'kW')[0],
+					'profile_power': results.get_val('Power|segment_3|profile_power', 'kW')[0],
+					'induced_power': results.get_val('Power|segment_3|induced_power', 'kW')[0],
+					'propulsive_power': results.get_val('Power|segment_3|propulsive_power', 'kW')[0]}
 
-plt.plot(cruise_speed_list, cruise_power_list, '-o')
-plt.xlabel('Cruise speed [km/h]')
-plt.ylabel('Cruise power [kW]')
-plt.grid()
-plt.show()
+	results_df = pd.DataFrame(results_dict, index=[i])
+
+	results_df.to_csv('multirotor_P_vs_v.csv', mode='a', header=True if i==0 else False)
 

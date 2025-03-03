@@ -32,7 +32,7 @@ mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', spee
 
 # Design and operation variables
 design_var1 = {'r_lift_rotor': 4.0}
-operation_var1 = {'RPM_lift_rotor': {'hover_climb':500.0,'cruise':450.0}, 'cruise_speed': cruise_speed}
+operation_var1 = {'RPM_lift_rotor': {'hover_climb':None,'cruise':450.0}, 'cruise_speed': cruise_speed}
 design_var2 = {'wing_area': 20.0, 'wing_aspect_ratio': 12.0, 'r_lift_rotor': 1.524, 'r_propeller': 1.37}
 operation_var2 = {'RPM_lift_rotor': {'hover_climb':500.0}, 'RPM_propeller': {'cruise':370.0}, 'cruise_speed': cruise_speed}
 
@@ -44,11 +44,16 @@ vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, operation_var2, tfs, n_pax=6
 # vehicle1.print_info()
 
 # Fidelity
-fidelity = {'aero':1, 'hover_climb':1}
+fidelity = {'aero':1, 'hover_climb':0}
 if fidelity['hover_climb'] == 0:
 	vehicle1.weight.max_takeoff = 2141.99321998
 	vehicle2.weight.max_takeoff = 2142.96575588
 elif fidelity['hover_climb'] == 1:
+	vehicle1.weight.max_takeoff = 2117.516898
+	vehicle1.lift_rotor.RPM['hover_climb'] = 350.0
+	vehicle2.weight.max_takeoff = 2143.508481
+	vehicle2.lift_rotor.RPM['hover_climb'] = 900.0
+elif fidelity['hover_climb'] == 2:
 	vehicle1.weight.max_takeoff = 2199.6029094
 	vehicle1.lift_rotor.global_twist = 7.8645777892370585
 	vehicle1.lift_rotor.RPM['hover_climb'] = 354.76421553294784
@@ -62,7 +67,7 @@ results = analysis.evaluate(record=True)
 
 plot_performance_by_segments(mission=mission, vehicle=vehicle1)
 
-# Note:
-# Analyses to check:
-# 	fidelity['hover_climb'] in [0, 1]
-# 	vehicle=vehicle1 or vehicle=vehicle2
+Note:
+Analyses to check:
+	fidelity['hover_climb'] in [0, 1]
+	vehicle=vehicle1 or vehicle=vehicle2
