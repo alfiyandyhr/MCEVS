@@ -32,7 +32,7 @@ mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', spee
 
 # Design and operation variables
 design_var = {'r_lift_rotor': 4.0}
-operation_var = {'RPM_lift_rotor': {'cruise':450.0}}
+operation_var = {'RPM_lift_rotor': {'hover_climb':None, 'cruise':450.0}}
 
 # Technology factors
 tfs = {'tf_structure':0.8, 'tf_propulsion':0.8, 'tf_equipment':0.8}
@@ -41,9 +41,15 @@ tfs = {'tf_structure':0.8, 'tf_propulsion':0.8, 'tf_equipment':0.8}
 vehicle = StandardMultirotorEVTOL(design_var, operation_var, tfs, n_pax=6, payload_per_pax=payload_per_pax)
 # vehicle.print_info()
 
+# Solver fidelity
+fidelity = {'aero':1, 'hover_climb':0}
+if fidelity['hover_climb'] == 0: vehicle.lift_rotor.RPM['hover_climb'] = 400.0
+elif fidelity['hover_climb'] == 1: vehicle.lift_rotor.RPM['hover_climb'] = 400.0
+elif fidelity['hover_climb'] == 2: vehicle.lift_rotor.RPM['hover_climb'] = 500.0
+
 # Analysis
-analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity={'aero':1, 'hover_climb':2}, sizing_mode=True, solved_by='optimization')
-results = analysis.evaluate(record=True, value_guess={'hover_climb_RPM':500.0, 'mtow':2500.0})
+analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity, sizing_mode=True, solved_by='optimization')
+results = analysis.evaluate(record=False, mtow_guess=2500.0)
 
 # plot_performance_by_segments(mission=mission, vehicle=vehicle)
 
@@ -69,5 +75,6 @@ print('\n--- Sanity Check: Residuals and others---')
 print(f"LiftRotor|global_twist = {results.get_val('LiftRotor|global_twist')[0]}")
 print(f"LiftRotor|HoverClimb|RPM = {results.get_val('LiftRotor|HoverClimb|RPM')[0]}")
 print(f"LiftRotor|HoverClimb|FM = {results.get_val('LiftRotor|HoverClimb|FM')[0]}")
-# print(f"LiftRotor|HoverClimb|thrust_residual_square = {results.get_val('LiftRotor|HoverClimb|thrust_residual_square')[0]}")
+if fidelity['hover_climb'] == 2:
+	print(f"LiftRotor|HoverClimb|thrust_residual_square = {results.get_val('LiftRotor|HoverClimb|thrust_residual_square')[0]}")
 print('Weight|residual = ', results.get_val('Weight|residual')[0])

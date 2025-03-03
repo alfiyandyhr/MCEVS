@@ -32,7 +32,7 @@ mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', spee
 
 # Design and operation variables
 design_var = {'wing_area': 20.0, 'wing_aspect_ratio': 12.0, 'r_lift_rotor': 1.524, 'r_propeller': 1.37}
-operation_var = {'RPM_propeller': {'cruise':370.0}}
+operation_var = {'RPM_lift_rotor':{'hover_climb':None}, 'RPM_propeller': {'cruise':370.0}}
 
 # Technology factors
 tfs = {'tf_structure':0.8, 'tf_propulsion':0.8, 'tf_equipment':0.8}
@@ -41,9 +41,15 @@ tfs = {'tf_structure':0.8, 'tf_propulsion':0.8, 'tf_equipment':0.8}
 vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, tfs, n_pax=6, payload_per_pax=payload_per_pax)
 # vehicle.print_info()
 
+# Solver fidelity
+fidelity = {'aero':1, 'hover_climb':0}
+if fidelity['hover_climb'] == 0: vehicle.lift_rotor.RPM['hover_climb'] = 400.0
+elif fidelity['hover_climb'] == 1: vehicle.lift_rotor.RPM['hover_climb'] = 900.0
+elif fidelity['hover_climb'] == 2: vehicle.lift_rotor.RPM['hover_climb'] = 500.0
+
 # Analysis
-analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity={'aero':1, 'hover_climb':0}, sizing_mode=True, solved_by='optimization')
-results = analysis.evaluate(record=True, value_guess={'hover_climb_RPM':500.0, 'mtow':2500.0})
+analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity, sizing_mode=True, solved_by='optimization')
+results = analysis.evaluate(record=True, mtow_guess=2500.0)
 
 # plot_performance_by_segments(mission=mission, vehicle=vehicle)
 

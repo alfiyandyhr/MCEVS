@@ -46,8 +46,8 @@ vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, operation_var2, tfs, n_pax=6
 # Fidelity
 fidelity = {'aero':1, 'hover_climb':0}
 if fidelity['hover_climb'] == 0:
-	vehicle1.weight.max_takeoff = 2141.852446
-	vehicle1.lift_rotor.RPM['hover_climb'] = 500.0
+	vehicle1.weight.max_takeoff = 2141.733343
+	vehicle1.lift_rotor.RPM['hover_climb'] = 400.0
 	vehicle2.weight.max_takeoff = 2142.965925
 	vehicle2.lift_rotor.RPM['hover_climb'] = 500.0
 elif fidelity['hover_climb'] == 1:
@@ -78,7 +78,7 @@ print('Power segment_4 = ', results.get_val('Power|segment_4', 'kW'))
 print('Power segment_5 = ', results.get_val('Power|segment_5', 'kW'))
 print('FM = ', results.get_val('LiftRotor|HoverClimb|FM'))
 
-plot_performance_by_segments(mission=mission, vehicle=vehicle)
+# plot_performance_by_segments(mission=mission, vehicle=vehicle)
 
 # Note:
 # Analyses to check:
