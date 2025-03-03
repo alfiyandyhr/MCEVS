@@ -68,7 +68,7 @@ class WeightAnalysis(object):
 		if self.solved_by not in ['optimization', 'nonlinear_solver']:
 			raise NotImplementedError('"solved_by" should be either "optimization" or "nonlinear_solver"')
 
-	def evaluate(self, record=False, value_guess={'hover_climb_RPM':None, 'mtow':None}):
+	def evaluate(self, record=False, mtow_guess=None):
 
 		# --- Design parameters --- #
 
@@ -95,6 +95,9 @@ class WeightAnalysis(object):
 		for segment in self.mission.segments:
 			if segment.kind == 'HoverClimbConstantSpeed':
 				indeps.add_output('Mission|hover_climb_speed', segment.speed, units='m/s')
+				indeps.add_output('LiftRotor|HoverClimb|RPM', self.vehicle.lift_rotor.RPM['hover_climb'], units='rpm')
+			if segment.kind == 'HoverDescentConstantSpeed':
+				indeps.add_output('Mission|hover_descent_speed', segment.speed, units='m/s')
 			if segment.kind == 'CruiseConstantSpeed':
 				indeps.add_output('Mission|cruise_speed', segment.speed, units='m/s')
 				if self.vehicle.configuration == 'Multirotor':
@@ -180,13 +183,9 @@ class WeightAnalysis(object):
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
 
-		# Hover climb guess
-		hover_climb_RPM_guess = 500.0 if value_guess['hover_climb_RPM'] is None else value_guess['hover_climb_RPM'] # rpm
-		indeps.add_output('LiftRotor|HoverClimb|RPM', hover_climb_RPM_guess, units='rpm')
-
 		# Sizing or not sizing
 		if not self.sizing_mode:
-			mtow_guess = 1500.0 if value_guess['mtow'] is None else value_guess['mtow']
+			mtow_guess = 1500.0 if mtow_guess is None else mtow_guess
 			indeps.add_output('Weight|takeoff', mtow_guess, units='kg') # mtow initial guess
 			prob.setup(check=False)
 			# prob.check_partials(compact_print=True, method='fd')
@@ -195,10 +194,10 @@ class WeightAnalysis(object):
 		else:
 			if self.solved_by == 'optimization':
 				prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
-				mtow_guess = 1500.0 if value_guess['mtow'] is None else value_guess['mtow']
+				mtow_guess = 1500.0 if mtow_guess is None else mtow_guess
 				indeps.add_output('Weight|takeoff', mtow_guess, units='kg') # mtow initial guess
 
-				if self.fidelity['hover_climb'] == 0:
+				if self.fidelity['hover_climb'] in [0,1]:
 					prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000)
 					prob.model.add_objective('Weight|residual')
 					prob.setup(check=False)
@@ -321,7 +320,7 @@ class MTOWEstimation(om.Group):
 		# includes the weight of rotors, motors, and controllers
 
 		self.add_subsystem('propulsion_weight',
-							PropulsionWeight(vehicle=vehicle, fidelity=fidelity, tf_propulsion=vehicle.tf_propulsion),
+							PropulsionWeight(vehicle=vehicle, tf_propulsion=vehicle.tf_propulsion),
 							promotes_inputs=['*'],
 							promotes_outputs=['*'])
 		if vehicle.configuration == 'Multirotor':
