@@ -42,7 +42,7 @@ vehicle = StandardMultirotorEVTOL(design_var, operation_var, tfs, n_pax=6, paylo
 # vehicle.print_info()
 
 # Analysis
-analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity={'aero':1, 'hover_climb':0}, sizing_mode=True, solved_by='optimization')
+analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity={'aero':1, 'hover_climb':2}, sizing_mode=True, solved_by='optimization')
 results = analysis.evaluate(record=True, value_guess={'hover_climb_RPM':500.0, 'mtow':2500.0})
 
 # plot_performance_by_segments(mission=mission, vehicle=vehicle)
