@@ -7,6 +7,7 @@ class MotorWeight(om.ExplicitComponent):
 	Parameters:
 		N_motor	: number of motors
 		tf 		: technology factor
+		PM 		: power margin
 	Inputs:
 		max_power : maximum power, i.e., power during climb [W]
 	Outputs:
@@ -19,6 +20,7 @@ class MotorWeight(om.ExplicitComponent):
 	"""
 	def initialize(self):
 		self.options.declare('N_motor', types=int, desc='Number of motors')
+		self.options.declare('PM', types=float, desc='Power margin')
 		self.options.declare('tf', types=float, desc='Technology factor')
 
 	def setup(self):
@@ -29,7 +31,7 @@ class MotorWeight(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		N_motor = self.options['N_motor']
 		tf = self.options['tf']
-		p_max = inputs['max_power']/1000.0 # in [kW]
+		p_max = (1 + self.options['PM']/100) * inputs['max_power']/1000.0 # in [kW]
 
 		# Calculating W_motors
 		W_motor = 0.2138 * p_max/N_motor
@@ -39,7 +41,7 @@ class MotorWeight(om.ExplicitComponent):
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		partials['Weight|motors', 'max_power'] = tf * 0.2138/1000.0
+		partials['Weight|motors', 'max_power'] = tf * 0.2138/1000.0 * (1 + self.options['PM']/100)
 
 class MotorWeightV1(om.ExplicitComponent):
 	"""

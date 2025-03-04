@@ -42,7 +42,7 @@ vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, tfs, n_pax=6, p
 # vehicle.print_info()
 
 # Solver fidelity
-fidelity = {'aero':1, 'hover_climb':0}
+fidelity = {'aero':1, 'hover_climb':2}
 if fidelity['hover_climb'] == 0: vehicle.lift_rotor.RPM['hover_climb'] = 400.0
 elif fidelity['hover_climb'] == 1: vehicle.lift_rotor.RPM['hover_climb'] = 900.0
 elif fidelity['hover_climb'] == 2: vehicle.lift_rotor.RPM['hover_climb'] = 500.0

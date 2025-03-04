@@ -42,7 +42,7 @@ def StandardMultirotorEVTOL(design_var:dict,
 		vehicle.add_component(kind='lift_rotor', n_rotor=4, n_blade=5, n_section=8, airfoil='BOEING_VERTOL_VR12',
 							  radius=r_lift_rotor, hub_radius=0.12*r_lift_rotor, mean_c_to_R=mean_c_to_R,
 							  r_to_R_list=r_to_R_list, c_to_R_list=c_to_R_list, w_to_R_list=w_to_R_list, pitch_list=pitch_list,
-							  global_twist=4.1, Cd0=0.0089, figure_of_merit=0.75, RPM=RPM_lift_rotor)
+							  global_twist=4.1, Cd0=0.0089, figure_of_merit=0.75, RPM=RPM_lift_rotor, motor_power_margin=50.0)
 	
 	elif n_pax == 6:
 		vehicle.add_component(kind='fuselage', length=21.0*0.3048, max_diameter=6.7455*0.3048, number_of_passenger=n_pax, payload_per_pax=payload_per_pax)
@@ -51,7 +51,7 @@ def StandardMultirotorEVTOL(design_var:dict,
 		vehicle.add_component(kind='lift_rotor', n_rotor=4, n_blade=3, n_section=8, airfoil='BOEING_VERTOL_VR12_Viterna_for_NASA_QR',
 							  radius=r_lift_rotor, hub_radius=0.12*r_lift_rotor, mean_c_to_R=mean_c_to_R,
 							  r_to_R_list=r_to_R_list, c_to_R_list=c_to_R_list, w_to_R_list=w_to_R_list, pitch_list=pitch_list,
-							  global_twist=4.1, Cd0=0.0089, figure_of_merit=0.75, RPM=RPM_lift_rotor)
+							  global_twist=4.1, Cd0=0.0089, figure_of_merit=0.75, RPM=RPM_lift_rotor, motor_power_margin=50.0)
 
 	return vehicle
 
@@ -112,11 +112,11 @@ def StandardLiftPlusCruiseEVTOL(design_var:dict,
 		vehicle.add_component(kind='lift_rotor', n_rotor=8, n_blade=2, n_section=8, airfoil='BOEING_VERTOL_VR12',
 							  radius=r_lift_rotor, hub_radius=0.21*r_lift_rotor, mean_c_to_R=mean_c_to_R1, r_to_R_list=r_to_R_list1, c_to_R_list=c_to_R_list1,
 							  pitch_list=pitch_list1, global_twist=global_twist1, hub_length=l_rotor_hub, hub_max_diameter=d_rotor_hub,
-							  figure_of_merit=0.75, RPM=RPM_lift_rotor)
+							  figure_of_merit=0.75, RPM=RPM_lift_rotor, motor_power_margin=50.0)
 		vehicle.add_component(kind='propeller', n_propeller=1, n_blade=4, n_section=8, airfoil='BOEING_VERTOL_VR12',
 							  radius=r_propeller, hub_radius=0.21*r_propeller, mean_c_to_R=mean_c_to_R2, r_to_R_list=r_to_R_list2, c_to_R_list=c_to_R_list2,
 							  pitch_list=pitch_list2, global_twist=global_twist2, hub_length=l_prop_hub, hub_max_diameter=d_prop_hub,
-							  figure_of_merit=0.75, Cd0=0.0089, RPM=RPM_propeller)
+							  figure_of_merit=0.75, Cd0=0.0089, RPM=RPM_propeller, motor_power_margin=50.0)
 
 	if n_pax == 6:
 		vehicle.add_component(kind='fuselage', length=30.0*0.3048, max_diameter=6.12707*0.3048, number_of_passenger=n_pax, payload_per_pax=payload_per_pax)
@@ -129,10 +129,10 @@ def StandardLiftPlusCruiseEVTOL(design_var:dict,
 		vehicle.add_component(kind='lift_rotor', n_rotor=8, n_blade=2, n_section=8, airfoil='BOEING_VERTOL_VR12_Viterna_for_NASA_LPC',
 							  radius=r_lift_rotor, hub_radius=0.21*r_lift_rotor, mean_c_to_R=mean_c_to_R1, r_to_R_list=r_to_R_list1, c_to_R_list=c_to_R_list1, w_to_R_list=w_to_R_list1,
 							  pitch_list=pitch_list1, global_twist=global_twist1, hub_length=0.3048, hub_max_diameter=2.25*0.3048,
-							  figure_of_merit=0.75, Cd0=0.0089, RPM=RPM_lift_rotor)
+							  figure_of_merit=0.75, Cd0=0.0089, RPM=RPM_lift_rotor, motor_power_margin=50.0)
 		vehicle.add_component(kind='propeller', n_propeller=1, n_blade=6, n_section=8, airfoil='BOEING_VERTOL_VR12_Viterna_for_NASA_LPC',
 							  radius=r_propeller, hub_radius=0.21*r_propeller, mean_c_to_R=mean_c_to_R2, r_to_R_list=r_to_R_list2, c_to_R_list=c_to_R_list2, w_to_R_list=w_to_R_list2,
 							  pitch_list=pitch_list2, global_twist=global_twist2, hub_length=0.3048, hub_max_diameter=1.5*0.3048,
-							  figure_of_merit=0.75, Cd0=0.0089, RPM=RPM_propeller)
+							  figure_of_merit=0.75, Cd0=0.0089, RPM=RPM_propeller, motor_power_margin=50.0)
 
 	return vehicle

@@ -40,6 +40,9 @@ class LiftRotor(object):
 		# Use of new material that reduces weight?
 		self.technology_factor = None
 
+		# Attached motor
+		self.motor_power_margin = 50.0 # %; default value
+
 	def _initialize(self):
 		for item in list(self.kwargs):
 			if item == 'n_rotor':
@@ -80,6 +83,8 @@ class LiftRotor(object):
 				self.RPM = self.kwargs[item]
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
+			elif item == 'motor_power_margin':
+				self.motor_power_margin = float(self.kwargs[item])
 
 		self.solidity = self.n_blade * self.mean_c_to_R / np.pi
 
@@ -108,7 +113,8 @@ class LiftRotor(object):
 		info += f'\t\tMean c_to_R = {self.mean_c_to_R}\n'
 		info += f'\t\tCd0 = {self.Cd0}\n'
 		info += f'\t\tFigure of Merit = {self.figure_of_merit}\n'
-		info += f'\t\tRPM = {self.RPM}'
+		info += f'\t\tRPM = {self.RPM}\n'
+		info += f'\t\tMotor power margin = {self.motor_power_margin}%'
 		return info
 
 	def print_info(self):
@@ -130,6 +136,7 @@ class LiftRotor(object):
 		print(f'\tCd0 = {self.Cd0}')
 		print(f'\tFigure of Merit = {self.figure_of_merit}')
 		print(f'\tRPM = {self.RPM}')
+		print(f'\tMotor power margin = {self.motor_power_margin}%')
 
 class Propeller(object):
 	"""
@@ -169,7 +176,10 @@ class Propeller(object):
 		self.hub_max_diameter = None	
 
 		# Use of new material that reduces weight?
-		self.technology_factor = None	
+		self.technology_factor = None
+
+		# Attached motor
+		self.motor_power_margin = 50.0 # %; default value
 
 	def _initialize(self):
 		for item in list(self.kwargs):
@@ -211,6 +221,8 @@ class Propeller(object):
 				self.RPM = self.kwargs[item]
 			elif item == 'technology_factor':
 				self.technology_factor = float(self.kwargs[item])
+			elif item == 'motor_power_margin':
+				self.motor_power_margin = float(self.kwargs[item])
 
 		self.solidity = self.n_blade * self.mean_c_to_R / np.pi
 
@@ -239,7 +251,8 @@ class Propeller(object):
 		info += f'\t\tMean c_to_R = {self.mean_c_to_R}\n'
 		info += f'\t\tCd0 = {self.Cd0}\n'
 		info += f'\t\tFigure of Merit = {self.figure_of_merit}\n'
-		info += f'\t\tRPM = {self.RPM}'
+		info += f'\t\tRPM = {self.RPM}\n'
+		info += f'\t\tMotor power margin = {self.motor_power_margin}%'
 		return info
 
 	def print_info(self):
@@ -261,9 +274,5 @@ class Propeller(object):
 		print(f'\tCd0 = {self.Cd0}')
 		print(f'\tFigure of Merit = {self.figure_of_merit}')
 		print(f'\tRPM = {self.RPM}')
-
-
-
-
-
+		print(f'\tMotor power margin = {self.motor_power_margin}%')
 
