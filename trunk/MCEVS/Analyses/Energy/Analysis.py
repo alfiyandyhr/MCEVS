@@ -1,6 +1,7 @@
 import numpy as np
 import openmdao.api as om
 from MCEVS.Analyses.Power.Analysis import PowerRequirement
+from MCEVS.Analyses.Geometry.Rotor import MeanChord
 from MCEVS.Utils.Performance import record_performance_by_segments
 
 class EnergyAnalysis(object):
@@ -16,38 +17,45 @@ class EnergyAnalysis(object):
 	def evaluate(self, record=False):
 		# print('### --- Solving for energy requirement --- ###')
 
-		# MTOW should be defined if not in sizing mode
-		mtow = self.vehicle.weight.max_takeoff 		# kg
-
 		# --- Design parameters --- #
 
 		if self.vehicle.configuration == 'Multirotor':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
 			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
-			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
+			mean_c_to_R_lift_rotor 	= self.vehicle.lift_rotor.mean_c_to_R
 			global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  # deg
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
 			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
-			c_lift_rotor 			= self.vehicle.lift_rotor.chord 		# m
+			mean_c_to_R_lift_rotor 	= self.vehicle.lift_rotor.mean_c_to_R
 			global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  # deg
 			r_propeller 			= self.vehicle.propeller.radius 		# m
-			c_propeller 			= self.vehicle.propeller.chord  		# m
+			mean_c_to_R_propeller 	= self.vehicle.propeller.mean_c_to_R
 			wing_area 				= self.vehicle.wing.area 				# m**2
 			wing_aspect_ratio 		= self.vehicle.wing.aspect_ratio
-
-		for segment in self.mission.segments:
-			if segment.kind == 'CruiseConstantSpeed':
-				cruise_speed = segment.speed 			# m/s
 
 		# --- OpenMDAO probolem --- #
 		prob = om.Problem()
 		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
-		indeps.add_output('Weight|takeoff', mtow, units='kg')
+		# MTOW should be defined since this is not in sizing mode
+		if self.vehicle.weight.max_takeoff is None:
+			raise ValueError('Vehicle MTOW should be defined, since PowerAnalysis() is never in sizing mode!')
+		else:
+			indeps.add_output('Weight|takeoff', self.vehicle.weight.max_takeoff, units='kg')
+
+		# Hover climb RPM should be defined since this is not in sizing mode
+		if self.vehicle.lift_rotor.RPM['hover_climb'] is None:
+			raise ValueError('Hover climb RPM should be defined, since PowerAnalysis() is never in sizing mode!')
+		else:
+			indeps.add_output('LiftRotor|HoverClimb|RPM', self.vehicle.lift_rotor.RPM['hover_climb'], units='rpm')
 
 		for segment in self.mission.segments:
+			if segment.kind == 'HoverClimbConstantSpeed':
+				indeps.add_output('Mission|hover_climb_speed', segment.speed, units='m/s')
+			if segment.kind == 'HoverDescentConstantSpeed':
+				indeps.add_output('Mission|hover_descent_speed', segment.speed, units='m/s')
 			if segment.kind == 'CruiseConstantSpeed':
 				indeps.add_output('Mission|cruise_speed', segment.speed, units='m/s')
 				if self.vehicle.configuration == 'Multirotor':
@@ -67,65 +75,72 @@ class EnergyAnalysis(object):
 
 		if self.vehicle.configuration == 'Multirotor':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|mean_c_to_R', mean_c_to_R_lift_rotor, units=None)
 			indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
-			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|global_twist', global_twist_lift_rotor, units='deg')
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
 			indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
+			indeps.add_output('LiftRotor|mean_c_to_R', mean_c_to_R_lift_rotor, units=None)
 			indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
-			indeps.add_output('LiftRotor|chord', c_lift_rotor, units='m')
 			indeps.add_output('LiftRotor|global_twist', global_twist_lift_rotor, units='deg')
 			indeps.add_output('Propeller|radius', r_propeller, units='m')
-			indeps.add_output('Propeller|chord', c_propeller, units='m')
+			indeps.add_output('Propeller|mean_c_to_R', mean_c_to_R_propeller, units=None)
 			indeps.add_output('Wing|area', wing_area, units='m**2')
 			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
 
-		# Lift rotor variables needed for BEMT
-		if self.fidelity['hover_climb'] == 1:
+		# Variables needed for BEMT
+		if self.fidelity['hover_climb'] == 2:
 			n_sections = self.vehicle.lift_rotor.n_section
-			radius_list = np.array(self.vehicle.lift_rotor.r_to_R_list) * self.vehicle.lift_rotor.radius
-			chord_list = np.array(self.vehicle.lift_rotor.c_to_R_list) * self.vehicle.lift_rotor.radius
-			pitch_list = np.array(self.vehicle.lift_rotor.pitch_list)
+			r_to_R_list = self.vehicle.lift_rotor.r_to_R_list
+			c_to_R_list = self.vehicle.lift_rotor.c_to_R_list
+			w_to_R_list = self.vehicle.lift_rotor.w_to_R_list
+			if self.vehicle.lift_rotor.pitch_linear_grad is not None:
+				indeps.add_output(f'LiftRotor|pitch_linear_grad', self.vehicle.lift_rotor.pitch_linear_grad, units='deg')
+			else:
+				pitch_list = np.array(self.vehicle.lift_rotor.pitch_list)
+				for i in range(n_sections):
+					indeps.add_output(f'LiftRotor|Section{i+1}|pitch', pitch_list[i], units='deg')
 			for i in range(n_sections):
-				if i == 0:
-					width = 2*(radius_list[i] - r_hub_lift_rotor)
-				elif i == n_sections-1:
-					width = 2*(r_lift_rotor - radius_list[i])
-				else:
-					width = radius_list[i] - radius_list[i-1]
+				indeps.add_output(f'LiftRotor|Section{i+1}|r_to_R', r_to_R_list[i], units=None)
+				indeps.add_output(f'LiftRotor|Section{i+1}|c_to_R', c_to_R_list[i], units=None)
+				indeps.add_output(f'LiftRotor|Section{i+1}|w_to_R', w_to_R_list[i], units=None)
 
-				indeps.add_output(f'LiftRotor|Section{i+1}|radius', radius_list[i], units='m')
-				indeps.add_output(f'LiftRotor|Section{i+1}|chord', chord_list[i], units='m')
-				indeps.add_output(f'LiftRotor|Section{i+1}|pitch', pitch_list[i], units='deg')
-				indeps.add_output(f'LiftRotor|Section{i+1}|width', width, units='m')
-			indeps.add_output('LiftRotor|HoverClimb|RPM', 1000.0, units='rpm') # rpm guess
-		
+		# Geometric analysis
+		if self.vehicle.configuration == 'Multirotor':
+			# Convert mean_c_to_R into mean_chord
+			prob.model.add_subsystem('chord_calc_lift_rotor',
+									  MeanChord(),
+									  promotes_inputs=[('mean_c_to_R', 'LiftRotor|mean_c_to_R'), ('R', 'LiftRotor|radius')],
+									  promotes_outputs=[('mean_chord', 'LiftRotor|chord')])
+
+		elif self.vehicle.configuration == 'LiftPlusCruise':
+			# Convert mean_c_to_R into mean_chord
+			prob.model.add_subsystem('chord_calc_lift_rotor',
+									  MeanChord(),
+									  promotes_inputs=[('mean_c_to_R', 'LiftRotor|mean_c_to_R'), ('R', 'LiftRotor|radius')],
+									  promotes_outputs=[('mean_chord', 'LiftRotor|chord')])
+			prob.model.add_subsystem('chord_calc_propeller',
+									  MeanChord(),
+									  promotes_inputs=[('mean_c_to_R', 'Propeller|mean_c_to_R'), ('R', 'Propeller|radius')],
+									  promotes_outputs=[('mean_chord', 'Propeller|chord')])
+
+		# Core energy module
 		prob.model.add_subsystem('energy_model',
 								  EnergyConsumption(mission=self.mission,
-								  					vehicle=self.vehicle,
-								  					fidelity=self.fidelity),
+								  				   vehicle=self.vehicle,
+								  				   fidelity=self.fidelity),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
 
-		if self.fidelity['hover_climb'] == 0:
-			prob.setup(check=False)
-			prob.run_model()
-
-		elif self.fidelity['hover_climb'] == 1:
-			prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=False)
-			prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10, upper=5000)
-			prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square')
-			prob.setup(check=False)
-			prob.run_driver()
-			# prob.run_model()
+		# Run the model (not in sizing mode !!!)
+		prob.setup(check=False)
+		prob.run_model()
 
 		if record:
 			record_performance_by_segments(prob, self.vehicle.configuration, self.mission)
 
-		# self.total_energy_required = prob.get_val('energy_cnsmp', 'kW*h')[0]
 		return prob
-		# return f'Total energy required is {self.total_energy_required} kWh'
 
 class EnergyConsumption(om.Group):
 	"""
