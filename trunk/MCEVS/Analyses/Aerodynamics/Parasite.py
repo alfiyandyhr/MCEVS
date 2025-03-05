@@ -81,7 +81,7 @@ class VehicleParasiteDragFidelityOne(om.ExplicitComponent):
 		self.add_output('Aero|parasite_drag_vehicle', units='N', desc='Parasite drag')
 		self.add_output('Aero|f_total_non_hub', units='m**2', desc='Total quivalent flat plate area of vehicle without rotor hubs')
 		self.add_output('Aero|f_fuselage', units='m**2', desc='Fuselage equivalent flat plate area')
-		self.declare_partials('*', '*', method='fd')
+		self.declare_partials('*', '*', method='cs')
 
 	def compute(self, inputs, outputs):
 		vehicle = self.options['vehicle']

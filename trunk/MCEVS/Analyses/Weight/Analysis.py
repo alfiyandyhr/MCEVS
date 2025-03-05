@@ -209,7 +209,6 @@ class WeightAnalysis(object):
 					prob.model.add_design_var('LiftRotor|global_twist', lower=0.0, upper=100.0)
 					prob.model.add_objective('Weight|residual')
 					prob.model.add_constraint('LiftRotor|HoverClimb|thrust_residual_square', lower=0, upper=0.1)
-					prob.model.add_constraint('LiftRotor|HoverClimb|FM', lower=0.5, upper=0.8)
 					prob.setup(check=False)
 					prob.run_driver()
 

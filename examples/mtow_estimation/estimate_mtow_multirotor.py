@@ -28,6 +28,7 @@ mission.add_segment(name='No Credit Climb', kind='NoCreditClimb', distance_Y=no_
 mission.add_segment('Cruise', kind='CruiseConstantSpeed', speed=cruise_speed, distance=mission_range, n_discrete=10)
 mission.add_segment(name='No Credit Descent', kind='NoCreditDescent', distance_Y=no_credit_distance, distance_X=0.0, n_discrete=10)
 mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', speed=hover_descent_speed, distance=hover_descent_distance, n_discrete=10)
+mission.add_segment(name='Reserve Cruise', kind='ReserveCruise', duration=20*60)
 # plot_mission_parameters(mission, print_info=False)
 
 # Design and operation variables
@@ -42,7 +43,7 @@ vehicle = StandardMultirotorEVTOL(design_var, operation_var, tfs, n_pax=6, paylo
 # vehicle.print_info()
 
 # Solver fidelity
-fidelity = {'aero':1, 'hover_climb':0}
+fidelity = {'aero':1, 'hover_climb':2}
 if fidelity['hover_climb'] == 0: vehicle.lift_rotor.RPM['hover_climb'] = 400.0
 elif fidelity['hover_climb'] == 1: vehicle.lift_rotor.RPM['hover_climb'] = 400.0
 elif fidelity['hover_climb'] == 2: vehicle.lift_rotor.RPM['hover_climb'] = 500.0
