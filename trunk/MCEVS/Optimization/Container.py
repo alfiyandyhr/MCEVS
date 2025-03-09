@@ -62,7 +62,7 @@ class DesignProblem(object):
 		Inputs:
 			name: name of the variables in OpenMDAO format
 				available:
-					- Mission|cruise_speed
+					- Mission|segment_{id}|speed
 					- Wing|area
 						  |aspect_ratio
 					- LiftRotor|radius
@@ -78,7 +78,7 @@ class DesignProblem(object):
 			name: name of the variables in OpenMDAO format
 				available:
 					* Operation variables
-						- Mission|cruise_speed
+						- Mission|segment_{id}|speed
 						- LiftRotor|HoverClimb|RPM
 								   |Climb|RPM
 								   |Cruise|RPM
@@ -105,7 +105,7 @@ class DesignProblem(object):
 		Inputs:
 			name: name of the variables in OpenMDAO format
 				available:
-					- Mission|cruise_speed
+					- Mission|segment_{id}|speed
 					- Wing|area
 						  |aspect_ratio
 					- LiftRotor|radius
@@ -131,7 +131,6 @@ class DesignProblem(object):
 			if segment.kind == 'HoverClimbConstantSpeed':
 				self.default_input_values['LiftRotor|HoverClimb|RPM'] = [self.vehicle.lift_rotor.RPM['hover_climb'], 'rpm']
 			if segment.kind == 'CruiseConstantSpeed':
-				self.default_input_values['Mission|cruise_speed'] = [segment.speed, 'm/s']
 				if self.vehicle.configuration == 'Multirotor':
 					self.default_input_values['LiftRotor|Cruise|RPM'] = [self.vehicle.lift_rotor.RPM['cruise'], 'rpm']
 				elif self.vehicle.configuration == 'LiftPlusCruise':
