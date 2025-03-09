@@ -43,7 +43,7 @@ vehicle = StandardMultirotorEVTOL(design_var, operation_var, tfs, n_pax=6, paylo
 # vehicle.print_info()
 
 # Solver fidelity
-fidelity = {'aero':1, 'hover_climb':2}
+fidelity = {'aero':1, 'hover_climb':0}
 if fidelity['hover_climb'] == 0: vehicle.lift_rotor.RPM['hover_climb'] = 400.0
 elif fidelity['hover_climb'] == 1: vehicle.lift_rotor.RPM['hover_climb'] = 400.0
 elif fidelity['hover_climb'] == 2: vehicle.lift_rotor.RPM['hover_climb'] = 500.0
