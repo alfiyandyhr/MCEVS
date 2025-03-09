@@ -125,6 +125,11 @@ class DesignProblem(object):
 
 		# Operation default input values
 		for segment in self.mission.segments:
+			if segment.kind not in ['ConstantPower','NoCreditClimb','NoCreditDescent','ReserveCruise']:
+				self.default_input_values[f'Mission|segment_{segment.id}|speed'] = [segment.speed, 'm/s']
+				self.default_input_values[f'Mission|segment_{segment.id}|distance'] = [segment.distance, 'm']
+			if segment.kind == 'HoverClimbConstantSpeed':
+				self.default_input_values['LiftRotor|HoverClimb|RPM'] = [self.vehicle.lift_rotor.RPM['hover_climb'], 'rpm']
 			if segment.kind == 'CruiseConstantSpeed':
 				self.default_input_values['Mission|cruise_speed'] = [segment.speed, 'm/s']
 				if self.vehicle.configuration == 'Multirotor':

@@ -93,13 +93,12 @@ class WeightAnalysis(object):
 		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
 		for segment in self.mission.segments:
+			if segment.kind not in ['ConstantPower','NoCreditClimb','NoCreditDescent','ReserveCruise']:
+				indeps.add_output(f'Mission|segment_{segment.id}|speed', segment.speed, units='m/s')
+				indeps.add_output(f'Mission|segment_{segment.id}|distance', segment.distance, units='m')
 			if segment.kind == 'HoverClimbConstantSpeed':
-				indeps.add_output('Mission|hover_climb_speed', segment.speed, units='m/s')
 				indeps.add_output('LiftRotor|HoverClimb|RPM', self.vehicle.lift_rotor.RPM['hover_climb'], units='rpm')
-			if segment.kind == 'HoverDescentConstantSpeed':
-				indeps.add_output('Mission|hover_descent_speed', segment.speed, units='m/s')
 			if segment.kind == 'CruiseConstantSpeed':
-				indeps.add_output('Mission|cruise_speed', segment.speed, units='m/s')
 				if self.vehicle.configuration == 'Multirotor':
 					indeps.add_output('LiftRotor|Cruise|RPM', self.vehicle.lift_rotor.RPM['cruise'], units='rpm')
 				elif self.vehicle.configuration == 'LiftPlusCruise':

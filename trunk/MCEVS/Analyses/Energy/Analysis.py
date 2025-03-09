@@ -52,12 +52,10 @@ class EnergyAnalysis(object):
 			indeps.add_output('LiftRotor|HoverClimb|RPM', self.vehicle.lift_rotor.RPM['hover_climb'], units='rpm')
 
 		for segment in self.mission.segments:
-			if segment.kind == 'HoverClimbConstantSpeed':
-				indeps.add_output('Mission|hover_climb_speed', segment.speed, units='m/s')
-			if segment.kind == 'HoverDescentConstantSpeed':
-				indeps.add_output('Mission|hover_descent_speed', segment.speed, units='m/s')
+			if segment.kind not in ['ConstantPower','NoCreditClimb','NoCreditDescent','ReserveCruise']:
+				indeps.add_output(f'Mission|segment_{segment.id}|speed', segment.speed, units='m/s')
+				indeps.add_output(f'Mission|segment_{segment.id}|distance', segment.distance, units='m')
 			if segment.kind == 'CruiseConstantSpeed':
-				indeps.add_output('Mission|cruise_speed', segment.speed, units='m/s')
 				if self.vehicle.configuration == 'Multirotor':
 					indeps.add_output('LiftRotor|Cruise|RPM', self.vehicle.lift_rotor.RPM['cruise'], units='rpm')
 				elif self.vehicle.configuration == 'LiftPlusCruise':
@@ -189,8 +187,15 @@ class EnergyConsumption(om.Group):
 
 		# Mission variables
 		indep = self.add_subsystem('mission_var', om.IndepVarComp())
-		for id in range(1,mission.n_segments+1):
-			indep.add_output(f'segment_time_{id}', val=mission.segments[id-1].duration, units='s')
+		for i in range(1,mission.n_segments+1):
+			if mission.segments[i-1].kind in ['ConstantPower','NoCreditClimb','NoCreditDescent','ReserveCruise']:
+				indep.add_output(f'segment_time_{i}', val=mission.segments[i-1].duration, units='s')
+			else:
+				kwargs_time_id = {f'segment_time_{i}': {'units':'s'}}
+				self.add_subsystem(f'calc_segment_time_{i}',
+									om.ExecComp(f'segment_time_{i} = distance / speed', **kwargs_time_id, distance={'units':'m'}, speed={'units':'m/s'}),
+									promotes_inputs=[('distance', f'Mission|segment_{i}|distance'), ('speed', f'Mission|segment_{i}|speed')],
+									promotes_outputs=[(f'segment_time_{i}', f'Mission|segment_{i}|duration')])
 		indep.add_output('n_repetition', val=mission.n_repetition)
 
 		# Writing energy equation from power
@@ -219,7 +224,10 @@ class EnergyConsumption(om.Group):
 
 		for i in range(1,mission.n_segments+1): 
 			self.connect(f'Power|segment_{i}', f'energy_one_mission.power_segment_{i}')
-			self.connect(f'mission_var.segment_time_{i}', f'energy_one_mission.segment_time_{i}')
+			if mission.segments[i-1].kind in ['ConstantPower','NoCreditClimb','NoCreditDescent','ReserveCruise']:
+				self.connect(f'mission_var.segment_time_{i}', f'energy_one_mission.segment_time_{i}')
+			else:
+				self.connect(f'Mission|segment_{i}|duration', f'energy_one_mission.segment_time_{i}')
 
 		# -- Reserve mission energy --- #
 		if len(mission.segments) == mission.n_segments: # meaning that there is no reserve mission

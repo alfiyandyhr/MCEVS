@@ -59,12 +59,10 @@ class PowerAnalysis(object):
 			indeps.add_output('LiftRotor|HoverClimb|RPM', self.vehicle.lift_rotor.RPM['hover_climb'], units='rpm')
 
 		for segment in self.mission.segments:
-			if segment.kind == 'HoverClimbConstantSpeed':
-				indeps.add_output('Mission|hover_climb_speed', segment.speed, units='m/s')
-			if segment.kind == 'HoverDescentConstantSpeed':
-				indeps.add_output('Mission|hover_descent_speed', segment.speed, units='m/s')
+			if segment.kind not in ['ConstantPower','NoCreditClimb','NoCreditDescent','ReserveCruise']:
+				indeps.add_output(f'Mission|segment_{segment.id}|speed', segment.speed, units='m/s')
+				indeps.add_output(f'Mission|segment_{segment.id}|distance', segment.distance, units='m')
 			if segment.kind == 'CruiseConstantSpeed':
-				indeps.add_output('Mission|cruise_speed', segment.speed, units='m/s')
 				if self.vehicle.configuration == 'Multirotor':
 					indeps.add_output('LiftRotor|Cruise|RPM', self.vehicle.lift_rotor.RPM['cruise'], units='rpm')
 				elif self.vehicle.configuration == 'LiftPlusCruise':
@@ -232,7 +230,7 @@ class PowerRequirement(om.Group):
 				if fidelity['hover_climb'] == 0:
 					self.add_subsystem(f'segment_{segment.id}_power',
 										PowerHoverClimbConstantSpeedFidelityZero(N_rotor=N_lift_rotor, hover_FM=hover_FM_lift_rotor, rho_air=rho_air, g=g),
-										promotes_inputs=['Weight|takeoff', 'Mission|hover_climb_speed', 'LiftRotor|*'],
+										promotes_inputs=['Weight|takeoff', ('Mission|hover_climb_speed',f'Mission|segment_{segment.id}|speed'), 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
 														  ('FM','LiftRotor|HoverClimb|FM'), ('LiftRotor|T_to_P', 'LiftRotor|HoverClimb|T_to_P')])
@@ -240,7 +238,7 @@ class PowerRequirement(om.Group):
 				elif fidelity['hover_climb'] == 1:
 					self.add_subsystem(f'segment_{segment.id}_power',
 										PowerHoverClimbConstantSpeedFidelityOne(N_rotor=N_lift_rotor, hover_FM=hover_FM_lift_rotor, n_blade=n_blade_lift_rotor, Cd0=Cd0_lift_rotor, rho_air=rho_air, g=g),
-										promotes_inputs=['Weight|takeoff', 'Mission|hover_climb_speed', 'LiftRotor|*'],
+										promotes_inputs=['Weight|takeoff', ('Mission|hover_climb_speed',f'Mission|segment_{segment.id}|speed'), 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 														  ('LiftRotor|HoverClimb|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
 														  'LiftRotor|HoverClimb|FM','LiftRotor|HoverClimb|thrust_coefficient'])
@@ -248,7 +246,7 @@ class PowerRequirement(om.Group):
 				elif fidelity['hover_climb'] == 2:
 					self.add_subsystem(f'segment_{segment.id}_power',
 										PowerHoverClimbConstantSpeedFidelityTwo(vehicle=vehicle, rho_air=rho_air, g=g),
-										promotes_inputs=['Weight|takeoff', 'Mission|hover_climb_speed', 'LiftRotor|*'],
+										promotes_inputs=['Weight|takeoff', ('Mission|hover_climb_speed',f'Mission|segment_{segment.id}|speed'), 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
 														  ('thrust_residual_square','LiftRotor|HoverClimb|thrust_residual_square'), ('J','LiftRotor|HoverClimb|J'),
@@ -257,7 +255,7 @@ class PowerRequirement(om.Group):
 			if segment.kind == 'HoverDescentConstantSpeed':
 				self.add_subsystem(f'segment_{segment.id}_power',
 									PowerHoverDescentConstantSpeed(N_rotor=N_lift_rotor, hover_FM=hover_FM_lift_rotor, rho_air=rho_air, g=g),
-									promotes_inputs=['Weight|takeoff', 'Mission|hover_descent_speed', 'LiftRotor|radius'],
+									promotes_inputs=['Weight|takeoff', ('Mission|hover_descent_speed',f'Mission|segment_{segment.id}|speed'), 'LiftRotor|radius'],
 									promotes_outputs=[('Power|HoverDescentConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 													  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'), ('LiftRotor|T_to_P', 'LiftRotor|HoverDescent|T_to_P')])
 			
@@ -301,7 +299,7 @@ class PowerRequirement(om.Group):
 				if vehicle.configuration == 'Multirotor':
 					self.add_subsystem(f'segment_{segment.id}_power',
 										PowerCruiseConstantSpeedEdgewise(vehicle=vehicle, N_rotor=N_lift_rotor, n_blade=n_blade_lift_rotor, Cd0=Cd0_lift_rotor, hover_FM=hover_FM_lift_rotor, rho_air=rho_air, mu_air=mu_air, g=g, fidelity=fidelity),
-										promotes_inputs=['Weight|*', 'Mission|*', 'LiftRotor|*'],
+										promotes_inputs=['Weight|*', ('Mission|cruise_speed',f'Mission|segment_{segment.id}|speed'), 'LiftRotor|*'],
 										promotes_outputs=[('Power|CruiseConstantSpeed', f'Power|LiftRotor|segment_{segment.id}'), 'LiftRotor|Cruise|T_to_P', ('Power|profile_power', f'Power|segment_{segment.id}|profile_power'),
 														  ('Power|induced_power', f'Power|segment_{segment.id}|induced_power'), ('Power|propulsive_power', f'Power|segment_{segment.id}|propulsive_power'),
 														  ('LiftRotor|Cruise|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'), 'LiftRotor|Cruise|mu',
@@ -310,7 +308,7 @@ class PowerRequirement(om.Group):
 				elif vehicle.configuration == 'LiftPlusCruise':
 					self.add_subsystem(f'segment_{segment.id}_power',
 										PowerCruiseConstantSpeedWithWing(vehicle=vehicle, N_propeller=N_propeller, n_blade=n_blade_propeller, rho_air=rho_air, mu_air=mu_air, Cd0=Cd0_propeller, hover_FM=hover_FM_propeller, g=g, AoA=AoA, fidelity=fidelity),
-										promotes_inputs=['Weight|*', 'Mission|*', 'Wing|*', 'Propeller|*'],
+										promotes_inputs=['Weight|*', ('Mission|cruise_speed',f'Mission|segment_{segment.id}|speed'), 'Wing|*', 'Propeller|*'],
 										promotes_outputs=[('Power|CruiseConstantSpeed', f'Power|Propeller|segment_{segment.id}'), 'Propeller|Cruise|T_to_P', ('Power|profile_power', f'Power|segment_{segment.id}|profile_power'),
 														  ('Power|induced_power', f'Power|segment_{segment.id}|induced_power'), ('Power|propulsive_power', f'Power|segment_{segment.id}|propulsive_power'),
 														   'Aero|Cruise|CL', 'Propeller|Cruise|thrust_coefficient', 'Propeller|Cruise|J',

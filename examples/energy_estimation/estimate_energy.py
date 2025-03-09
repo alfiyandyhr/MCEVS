@@ -45,7 +45,7 @@ vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, operation_var2, tfs, n_pax=6
 # vehicle1.print_info()
 
 # Fidelity
-fidelity = {'aero':1, 'hover_climb':2}
+fidelity = {'aero':1, 'hover_climb':0}
 if fidelity['hover_climb'] == 0:
 	vehicle1.weight.max_takeoff = 3131.595333
 	vehicle1.lift_rotor.RPM['hover_climb'] = 400.0
@@ -65,7 +65,7 @@ elif fidelity['hover_climb'] == 2:
 	vehicle2.lift_rotor.RPM['hover_climb'] = 704.6420168
 
 # Analysis (change vehicle=vehicle1 or vehicle=vehicle2)
-vehicle = vehicle2
+vehicle = vehicle1
 
 # Run analysis
 analysis = EnergyAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity)

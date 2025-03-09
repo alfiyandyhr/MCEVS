@@ -20,6 +20,7 @@ def StandardMissionProfile(mission_range, cruise_speed):
 	mission.add_segment('Cruise', kind='CruiseConstantSpeed', speed=cruise_speed, distance=mission_range, AoA=5.0, n_discrete=10)
 	mission.add_segment(name='No Credit Descent', kind='NoCreditDescent', distance_Y=no_credit_distance, distance_X=0.0, n_discrete=10)
 	mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', speed=hover_descent_speed, distance=hover_descent_distance, n_discrete=10)
+	mission.add_segment(name='Reserve Cruise', kind='ReserveCruise', duration=20*60)
 	# plot_mission_parameters(mission, print_info=False)
 
 	return mission
