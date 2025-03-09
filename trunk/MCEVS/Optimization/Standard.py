@@ -20,7 +20,7 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 			problem.add_design_var('LiftRotor|radius', 1.0, 5.0, vehicle.lift_rotor.radius, 'm')
 			problem.add_design_var('LiftRotor|Cruise|RPM', 100.0, 1500.0, vehicle.lift_rotor.RPM['cruise'], 'rpm')
 			if speed_as_design_var:
-				problem.add_design_var('Mission|cruise_speed', 80*1000/3600, 320*1000/3600, mission.segments[2].speed, 'm/s')
+				problem.add_design_var('Mission|segment_2|speed', 80*1000/3600, 320*1000/3600, mission.segments[2].speed, 'm/s')
 
 			problem.add_constraint('Weight|residual', 0.0, 0.0, 'kg')
 			problem.add_constraint('LiftRotor|Cruise|mu', 0.01, 1.0, None)
@@ -40,7 +40,7 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 
 		# Mission requirements
 		results['mission_range'] = mission.segments[2].distance/1000.0 	# km
-		results['cruise_speed'] = res.get_val('Mission|cruise_speed', 'km/h')[0] if speed_as_design_var else mission.segments[2].speed*3.6 # km/h
+		results['cruise_speed'] = res.get_val('Mission|segment_2|speed', 'km/h')[0] if speed_as_design_var else mission.segments[2].speed*3.6 # km/h
 		results['endurance'] = (mission.segments[0].duration + mission.segments[2].duration + mission.segments[4].duration + mission.segments[5].duration)/3600.0 # h
 
 		# Design objective, variables, and constraints
@@ -88,7 +88,7 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 			problem.add_design_var('Propeller|radius', 0.8, 2.1, vehicle.propeller.radius, 'm')
 			problem.add_design_var('Propeller|Cruise|RPM', 100.0, 1500.0, vehicle.propeller.RPM['cruise'], 'rpm')
 			if speed_as_design_var:
-				problem.add_design_var('Mission|cruise_speed', 80*1000/3600, 320*1000/3600, mission.segments[2].speed, 'm/s')
+				problem.add_design_var('Mission|segment_2|speed', 80*1000/3600, 320*1000/3600, mission.segments[2].speed, 'm/s')
 
 			problem.add_constraint('Weight|residual', 0.0, 0.0, 'kg')
 			problem.add_constraint('Aero|Cruise|CL', 0.0, 0.9)
@@ -109,7 +109,7 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 
 		# Mission requirements
 		results['mission_range'] = mission.segments[2].distance/1000.0	# km
-		results['cruise_speed'] = res.get_val('Mission|cruise_speed', 'km/h')[0] if speed_as_design_var else mission.segments[2].speed*3.6 # km/h
+		results['cruise_speed'] = res.get_val('Mission|segment_2|speed', 'km/h')[0] if speed_as_design_var else mission.segments[2].speed*3.6 # km/h
 		results['endurance'] = (mission.segments[0].duration + mission.segments[2].duration + mission.segments[4].duration + mission.segments[5].duration)/3600.0 # h
 
 		# Design objective, variables, and constraints
