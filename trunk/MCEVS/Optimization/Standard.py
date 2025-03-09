@@ -5,6 +5,10 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 
 	if not print: sys.stdout = open('/dev/null', 'w')  # Redirect stdout to /dev/null
 
+	for segment in mission.segments:
+		if segment.kind == 'CruiseConstantSpeed':
+			cruise_segment_id = segment.id
+
 	if vehicle.configuration == 'Multirotor':
 
 		# Design problem
@@ -20,7 +24,7 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 			problem.add_design_var('LiftRotor|radius', 1.0, 5.0, vehicle.lift_rotor.radius, 'm')
 			problem.add_design_var('LiftRotor|Cruise|RPM', 100.0, 1500.0, vehicle.lift_rotor.RPM['cruise'], 'rpm')
 			if speed_as_design_var:
-				problem.add_design_var('Mission|segment_2|speed', 80*1000/3600, 320*1000/3600, mission.segments[2].speed, 'm/s')
+				problem.add_design_var(f'Mission|segment_{cruise_segment_id}|speed', 80*1000/3600, 320*1000/3600, mission.segments[cruise_segment_id-1].speed, 'm/s')
 
 			problem.add_constraint('Weight|residual', 0.0, 0.0, 'kg')
 			problem.add_constraint('LiftRotor|Cruise|mu', 0.01, 1.0, None)
@@ -39,9 +43,9 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 		results = {}
 
 		# Mission requirements
-		results['mission_range'] = mission.segments[2].distance/1000.0 	# km
-		results['cruise_speed'] = res.get_val('Mission|segment_2|speed', 'km/h')[0] if speed_as_design_var else mission.segments[2].speed*3.6 # km/h
-		results['endurance'] = (mission.segments[0].duration + mission.segments[2].duration + mission.segments[4].duration + mission.segments[5].duration)/3600.0 # h
+		results['mission_range'] = mission.segments[cruise_segment_id-1].distance/1000.0 	# km
+		results['cruise_speed'] = res.get_val(f'Mission|segment_{cruise_segment_id}|speed', 'km/h')[0] if speed_as_design_var else mission.segments[cruise_segment_id-1].speed*3.6 # km/h
+		results['endurance'] = (mission.segments[0].duration + mission.segments[cruise_segment_id-1].duration + mission.segments[4].duration + mission.segments[5].duration)/3600.0 # h
 
 		# Design objective, variables, and constraints
 		results['Weight|takeoff'] = res.get_val('Weight|takeoff', 'kg')[0]
@@ -88,7 +92,7 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 			problem.add_design_var('Propeller|radius', 0.8, 2.1, vehicle.propeller.radius, 'm')
 			problem.add_design_var('Propeller|Cruise|RPM', 100.0, 1500.0, vehicle.propeller.RPM['cruise'], 'rpm')
 			if speed_as_design_var:
-				problem.add_design_var('Mission|segment_2|speed', 80*1000/3600, 320*1000/3600, mission.segments[2].speed, 'm/s')
+				problem.add_design_var(f'Mission|segment_{cruise_segment_id}|speed', 80*1000/3600, 320*1000/3600, mission.segments[cruise_segment_id-1].speed, 'm/s')
 
 			problem.add_constraint('Weight|residual', 0.0, 0.0, 'kg')
 			problem.add_constraint('Aero|Cruise|CL', 0.0, 0.9)
@@ -108,9 +112,9 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 		results = {}		
 
 		# Mission requirements
-		results['mission_range'] = mission.segments[2].distance/1000.0	# km
-		results['cruise_speed'] = res.get_val('Mission|segment_2|speed', 'km/h')[0] if speed_as_design_var else mission.segments[2].speed*3.6 # km/h
-		results['endurance'] = (mission.segments[0].duration + mission.segments[2].duration + mission.segments[4].duration + mission.segments[5].duration)/3600.0 # h
+		results['mission_range'] = mission.segments[cruise_segment_id-1].distance/1000.0	# km
+		results['cruise_speed'] = res.get_val(f'Mission|segment_{cruise_segment_id}|speed', 'km/h')[0] if speed_as_design_var else mission.segments[cruise_segment_id-1].speed*3.6 # km/h
+		results['endurance'] = (mission.segments[0].duration + mission.segments[cruise_segment_id-1].duration + mission.segments[4].duration + mission.segments[5].duration)/3600.0 # h
 
 		# Design objective, variables, and constraints
 		results['Weight|takeoff'] = res.get_val('Weight|takeoff', 'kg')[0]
