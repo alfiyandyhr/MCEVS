@@ -1,9 +1,12 @@
 from MCEVS.Optimization.Container import DesignProblem
+import os
 import sys
 
 def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_guess:bool, speed_as_design_var:bool, print=True):
 
-	if not print: sys.stdout = open('/dev/null', 'w')  # Redirect stdout to /dev/null
+	if not print: 
+		if os.name =='posix': sys.stdout = open('/dev/null', 'w')  # Redirect stdout to /dev/null
+		if os.name =='nt': sys.stdout = open(os.devnull, 'w')  # Redirect stdout to os.devnull
 
 	for segment in mission.segments:
 		if segment.kind == 'CruiseConstantSpeed':
