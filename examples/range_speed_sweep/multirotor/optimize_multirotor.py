@@ -56,7 +56,6 @@ if run_without_speed_as_design_var_all_opt:
 	for i, mission_range in enumerate(range_array):
 		for j, cruise_speed in enumerate(speed_array):
 
-			# if mission_range in [220] and cruise_speed == 240:
 			iter_idx = i*len(speed_array)+j+1
 			print(f"Iter= {iter_idx}, Range= {mission_range}, Speed= {cruise_speed}")
 			sys.stdout.flush() # To flush the above print output
