@@ -19,8 +19,8 @@ range_grid, speed_grid = np.meshgrid(range_array, speed_array)
 
 if plot_multi_range_optimal_speed:
 
-	data_df = pd.read_csv('multirotor/Multirotor_OPT_results_with_speed_as_design_var.csv')
-	data_df2 = pd.read_csv('liftcruise/Liftcruise_OPT_results_with_speed_as_design_var.csv')
+	data_df = pd.read_csv('multirotor/results_with_speed_as_design_var.csv')
+	data_df2 = pd.read_csv('liftcruise/results_with_speed_as_design_var.csv')
 
 	data_df = data_df[data_df['Weight|residual']<0.1]
 	data_df = data_df[data_df['LiftRotor|HoverClimb|T_to_P']<12.01]
@@ -49,8 +49,8 @@ if plot_multi_range_optimal_speed:
 
 if plot_multi_range_single_speed:
 
-	data_df = pd.read_csv('multirotor/Multirotor_OPT_results_without_speed_as_design_var.csv')
-	data_df2 = pd.read_csv('liftcruise/Liftcruise_OPT_results_without_speed_as_design_var.csv')
+	data_df = pd.read_csv('multirotor/results_without_speed_as_design_var.csv')
+	data_df2 = pd.read_csv('liftcruise/results_without_speed_as_design_var.csv')
 
 	data_df = data_df[data_df['Weight|residual']<0.1]
 	data_df = data_df[data_df['LiftRotor|HoverClimb|T_to_P']<12.01]
@@ -82,8 +82,8 @@ if plot_multi_range_single_speed:
 
 if plot_multi_range_multi_speed_optimal_config or plot_multi_range_multi_speed_optimal_config_around_uber_vehicle_requirement:
 
-	data_df = pd.read_csv('multirotor/Multirotor_OPT_results_without_speed_as_design_var.csv')
-	data_df2 = pd.read_csv('liftcruise/Liftcruise_OPT_results_without_speed_as_design_var.csv')
+	data_df = pd.read_csv('multirotor/results_without_speed_as_design_var.csv')
+	data_df2 = pd.read_csv('liftcruise/results_without_speed_as_design_var.csv')
 
 	# Filtering
 	# data_df = data_df[data_df['Weight|residual']<1.0]
