@@ -14,6 +14,8 @@ run_with_speed_as_design_var_all_opt = False
 
 rerun_without_speed_as_design_var_all_opt = False
 
+battery_energy_density = 250 # [250,400]
+
 # Mission requirement sweep
 range_i, range_f, d_range = 10, 230, 10 	# km
 speed_i, speed_f, d_speed = 80, 330, 10 	# km/h
@@ -85,7 +87,7 @@ if run_without_speed_as_design_var_all_opt:
 
 			results_df = pd.DataFrame(results, index=[iter_idx])
 
-			results_df.to_csv('results_without_speed_as_design_var.csv', mode='a', header=True if iter_idx==1 else False)
+			results_df.to_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv', mode='a', header=True if iter_idx==1 else False)
 
 			# Change back to the default guess
 			mtow_guess = 3000.0
@@ -133,10 +135,10 @@ if rerun_without_speed_as_design_var_all_opt:
 				last_column = results_df.columns[-1]
 				results_df = results_df[[last_column] + [col for col in results_df if col != last_column]]
 
-				results_df_ori = pd.read_csv('results_without_speed_as_design_var.csv')
+				results_df_ori = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
 				results_df_ori.iloc[iter_idx-1] = results_df.iloc[0]
 
-				results_df_ori.to_csv('results_without_speed_as_design_var.csv', index=False)
+				results_df_ori.to_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv', index=False)
 
 				# Change back to the default guess
 				mtow_guess = 3000.0
@@ -172,6 +174,6 @@ if run_with_speed_as_design_var_all_opt:
 
 		results_df = pd.DataFrame(results, index=[i])
 
-		results_df.to_csv('results_with_speed_as_design_var.csv', mode='a', header=True if i==0 else False)
+		results_df.to_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv', mode='a', header=True if i==0 else False)
 
 

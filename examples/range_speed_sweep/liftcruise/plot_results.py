@@ -9,8 +9,10 @@ print_best_speed_for_all_range = False
 
 plot_2D_with_speed_as_design_var = False
 
+battery_energy_density = 250 # [250,400]
+
 if print_best_speed_for_all_range:
-	data_df = pd.read_csv('results_without_speed_as_design_var.csv')
+	data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
 	data_df = data_df[data_df['Weight|residual']<0.1]
 	data_df = data_df[data_df['Aero|Cruise|CL']<0.91]
 	data_df = data_df[data_df['LiftRotor|HoverClimb|T_to_P']<12.01]
@@ -23,8 +25,8 @@ if print_best_speed_for_all_range:
 	print(data[['cruise_speed','Weight|takeoff','LiftRotor|radius','Propeller|Cruise|RPM']].sort_values(by='Weight|takeoff'))
 
 if plot_2D:
-	data_df = pd.read_csv('results_without_speed_as_design_var.csv')
-	data_df2 = pd.read_csv('results_with_speed_as_design_var.csv')
+	data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
+	data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
 
 	data_df = data_df[data_df['Weight|residual']<0.1]
 	data_df = data_df[data_df['Aero|Cruise|CL']<0.91]
@@ -59,7 +61,7 @@ if plot_2D:
 	plt.show()
 
 if plot_2D_with_speed_as_design_var:
-	data_df2 = pd.read_csv('results_with_speed_as_design_var.csv')
+	data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
 
 	data_df2 = data_df2[data_df2['Weight|residual']<0.1]
 	data_df2 = data_df2[data_df2['Aero|Cruise|CL']<0.91]
@@ -80,8 +82,8 @@ if plot_2D_with_speed_as_design_var:
 	plt.show()
 
 if plot_contour:
-	data_df = pd.read_csv('results_without_speed_as_design_var.csv')
-	data_df2 = pd.read_csv('results_with_speed_as_design_var.csv')	
+	data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
+	data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')	
 
 	data_df.loc[data_df['Weight|residual']>0.1, 'Weight|takeoff'] = 10000.0
 	data_df.loc[data_df['Aero|Cruise|CL']>0.91, 'Weight|takeoff'] = 10000.0
@@ -110,8 +112,8 @@ if plot_contour:
 	# print(np.nanmin(Z))
 
 if plot_surface:
-	data_df = pd.read_csv('results_without_speed_as_design_var.csv')
-	data_df2 = pd.read_csv('results_with_speed_as_design_var.csv')
+	data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
+	data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
 
 	data_df.loc[data_df['Weight|residual']>0.1, 'Weight|takeoff'] = None
 	data_df.loc[data_df['Aero|Cruise|CL']>0.91, 'Weight|takeoff'] = None
