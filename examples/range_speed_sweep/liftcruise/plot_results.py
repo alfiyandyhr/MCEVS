@@ -9,7 +9,7 @@ print_best_speed_for_all_range = False
 
 plot_2D_with_speed_as_design_var = False
 
-battery_energy_density = 250 # [250,400]
+battery_energy_density = 400 # [250,400]
 
 if print_best_speed_for_all_range:
 	data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
@@ -72,8 +72,8 @@ if plot_2D_with_speed_as_design_var:
 	data_df2 = data_df2[data_df2['Propeller|Cruise|CT/sigma']<0.15]
 	data_df2 = data_df2[data_df2['LiftRotor|clearance_constraint']<0.1]
 
-	# plt.plot(data_df2['mission_range'], data_df2['Weight|takeoff'], '-o', label=f'Cruise speed = optimal speed')
-	plt.plot(data_df2['mission_range'], data_df2['cruise_speed'], '-o', label=f'Cruise speed = optimal speed')
+	plt.plot(data_df2['mission_range'], data_df2['Weight|takeoff'], '-o', label=f'Cruise speed = optimal speed')
+	# plt.plot(data_df2['mission_range'], data_df2['cruise_speed'], '-o', label=f'Cruise speed = optimal speed')
 
 	plt.xlabel('Mission range [km]')
 	plt.ylabel('Optimal MTOW [kg]')

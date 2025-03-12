@@ -9,7 +9,7 @@ print_best_speed_for_all_range = False
 
 plot_2D_with_speed_as_design_var = False
 
-battery_energy_density = 250 # [250,400]
+battery_energy_density = 400 # [250,400]
 
 if print_best_speed_for_all_range:
 	data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
@@ -59,7 +59,7 @@ if plot_2D:
 	for cruise_speed in speed_array:
 		data = data_df[data_df['cruise_speed']==cruise_speed]
 
-		if cruise_speed in [250, 260, 270, 280, 290, 300, 310, 320]:
+		if cruise_speed in [240, 250, 260, 270, 280, 290, 300, 310, 320]:
 			plt.plot(data['mission_range'], data['Weight|takeoff'], '-o', label=f'Cruise speed = {cruise_speed}')
 
 	plt.plot(data_df2['mission_range'], data_df2['Weight|takeoff'], 'k-', label=f'Cruise speed = optimal')
