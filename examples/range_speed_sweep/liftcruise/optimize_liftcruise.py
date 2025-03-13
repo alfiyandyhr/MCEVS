@@ -7,7 +7,7 @@ import pandas as pd
 import sys
 import time
 
-run_without_speed_as_design_var_one_opt = True
+run_without_speed_as_design_var_one_opt = False
 run_with_speed_as_design_var_one_opt = False
 
 run_without_speed_as_design_var_all_opt = False
@@ -15,7 +15,7 @@ run_with_speed_as_design_var_all_opt = False
 
 rerun_without_speed_as_design_var_all_opt = False
 
-battery_energy_density = 400 # [250,400]
+battery_energy_density = 550 # [250,400,550]
 
 # Mission requirement sweep
 range_i, range_f, d_range = 10, 230, 10 	# km
@@ -95,7 +95,60 @@ if run_without_speed_as_design_var_all_opt:
 				if mission_range in [170] and cruise_speed == 280: mtow_guess = 5000.0
 				if mission_range in [110] and cruise_speed == 320: mtow_guess = 5000.0
 			elif battery_energy_density == 400:
-				pass
+				if mission_range in [30,90] and cruise_speed == 120: mtow_guess = 1500.0
+				if mission_range in [10] and cruise_speed == 130: mtow_guess = 1000.0
+				if mission_range in [20] and cruise_speed == 130: mtow_guess = 1500.0
+				if mission_range in [90,170] and cruise_speed == 130: mtow_guess = 2500.0
+				if mission_range in [60] and cruise_speed == 140: mtow_guess = 2000.0
+				if mission_range in [70] and cruise_speed == 140: mtow_guess = 1000.0
+				if mission_range in [140] and cruise_speed == 150: mtow_guess = 2000.0
+				if mission_range in [30] and cruise_speed == 160: mtow_guess = 2000.0
+				if mission_range in [50,60] and cruise_speed == 160: mtow_guess = 1500.0
+				if mission_range in [10,90,100,140,170] and cruise_speed == 160: mtow_guess = 2500.0
+				if mission_range in [70] and cruise_speed == 170: mtow_guess = 1000.0
+				if mission_range in [80,110] and cruise_speed == 170: mtow_guess = 2500.0
+				if mission_range in [10,20] and cruise_speed == 180: mtow_guess = 1000.0
+				if mission_range in [30] and cruise_speed == 180: mtow_guess = 1400.0
+				if mission_range in [60,70] and cruise_speed == 180: mtow_guess = 2000.0
+				if mission_range in [80,150] and cruise_speed == 180: mtow_guess = 1500.0
+				if mission_range in [10,110,200,220] and cruise_speed == 180: mtow_guess = 2500.0
+				if mission_range in [10] and cruise_speed == 190: mtow_guess = 2500.0
+				if mission_range in [20,70,110] and cruise_speed == 190: mtow_guess = 1500.0
+				if mission_range in [200] and cruise_speed == 210: mtow_guess = 2500.0
+				if mission_range in [210] and cruise_speed == 210: mtow_guess = 2000.0
+				if mission_range in [20,60] and cruise_speed == 250: mtow_guess = 2500.0
+				if mission_range == 100 and cruise_speed in [260,270]: mtow_guess = 2500.0
+				if mission_range in [40] and cruise_speed == 280: mtow_guess = 2500.0
+				if mission_range in [180,190] and cruise_speed == 320: mtow_guess = 2500.0
+			elif battery_energy_density == 550:
+				if mission_range in [20] and cruise_speed == 110: mtow_guess = 1250.0
+				if mission_range in [10] and cruise_speed == 120: mtow_guess = 2500.0
+				if mission_range in [30] and cruise_speed == 120: mtow_guess = 1000.0
+				if mission_range in [40] and cruise_speed == 120: mtow_guess = 2000.0
+				if mission_range in [150] and cruise_speed == 120: mtow_guess = 1500.0
+				if mission_range in [60,140] and cruise_speed == 130: mtow_guess = 1500.0
+				if mission_range in [40] and cruise_speed == 140: mtow_guess = 1500.0
+				if mission_range in [60] and cruise_speed == 140: mtow_guess = 2500.0
+				if mission_range in [10,20,30,100] and cruise_speed == 140: mtow_guess = 1000.0
+				if mission_range in [50,60] and cruise_speed == 150: mtow_guess = 1000.0
+				if mission_range in [90,110] and cruise_speed == 150: mtow_guess = 1500.0
+				if mission_range in [40] and cruise_speed == 160: mtow_guess = 1150.0
+				if mission_range in [150] and cruise_speed == 160: mtow_guess = 1400.0
+				if mission_range in [10,20,30,50,70,80,90,110,140,190] and cruise_speed == 160: mtow_guess = 1000.0
+				if mission_range in [10,20,30,40,50,60,70,90,100] and cruise_speed == 170: mtow_guess = 1000.0
+				if mission_range in [110,120,220] and cruise_speed == 170: mtow_guess = 1500.0
+				if mission_range in [130] and cruise_speed == 170: mtow_guess = 2000.0
+				if mission_range in [10,20,30,40,50,60,70,100,110,120] and cruise_speed == 180: mtow_guess = 2500.0
+				if mission_range in [210] and cruise_speed == 180: mtow_guess = 1500.0
+				if mission_range in [10,20,40,50,60,70,80,90,100,140,180] and cruise_speed == 190: mtow_guess = 1500.0
+				if mission_range in [120] and cruise_speed == 190: mtow_guess = 2000.0
+				if mission_range in [10,20,30,40,50,60,80,90,100] and cruise_speed == 200: mtow_guess = 2500.0
+				if mission_range in [40] and cruise_speed == 240: mtow_guess = 2500.0
+				if mission_range in [90,130] and cruise_speed == 250: mtow_guess = 2500.0
+				if mission_range in [40,210] and cruise_speed == 260: mtow_guess = 1500.0
+				if mission_range in [30] and cruise_speed == 270: mtow_guess = 2500.0
+				if mission_range in [10] and cruise_speed == 280: mtow_guess = 2500.0
+				if mission_range in [130,150] and cruise_speed == 310: mtow_guess = 2500.0
 
 			# Standard mission
 			mission_ij = StandardMissionProfile(mission_range*1000, cruise_speed*1000/3600)
@@ -122,7 +175,7 @@ if rerun_without_speed_as_design_var_all_opt:
 	for i, mission_range in enumerate(range_array):
 		for j, cruise_speed in enumerate(speed_array):
 
-			if mission_range in [30] and cruise_speed == 180:
+			if mission_range in [130,150] and cruise_speed == 310:
 				iter_idx = i*len(speed_array)+j+1
 				print(f"Iter= {iter_idx}, Range= {mission_range}, Speed= {cruise_speed}")
 				sys.stdout.flush() # To flush the above print output
@@ -180,6 +233,35 @@ if rerun_without_speed_as_design_var_all_opt:
 					if mission_range == 100 and cruise_speed in [260,270]: mtow_guess = 2500.0
 					if mission_range in [40] and cruise_speed == 280: mtow_guess = 2500.0
 					if mission_range in [180,190] and cruise_speed == 320: mtow_guess = 2500.0
+				elif battery_energy_density == 550:
+					if mission_range in [20] and cruise_speed == 110: mtow_guess = 1250.0
+					if mission_range in [10] and cruise_speed == 120: mtow_guess = 2500.0
+					if mission_range in [30] and cruise_speed == 120: mtow_guess = 1000.0
+					if mission_range in [40] and cruise_speed == 120: mtow_guess = 2000.0
+					if mission_range in [150] and cruise_speed == 120: mtow_guess = 1500.0
+					if mission_range in [60,140] and cruise_speed == 130: mtow_guess = 1500.0
+					if mission_range in [40] and cruise_speed == 140: mtow_guess = 1500.0
+					if mission_range in [60] and cruise_speed == 140: mtow_guess = 2500.0
+					if mission_range in [10,20,30,100] and cruise_speed == 140: mtow_guess = 1000.0
+					if mission_range in [50,60] and cruise_speed == 150: mtow_guess = 1000.0
+					if mission_range in [90,110] and cruise_speed == 150: mtow_guess = 1500.0
+					if mission_range in [40] and cruise_speed == 160: mtow_guess = 1150.0
+					if mission_range in [150] and cruise_speed == 160: mtow_guess = 1400.0
+					if mission_range in [10,20,30,50,70,80,90,110,140,190] and cruise_speed == 160: mtow_guess = 1000.0
+					if mission_range in [10,20,30,40,50,60,70,90,100] and cruise_speed == 170: mtow_guess = 1000.0
+					if mission_range in [110,120,220] and cruise_speed == 170: mtow_guess = 1500.0
+					if mission_range in [130] and cruise_speed == 170: mtow_guess = 2000.0
+					if mission_range in [10,20,30,40,50,60,70,100,110,120] and cruise_speed == 180: mtow_guess = 2500.0
+					if mission_range in [210] and cruise_speed == 180: mtow_guess = 1500.0
+					if mission_range in [10,20,40,50,60,70,80,90,100,140,180] and cruise_speed == 190: mtow_guess = 1500.0
+					if mission_range in [120] and cruise_speed == 190: mtow_guess = 2000.0
+					if mission_range in [10,20,30,40,50,60,80,90,100] and cruise_speed == 200: mtow_guess = 2500.0
+					if mission_range in [40] and cruise_speed == 240: mtow_guess = 2500.0
+					if mission_range in [90,130] and cruise_speed == 250: mtow_guess = 2500.0
+					if mission_range in [40,210] and cruise_speed == 260: mtow_guess = 1500.0
+					if mission_range in [30] and cruise_speed == 270: mtow_guess = 2500.0
+					if mission_range in [10] and cruise_speed == 280: mtow_guess = 2500.0
+					if mission_range in [130,150] and cruise_speed == 310: mtow_guess = 2500.0
 
 				# Standard mission
 				mission_ij = StandardMissionProfile(mission_range*1000, cruise_speed*1000/3600)
@@ -207,7 +289,7 @@ if run_with_speed_as_design_var_all_opt:
 
 	for i, mission_range in enumerate(range_array):
 
-		if mission_range in [10,30]:
+		if mission_range in [40]:
 			sys.stdout.flush() # To flush the above print output
 
 			if battery_energy_density == 250:
@@ -222,6 +304,14 @@ if run_with_speed_as_design_var_all_opt:
 				if mission_range in [20,60,130]: mtow_guess = 1500.0
 				elif mission_range in [10]: mtow_guess = 2500.0
 				elif mission_range in [30]: mtow_guess = 1200.0
+				else: mtow_guess = 1000.0
+			elif battery_energy_density == 550:
+				cruise_speed_guess = 300 # km/h
+				if mission_range in [10,120,150]: mtow_guess = 2000.0
+				elif mission_range in [20]: mtow_guess = 2100.0
+				elif mission_range in [30]: mtow_guess = 2300.0
+				# elif mission_range in [40]: mtow_guess = 1500.0
+				elif mission_range in [60,90]: mtow_guess = 1100.0
 				else: mtow_guess = 1000.0
 
 			# Standard vehicle

@@ -9,7 +9,7 @@ print_best_speed_for_all_range = False
 
 plot_2D_with_speed_as_design_var = False
 
-battery_energy_density = 400 # [250,400]
+battery_energy_density = 550 # [250,400,550]
 
 if print_best_speed_for_all_range:
 	data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')

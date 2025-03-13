@@ -10,11 +10,11 @@ run_without_speed_as_design_var_one_opt = False
 run_with_speed_as_design_var_one_opt = False
 
 run_without_speed_as_design_var_all_opt = False
-run_with_speed_as_design_var_all_opt = True
+run_with_speed_as_design_var_all_opt = False
 
 rerun_without_speed_as_design_var_all_opt = False
 
-battery_energy_density = 400 # [250,400]
+battery_energy_density = 550 # [250,400,550]
 
 # Mission requirement sweep
 range_i, range_f, d_range = 10, 230, 10 	# km
@@ -89,7 +89,21 @@ if run_without_speed_as_design_var_all_opt:
 				if mission_range in [90] and cruise_speed == 190: mtow_guess = 2500.0
 				if mission_range in [160] and cruise_speed == 280: mtow_guess = 5000.0
 			elif battery_energy_density == 400:
-				# if mission_range in [30] and cruise_speed == 90: mtow_guess = 2500.0
+				if mission_range in [110] and cruise_speed == 80: mtow_guess = 5000.0
+				if mission_range in [30] and cruise_speed in [80,140]: mtow_guess = 2500.0
+				if mission_range in [100] and cruise_speed == 80: mtow_guess = 5000.0
+				if mission_range in [10,20,70] and cruise_speed == 90: mtow_guess = 2500.0
+				if mission_range in [80] and cruise_speed == 90: mtow_guess = 2000.0
+				if mission_range == 120 and cruise_speed in [90,100]: mtow_guess = 4000.0
+				if mission_range in [140] and cruise_speed == 110: mtow_guess = 4800.0
+				if mission_range in [150] and cruise_speed == 120: mtow_guess = 2500.0
+				if mission_range in [160] and cruise_speed == 120: mtow_guess = 4800.0
+				if mission_range in [150,190] and cruise_speed == 150: mtow_guess = 2500.0
+				if mission_range in [20,170] and cruise_speed == 170: mtow_guess = 2500.0
+				if mission_range in [180,190] and cruise_speed == 190: mtow_guess = 2500.0
+				if mission_range in [150] and cruise_speed == 220: mtow_guess = 2500.0
+			elif battery_energy_density == 550:
+				# if mission_range in [110] and cruise_speed == 80: mtow_guess = 5000.0
 				pass
 
 			# Standard optimization
@@ -113,7 +127,7 @@ if rerun_without_speed_as_design_var_all_opt:
 	for i, mission_range in enumerate(range_array):
 		for j, cruise_speed in enumerate(speed_array):
 
-			if mission_range in [110] and cruise_speed == 80:
+			if mission_range in [50] and cruise_speed == 240:
 				iter_idx = i*len(speed_array)+j+1
 				print(f"Iter= {iter_idx}, Range= {mission_range}, Speed= {cruise_speed}")
 				sys.stdout.flush() # To flush the above print output
@@ -154,6 +168,20 @@ if rerun_without_speed_as_design_var_all_opt:
 					if mission_range in [20,170] and cruise_speed == 170: mtow_guess = 2500.0
 					if mission_range in [180,190] and cruise_speed == 190: mtow_guess = 2500.0
 					if mission_range in [150] and cruise_speed == 220: mtow_guess = 2500.0
+				elif battery_energy_density == 550:
+					if mission_range in [40,80,100] and cruise_speed == 80: mtow_guess = 2500.0
+					if mission_range in [90,110,120] and cruise_speed == 80: mtow_guess = 2000.0
+					if mission_range in [140] and cruise_speed == 80: mtow_guess = 4000.0
+					if mission_range in [40,70] and cruise_speed == 90: mtow_guess = 2500.0
+					if mission_range in [120] and cruise_speed == 90: mtow_guess = 2000.0
+					if mission_range in [180] and cruise_speed == 90: mtow_guess = 5000.0
+					if mission_range in [40] and cruise_speed == 100: mtow_guess = 2500.0
+					if mission_range in [190] and cruise_speed == 100: mtow_guess = 4000.0
+					if mission_range in [30,190] and cruise_speed == 110: mtow_guess = 2000.0
+					if mission_range in [180] and cruise_speed == 120: mtow_guess = 2000.0
+					if mission_range in [60,140] and cruise_speed == 190: mtow_guess = 2000.0
+					if mission_range in [70] and cruise_speed == 210: mtow_guess = 2000.0
+					if mission_range in [50] and cruise_speed == 240: mtow_guess = 2000.0
 
 				# Standard optimization
 				results = RunStandardOptimization(vehicle, mission_ij, solution_fidelity, mtow_guess, speed_as_design_var=False, print=False)
@@ -189,6 +217,10 @@ if run_with_speed_as_design_var_all_opt:
 		elif battery_energy_density == 400:
 			cruise_speed_guess = 300 # km/h
 			mtow_guess = 1000.0
+		elif battery_energy_density == 550:
+			cruise_speed_guess = 300 # km/h
+			if mission_range in [30]: mtow_guess = 1500.0
+			else: mtow_guess = 1000.0
 
 		# Standard vehicle
 		design_var = {'r_lift_rotor': 4.0}

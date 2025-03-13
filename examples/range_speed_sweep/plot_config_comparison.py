@@ -9,7 +9,7 @@ plot_multi_range_optimal_speed = False
 plot_multi_range_multi_speed_optimal_config = True
 plot_multi_range_multi_speed_optimal_config_around_uber_vehicle_requirement = False
 
-battery_energy_density = 250 # [250,400]
+battery_energy_density = 250 # [250,400,550]
 
 # Mission requirement sweep
 range_i, range_f, d_range = 10, 230, 10 	# km
@@ -88,8 +88,6 @@ if plot_multi_range_multi_speed_optimal_config or plot_multi_range_multi_speed_o
 	data_df2 = pd.read_csv(f'liftcruise/battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
 
 	# Filtering
-	# data_df = data_df[data_df['Weight|residual']<1.0]
-	# data_df2 = data_df2[data_df2['Weight|residual']<1.0]
 	data_df.loc[data_df['Weight|residual'] > 0.1, 'Weight|takeoff'] = np.nan
 	data_df.loc[data_df['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
 	data_df.loc[data_df['LiftRotor|Cruise|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
