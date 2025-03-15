@@ -107,6 +107,7 @@ folders.append('examples/vehicle_creation/LiftPlusCruise_NASA/.vsptime')
 folders.append('examples/vehicle_creation/QuadRotor_NASA/.vsptime')
 folders.append('examples/vehicle_creation/.vsptime')
 folders.append('examples/mtow_estimation/.vsptime')
+folders.append('examples/mtow_validation/vehicles/.vsptime')
 folders.append('examples/range_speed_sweep/multirotor/.vsptime')
 folders.append('examples/range_speed_sweep/liftcruise/.vsptime')
 
