@@ -29,8 +29,7 @@ solution_fidelity = {'aero':1, 'hover_climb':0}
 
 if run_without_speed_as_design_var_one_opt or run_with_speed_as_design_var_one_opt:
 
-	range_ij = 220 # km
-	# range_ij = 100 # km
+	range_ij = 100 # km
 
 	if run_without_speed_as_design_var_one_opt: mtow_guess = 3000.0; speed_ij = 240
 	if run_with_speed_as_design_var_one_opt: mtow_guess = 1000.0; speed_ij = 300
