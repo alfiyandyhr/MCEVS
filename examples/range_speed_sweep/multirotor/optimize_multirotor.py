@@ -1,6 +1,6 @@
 from MCEVS.Vehicles.Standard import StandardMultirotorEVTOL
 from MCEVS.Missions.Standard import StandardMissionProfile
-from MCEVS.Optimization.Standard import RunStandardOptimization
+from MCEVS.Optimization.Standard import RunStandardSingleObjectiveOptimization
 import numpy as np
 import pandas as pd
 import sys
@@ -14,7 +14,7 @@ run_with_speed_as_design_var_all_opt = False
 
 rerun_without_speed_as_design_var_all_opt = False
 
-battery_energy_density = 550 # [250,400,550]
+battery_energy_density = 250 # [250,400,550]
 
 # Mission requirement sweep
 range_i, range_f, d_range = 10, 230, 10 	# km
@@ -48,10 +48,10 @@ if run_without_speed_as_design_var_one_opt or run_with_speed_as_design_var_one_o
 
 	# Standard optimization
 	if run_without_speed_as_design_var_one_opt:
-		results = RunStandardOptimization(vehicle, mission_ij, solution_fidelity, mtow_guess, speed_as_design_var=False, print=True)
+		results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'MTOW', mtow_guess, speed_as_design_var=False, print=True)
 		print(results)
 	if run_with_speed_as_design_var_one_opt:
-		results = RunStandardOptimization(vehicle, mission_ij, solution_fidelity, mtow_guess, speed_as_design_var=True, print=True)
+		results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'MTOW', mtow_guess, speed_as_design_var=True, print=True)
 		print(results)
 
 # Expensive simulations, run once !!!
@@ -106,7 +106,7 @@ if run_without_speed_as_design_var_all_opt:
 				pass
 
 			# Standard optimization
-			results = RunStandardOptimization(vehicle, mission_ij, solution_fidelity, mtow_guess, speed_as_design_var=False, print=False)
+			results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'MTOW', mtow_guess, speed_as_design_var=False, print=False)
 			# print(results)
 
 			results_df = pd.DataFrame(results, index=[iter_idx])
@@ -183,7 +183,7 @@ if rerun_without_speed_as_design_var_all_opt:
 					if mission_range in [50] and cruise_speed == 240: mtow_guess = 2000.0
 
 				# Standard optimization
-				results = RunStandardOptimization(vehicle, mission_ij, solution_fidelity, mtow_guess, speed_as_design_var=False, print=False)
+				results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, mtow_guess, speed_as_design_var=False, print=False)
 				# print(results)
 
 				results['Unnamed: 0'] = iter_idx
@@ -236,7 +236,7 @@ if run_with_speed_as_design_var_all_opt:
 		mission_ij = StandardMissionProfile(mission_range*1000, cruise_speed_guess*1000/3600)
 
 		# Standard optimization
-		results = RunStandardOptimization(vehicle, mission_ij, solution_fidelity, mtow_guess, speed_as_design_var=True, print=False)
+		results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'MTOW', mtow_guess, speed_as_design_var=True, print=False)
 		# print(results)
 
 		results_df = pd.DataFrame(results, index=[i])

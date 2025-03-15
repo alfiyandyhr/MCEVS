@@ -2,7 +2,7 @@ from MCEVS.Optimization.Container import DesignProblem
 import os
 import sys
 
-def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_guess:bool, speed_as_design_var:bool, print=True):
+def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidelity:dict, objective:str, mtow_guess:bool, speed_as_design_var:bool, print=True):
 
 	if not print: 
 		if os.name =='posix': sys.stdout = open('/dev/null', 'w')  # Redirect stdout to /dev/null
@@ -20,8 +20,11 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 								fidelity=fidelity,
 								algorithm='gradient-based')
 
-		problem.add_objective('Weight|takeoff')
-		# problem.add_objective('Weight|battery')
+		if objective == 'MTOW':
+			problem.add_objective('Weight|takeoff')
+		elif objective == 'energy':
+			# problem.add_objective('Weight|battery')
+			problem.add_objective('Energy|entire_mission')
 
 		if fidelity['hover_climb'] == 0:
 			problem.add_design_var('Weight|takeoff', 100.0, 10000.0, mtow_guess, 'kg')
@@ -86,8 +89,11 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 								fidelity=fidelity,
 								algorithm='gradient-based')
 
-		problem.add_objective('Weight|takeoff')
-		# problem.add_objective('Weight|battery')
+		if objective == 'MTOW':
+			problem.add_objective('Weight|takeoff')
+		elif objective == 'energy':
+			# problem.add_objective('Weight|battery')
+			problem.add_objective('Energy|entire_mission')
 
 		if fidelity['hover_climb'] == 0:
 			problem.add_design_var('Weight|takeoff', 100.0, 10000.0, mtow_guess, 'kg')
