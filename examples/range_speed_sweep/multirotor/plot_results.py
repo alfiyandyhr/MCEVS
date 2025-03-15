@@ -9,7 +9,7 @@ print_best_speed_for_all_range = False
 
 plot_2D_with_speed_as_design_var = False
 
-battery_energy_density = 550 # [250,400,550]
+battery_energy_density = 250 # [250,400,550]
 
 if print_best_speed_for_all_range:
 	data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
@@ -102,7 +102,7 @@ if plot_contour:
 	data_df2.loc[data_df2['LiftRotor|Cruise|T_to_P'] > 12.01, 'cruise_speed'] = None
 	data_df2.loc[data_df2['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'cruise_speed'] = None
 	data_df2.loc[data_df2['LiftRotor|Cruise|mu'] > 1, 'cruise_speed'] = None
-	data_df2.loc[data_df2['LiftRotor|Cruise|CT/sigma'] > 0.15, 'Weight|takeoff'] = None
+	data_df2.loc[data_df2['LiftRotor|Cruise|CT/sigma'] > 0.15, 'cruise_speed'] = None
 
 	range_array = np.unique(data_df['mission_range'].to_numpy())
 	speed_array = np.unique(data_df['cruise_speed'].to_numpy())

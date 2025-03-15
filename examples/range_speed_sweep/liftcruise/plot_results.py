@@ -3,13 +3,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 plot_2D = False
-plot_contour = False
+plot_contour = True
 plot_surface = False
 print_best_speed_for_all_range = False
 
 plot_2D_with_speed_as_design_var = False
 
-battery_energy_density = 550 # [250,400,550]
+battery_energy_density = 250 # [250,400,550]
 
 if print_best_speed_for_all_range:
 	data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')

@@ -21,6 +21,7 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 								algorithm='gradient-based')
 
 		problem.add_objective('Weight|takeoff')
+		# problem.add_objective('Weight|battery')
 
 		if fidelity['hover_climb'] == 0:
 			problem.add_design_var('Weight|takeoff', 100.0, 10000.0, mtow_guess, 'kg')
@@ -86,6 +87,7 @@ def RunStandardOptimization(vehicle:object, mission:object, fidelity:dict, mtow_
 								algorithm='gradient-based')
 
 		problem.add_objective('Weight|takeoff')
+		# problem.add_objective('Weight|battery')
 
 		if fidelity['hover_climb'] == 0:
 			problem.add_design_var('Weight|takeoff', 100.0, 10000.0, mtow_guess, 'kg')
