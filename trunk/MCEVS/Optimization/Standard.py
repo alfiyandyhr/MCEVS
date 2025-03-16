@@ -20,11 +20,12 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 								fidelity=fidelity,
 								algorithm='gradient-based')
 
-		if objective == 'MTOW':
-			problem.add_objective('Weight|takeoff')
+		if objective == 'takeoff_weight':
+			problem.add_objective('Weight|takeoff', 3000.0, 'kg')
 		elif objective == 'energy':
-			# problem.add_objective('Weight|battery')
-			problem.add_objective('Energy|entire_mission')
+			problem.add_objective('Energy|entire_mission', 100000.0, 'W*h')
+		elif objective == 'mission_time':
+			problem.add_objective('Mission|total_time', 1800.0, 's')
 
 		if fidelity['hover_climb'] == 0:
 			problem.add_design_var('Weight|takeoff', 100.0, 10000.0, mtow_guess, 'kg')
@@ -33,12 +34,12 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 			if speed_as_design_var:
 				problem.add_design_var(f'Mission|segment_{cruise_segment_id}|speed', 80*1000/3600, 320*1000/3600, mission.segments[cruise_segment_id-1].speed, 'm/s')
 
-			problem.add_constraint('Weight|residual', 0.0, 0.0, 'kg')
-			problem.add_constraint('LiftRotor|Cruise|mu', 0.01, 1.0, None)
-			problem.add_constraint('LiftRotor|Cruise|thrust_coefficient', 0.0, 0.14*vehicle.lift_rotor.solidity)
-			problem.add_constraint('LiftRotor|HoverClimb|T_to_P', 0.0, 12.0)
-			problem.add_constraint('LiftRotor|Cruise|T_to_P', 0.0, 12.0)
-			problem.add_constraint('LiftRotor|HoverDescent|T_to_P', 0.0, 12.0)
+			problem.add_constraint('Weight|residual', 0.0, 0.0, 0.1, 'kg')
+			problem.add_constraint('LiftRotor|Cruise|mu', 0.01, 1.0, 0.5, None)
+			problem.add_constraint('LiftRotor|Cruise|thrust_coefficient', 0.0, 0.14*vehicle.lift_rotor.solidity, 0.10*vehicle.lift_rotor.solidity, None)
+			problem.add_constraint('LiftRotor|HoverClimb|T_to_P', 0.0, 12.0, 10.0, 'g/W')
+			problem.add_constraint('LiftRotor|Cruise|T_to_P', 0.0, 12.0, 10.0, 'g/W')
+			problem.add_constraint('LiftRotor|HoverDescent|T_to_P', 0.0, 12.0, 10.0, 'g/W')
 
 		# Optimization
 		res = problem.run_optimization()
@@ -52,7 +53,10 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 		# Mission requirements
 		results['mission_range'] = mission.segments[cruise_segment_id-1].distance/1000.0 	# km
 		results['cruise_speed'] = res.get_val(f'Mission|segment_{cruise_segment_id}|speed', 'km/h')[0] if speed_as_design_var else mission.segments[cruise_segment_id-1].speed*3.6 # km/h
-		results['endurance'] = (mission.segments[0].duration + mission.segments[cruise_segment_id-1].duration + mission.segments[4].duration + mission.segments[5].duration)/3600.0 # h
+		if speed_as_design_var:
+			results['mission_time'] = res.get_val('Mission|total_time', 'h')[0]
+		else:
+			results['mission_time'] = (mission.segments[0].duration + mission.segments[cruise_segment_id-1].duration + mission.segments[4].duration)/3600.0 # h
 
 		# Design objective, variables, and constraints
 		results['Weight|takeoff'] = res.get_val('Weight|takeoff', 'kg')[0]
@@ -89,11 +93,13 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 								fidelity=fidelity,
 								algorithm='gradient-based')
 
-		if objective == 'MTOW':
+		if objective == 'takeoff_weight':
 			problem.add_objective('Weight|takeoff')
 		elif objective == 'energy':
-			# problem.add_objective('Weight|battery')
-			problem.add_objective('Energy|entire_mission')
+			problem.add_objective('Weight|battery')
+			# problem.add_objective('Energy|one_mission')
+		elif objective == 'mission_time':
+			problem.add_objective('Mission|total_time')
 
 		if fidelity['hover_climb'] == 0:
 			problem.add_design_var('Weight|takeoff', 100.0, 10000.0, mtow_guess, 'kg')
@@ -105,14 +111,14 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 			if speed_as_design_var:
 				problem.add_design_var(f'Mission|segment_{cruise_segment_id}|speed', 80*1000/3600, 320*1000/3600, mission.segments[cruise_segment_id-1].speed, 'm/s')
 
-			problem.add_constraint('Weight|residual', 0.0, 0.0, 'kg')
-			problem.add_constraint('Aero|Cruise|CL', 0.0, 0.9)
-			problem.add_constraint('Propeller|Cruise|J', 0.01, 3.0)
-			problem.add_constraint('Propeller|Cruise|thrust_coefficient', 0.0, 0.14*vehicle.propeller.solidity)
-			problem.add_constraint('LiftRotor|HoverClimb|T_to_P', 0.0, 12.0)
-			problem.add_constraint('Propeller|Cruise|T_to_P', 0.0, 12.0)
-			problem.add_constraint('LiftRotor|HoverDescent|T_to_P', 0.0, 12.0)
-			problem.add_constraint('LiftRotor|clearance_constraint', -1000.0, 0.0)
+			problem.add_constraint('Weight|residual', 0.0, 0.0, 0.1, 'kg')
+			problem.add_constraint('Aero|Cruise|CL', 0.0, 0.9, 0.5, None)
+			problem.add_constraint('Propeller|Cruise|J', 0.01, 3.0, 1.0, None)
+			problem.add_constraint('Propeller|Cruise|thrust_coefficient', 0.0, 0.14*vehicle.propeller.solidity, 0.10*vehicle.propeller.solidity, None)
+			problem.add_constraint('LiftRotor|HoverClimb|T_to_P', 0.0, 12.0, 10.0, 'g/W')
+			problem.add_constraint('Propeller|Cruise|T_to_P', 0.0, 12.0, 10.0, 'g/W')
+			problem.add_constraint('LiftRotor|HoverDescent|T_to_P', 0.0, 12.0, 10.0, 'g/W')
+			problem.add_constraint('LiftRotor|clearance_constraint', -1000.0, 0.0, -0.1, 'm')
 
 		# Optimization
 		res = problem.run_optimization()
@@ -125,7 +131,10 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 		# Mission requirements
 		results['mission_range'] = mission.segments[cruise_segment_id-1].distance/1000.0	# km
 		results['cruise_speed'] = res.get_val(f'Mission|segment_{cruise_segment_id}|speed', 'km/h')[0] if speed_as_design_var else mission.segments[cruise_segment_id-1].speed*3.6 # km/h
-		results['endurance'] = (mission.segments[0].duration + mission.segments[cruise_segment_id-1].duration + mission.segments[4].duration + mission.segments[5].duration)/3600.0 # h
+		if speed_as_design_var:
+			results['mission_time'] = res.get_val('Mission|total_time', 'h')[0]
+		else:
+			results['mission_time'] = (mission.segments[0].duration + mission.segments[cruise_segment_id-1].duration + mission.segments[4].duration)/3600.0 # h
 
 		# Design objective, variables, and constraints
 		results['Weight|takeoff'] = res.get_val('Weight|takeoff', 'kg')[0]

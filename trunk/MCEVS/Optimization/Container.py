@@ -26,7 +26,7 @@ class DesignProblem(object):
 		self.fidelity 	= fidelity
 
 		# Design problem
-		self.objectives				= None
+		self.objectives				= {}
 		self.design_variables		= {}
 		self.constraints 			= {}
 		self.default_input_values 	= {}
@@ -57,7 +57,7 @@ class DesignProblem(object):
 
 		return result
 
-	def add_objective(self, name):
+	def add_objective(self, name:str, ref:float, units=None):
 		"""
 		Inputs:
 			name: name of the variables in OpenMDAO format
@@ -70,7 +70,7 @@ class DesignProblem(object):
 					- Propeller|radius
 							   |advance_ratio
 		"""
-		self.objectives = name
+		self.objectives[name] = [name, ref, units]
 
 	def add_design_var(self, name:str, lower:float, upper:float, init:float, units=None):
 		"""
@@ -100,7 +100,7 @@ class DesignProblem(object):
 		# Append design variable info
 		self.design_variables[name] = [lower, upper, init, units]
 
-	def add_constraint(self, name, lower=float, upper=float, units=None):
+	def add_constraint(self, name, lower:float, upper:float, ref:float, units=None):
 		"""
 		Inputs:
 			name: name of the variables in OpenMDAO format
@@ -114,9 +114,10 @@ class DesignProblem(object):
 							   |advance_ratio
 			lower: lower bound
 			upper: upper bound
+			ref: reference value
 			units: units
 		"""
-		self.constraints[name] = [lower, upper, units]
+		self.constraints[name] = [lower, upper, ref, units]
 
 	def _initialize_default_input_values(self):
 		"""

@@ -198,6 +198,23 @@ class EnergyConsumption(om.Group):
 									promotes_outputs=[(f'segment_time_{i}', f'Mission|segment_{i}|duration')])
 		indep.add_output('n_repetition', val=mission.n_repetition)
 
+		# Calculate total mission time
+		total_mission_time_eq = 'total_mission_time = '
+		kwargs_time = {}
+		for i in range(1,mission.n_segments+1):
+			kwargs_time[f'segment_time_{i}'] = {'units':'s'}
+			total_mission_time_eq += f'segment_time_{i}' if i == mission.n_segments else f'segment_time_{i} + '
+			
+		self.add_subsystem('calc_total_mission_time',
+							om.ExecComp(total_mission_time_eq, **kwargs_time, total_mission_time={'units':'s'}),
+							promotes_outputs=[('total_mission_time', f'Mission|total_time')])
+
+		for i in range(1,mission.n_segments+1):
+			if mission.segments[i-1].kind in ['ConstantPower','NoCreditClimb','NoCreditDescent','ReserveCruise']:
+				self.connect(f'mission_var.segment_time_{i}', f'calc_total_mission_time.segment_time_{i}')
+			else:
+				self.connect(f'Mission|segment_{i}|duration', f'calc_total_mission_time.segment_time_{i}')
+
 		# Writing energy equation from power
 		# energy_cnsmp = power_segment_1 * segment_time_1 + ... + power_segment_n * segment_time_n
 		energy_eq 	 = 'energy_cnsmp = '

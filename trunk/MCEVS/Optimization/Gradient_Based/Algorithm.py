@@ -24,13 +24,17 @@ def run_gradient_based_optimization(DesignProblem:object):
 						  units=DesignProblem.design_variables[var_name][3])
 	
 	# Objective function
-	prob.model.add_objective(DesignProblem.objectives)
+	for obj_name in DesignProblem.objectives:
+		prob.model.add_objective(DesignProblem.objectives[obj_name][0],
+								 ref=DesignProblem.objectives[obj_name][1],
+								 units=DesignProblem.objectives[obj_name][2])
 
 	# Design variables and their boundaries
 	for var_name in DesignProblem.design_variables:
 		prob.model.add_design_var(var_name,
 								  lower=DesignProblem.design_variables[var_name][0],
 								  upper=DesignProblem.design_variables[var_name][1],
+								  ref=DesignProblem.design_variables[var_name][2],
 								  units=DesignProblem.design_variables[var_name][3])
 
 	# Constraints
@@ -38,7 +42,8 @@ def run_gradient_based_optimization(DesignProblem:object):
 		prob.model.add_constraint(cnstr_name,
 								  lower=DesignProblem.constraints[cnstr_name][0],
 								  upper=DesignProblem.constraints[cnstr_name][1],
-								  units=DesignProblem.constraints[cnstr_name][2])
+								  ref=DesignProblem.constraints[cnstr_name][2],
+								  units=DesignProblem.constraints[cnstr_name][3])
 
 	# Geometric analysis
 	if DesignProblem.vehicle.configuration == 'Multirotor':
@@ -67,7 +72,8 @@ def run_gradient_based_optimization(DesignProblem:object):
 								  promotes_outputs=[('mean_chord', 'Propeller|chord')])
 
 	# Analysis
-	if DesignProblem.objectives in ['Weight|takeoff', 'Weight|residual', 'Weight|battery', 'Energy|entire_mission']:
+
+	if list(DesignProblem.objectives.keys())[0] in ['Weight|takeoff', 'Weight|residual', 'Weight|battery', 'Energy|entire_mission', 'Mission|total_time']:
 		prob.model.add_subsystem('weight_estimation',
 								  MTOWEstimation(mission=DesignProblem.mission,
 								  				 vehicle=DesignProblem.vehicle,

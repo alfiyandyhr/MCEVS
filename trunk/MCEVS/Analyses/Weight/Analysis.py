@@ -297,22 +297,22 @@ class MTOWEstimation(om.Group):
 		# 1. Battery weight
 		# battery weight is computed taking into account loss in efficiency,
 		# avionics power, and its maximum discharge rate
-		battery_weight_comp = om.ExecComp('W_battery = energy_req / (battery_rho * battery_eff * battery_max_discharge)',
-										   W_battery={'units': 'kg'},
-										   energy_req={'units': 'W * h'},
-										   battery_rho={'units': 'W * h / kg', 'val': battery_rho},
-										   battery_eff={'val': battery_eff},
-										   battery_max_discharge={'val': battery_max_discharge})
-		self.add_subsystem('battery_weight',
-							battery_weight_comp,
-							promotes_outputs=[('W_battery', 'Weight|battery')])
-		self.connect('Energy|entire_mission', 'battery_weight.energy_req')
+		# battery_weight_comp = om.ExecComp('W_battery = energy_req / (battery_rho * battery_eff * battery_max_discharge)',
+		# 								   W_battery={'units': 'kg'},
+		# 								   energy_req={'units': 'W * h'},
+		# 								   battery_rho={'units': 'W * h / kg', 'val': battery_rho},
+		# 								   battery_eff={'val': battery_eff},
+		# 								   battery_max_discharge={'val': battery_max_discharge})
+		# self.add_subsystem('battery_weight',
+		# 					battery_weight_comp,
+		# 					promotes_outputs=[('W_battery', 'Weight|battery')])
+		# self.connect('Energy|entire_mission', 'battery_weight.energy_req')
 
 		# Alternative approach
-		# self.add_subsystem('battery_weight',
-		# 					BatteryWeight(battery_rho=battery_rho, battery_eff=battery_eff, battery_max_discharge=battery_max_discharge),
-		# 					promotes_inputs=[('required_energy', 'Energy|entire_mission')],
-		# 					promotes_outputs=['Weight|battery'])
+		self.add_subsystem('battery_weight',
+							BatteryWeight(battery_rho=battery_rho, battery_eff=battery_eff, battery_max_discharge=battery_max_discharge),
+							promotes_inputs=[('required_energy', 'Energy|entire_mission')],
+							promotes_outputs=['Weight|battery'])
 
 		# 2. Propulsion weight
 		# includes the weight of rotors, motors, and controllers
