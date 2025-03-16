@@ -5,13 +5,10 @@ import numpy as np
 import pandas as pd
 import sys
 import time
+import warnings
 
-run_with_speed_as_design_var_one_opt = True
+run_with_speed_as_design_var_one_opt = False
 run_with_speed_as_design_var_all_opt = False
-
-objective = 'takeoff_weight'
-# objective = 'energy'
-# objective = 'mission_time'
 
 battery_energy_density = 250 # [250,400,550]
 
@@ -43,13 +40,10 @@ if run_with_speed_as_design_var_one_opt:
 	mission_ij = StandardMissionProfile(range_ij*1000, speed_ij*1000/3600)
 
 	# Standard optimization
-	if objective == 'takeoff_weight':
+	with warnings.catch_warnings():
+		warnings.simplefilter("ignore")
 		results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=True, print=True)
-	elif objective == 'energy':
-		results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'energy', mtow_guess, speed_as_design_var=True, print=True)
-	elif objective == 'mission_time':
-		results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'mission_time', mtow_guess, speed_as_design_var=True, print=True)
-	print(results)
+		print(results)
 
 # Expensive simulations, run once !!!
 if run_with_speed_as_design_var_all_opt:
@@ -58,18 +52,19 @@ if run_with_speed_as_design_var_all_opt:
 
 		sys.stdout.flush() # To flush the above print output
 
+		cruise_speed_guess = 300 # km/h
+
 		if battery_energy_density == 250:
-			if mission_range in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]:
-				cruise_speed_guess = 300 # km/h
+			if mission_range in [10, 20, 30, 40, 50, 60, 80, 90, 100, 110, 120, 130, 140, 150]:
 				mtow_guess = 1000.0
-			if mission_range in [170, 180, 190, 200, 210, 220]:
-				cruise_speed_guess = 300 # km/h
+			elif mission_range in [70, 160]:
+				mtow_guess = 2500.0
+			elif mission_range in [170, 180, 190, 200, 210, 220]:
 				mtow_guess = 5000.0
 		elif battery_energy_density == 400:
-			cruise_speed_guess = 300 # km/h
-			mtow_guess = 1000.0
+			if mission_range in [170, 180, 190]: mtow_guess = 2000.0
+			else: mtow_guess = 1000.0
 		elif battery_energy_density == 550:
-			cruise_speed_guess = 300 # km/h
 			if mission_range in [30]: mtow_guess = 1500.0
 			else: mtow_guess = 1000.0
 
@@ -88,8 +83,10 @@ if run_with_speed_as_design_var_all_opt:
 		mission_ij = StandardMissionProfile(mission_range*1000, cruise_speed_guess*1000/3600)
 
 		# Standard optimization
-		results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, mtow_guess, speed_as_design_var=True, print=False)
-		# print(results)
+		with warnings.catch_warnings():
+			warnings.simplefilter("ignore")
+			results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=True, print=False)
+			# print(results)
 
 		results_df = pd.DataFrame(results, index=[i])
 
