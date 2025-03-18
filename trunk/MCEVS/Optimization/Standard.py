@@ -94,12 +94,11 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 								algorithm='gradient-based')
 
 		if objective == 'takeoff_weight':
-			problem.add_objective('Weight|takeoff')
+			problem.add_objective('Weight|takeoff', 3000.0, 'kg')
 		elif objective == 'energy':
-			problem.add_objective('Weight|battery')
-			# problem.add_objective('Energy|one_mission')
+			problem.add_objective('Energy|entire_mission', 100000.0, 'W*h')
 		elif objective == 'mission_time':
-			problem.add_objective('Mission|total_time')
+			problem.add_objective('Mission|total_time', 1800.0, 's')
 
 		if fidelity['hover_climb'] == 0:
 			problem.add_design_var('Weight|takeoff', 100.0, 10000.0, mtow_guess, 'kg')
@@ -118,7 +117,7 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 			problem.add_constraint('LiftRotor|HoverClimb|T_to_P', 0.0, 12.0, 10.0, 'g/W')
 			problem.add_constraint('Propeller|Cruise|T_to_P', 0.0, 12.0, 10.0, 'g/W')
 			problem.add_constraint('LiftRotor|HoverDescent|T_to_P', 0.0, 12.0, 10.0, 'g/W')
-			problem.add_constraint('LiftRotor|clearance_constraint', -1000.0, 0.0, -0.1, 'm')
+			problem.add_constraint('LiftRotor|clearance_constraint', -1000.0, 0.0, 1.0, 'm')
 
 		# Optimization
 		res = problem.run_optimization()

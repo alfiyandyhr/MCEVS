@@ -24,7 +24,7 @@ class LiftRotorClearanceConstraint(om.ExplicitComponent):
 		self.add_input('LiftRotor|radius', units='m', desc='Lift rotor radius')
 		self.add_input('Wing|area', units='m**2', desc='Wing area')
 		self.add_input('Wing|aspect_ratio', units=None, desc='Wing aspect ratio')
-		self.add_output('clearance_constraint', desc='Spanwise clearance constraint')
+		self.add_output('clearance_constraint', units='m', desc='Spanwise clearance constraint')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
