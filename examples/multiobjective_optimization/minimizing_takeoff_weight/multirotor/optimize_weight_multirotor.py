@@ -6,10 +6,10 @@ import pandas as pd
 import sys
 import warnings
 
-run_with_speed_as_design_var_one_opt = False
+run_with_speed_as_design_var_one_opt = True
 run_with_speed_as_design_var_all_opt = False
 
-battery_energy_density = 250 # [250,400,550]
+battery_energy_density = 550 # [250,400,550]
 
 # Mission requirement sweep
 range_i, range_f, d_range = 10, 230, 10 # km

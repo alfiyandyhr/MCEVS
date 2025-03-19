@@ -8,8 +8,8 @@ plot_minimizing_mission_time = False
 
 plot_minimizing_all_objs = True
 
-# configuration = 'multirotor'
-configuration = 'liftcruise'
+configuration = 'multirotor'
+# configuration = 'liftcruise'
 
 if plot_minimizing_takeoff_weight or plot_minimizing_energy or plot_minimizing_mission_time:
 
@@ -26,8 +26,7 @@ if plot_minimizing_takeoff_weight or plot_minimizing_energy or plot_minimizing_m
 	if plot_minimizing_mission_time:
 		folder = 'minimizing_mission_time'
 		label = 'Time-minimized'
-		# df_label = 'mission_time'
-		df_label = 'Weight|takeoff'
+		df_label = 'mission_time'
 		y_label = 'Mission time [mins]'
 
 	data_df1 = pd.read_csv(f'{folder}/{configuration}/battery_250_Whpkg/results_with_speed_as_design_var.csv')
