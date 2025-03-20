@@ -197,17 +197,17 @@ class WeightAnalysis(object):
 				indeps.add_output('Weight|takeoff', mtow_guess, units='kg') # mtow initial guess
 
 				if self.fidelity['hover_climb'] in [0,1]:
-					prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000)
-					prob.model.add_objective('Weight|residual')
+					prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000, units='kg')
+					prob.model.add_objective('Weight|residual', units='kg')
 					prob.setup(check=False)
 					prob.run_driver()
 
 				elif self.fidelity['hover_climb'] == 2:
-					prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10, upper=5000)
-					prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000)
-					prob.model.add_design_var('LiftRotor|global_twist', lower=0.0, upper=100.0)
-					prob.model.add_objective('Weight|residual')
-					prob.model.add_constraint('LiftRotor|HoverClimb|thrust_residual_square', lower=0, upper=0.1)
+					prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
+					prob.model.add_design_var('Weight|takeoff', lower=600.0, upper=10000.0, units='kg')
+					prob.model.add_design_var('LiftRotor|global_twist', lower=0.0, upper=100.0, units='deg')
+					prob.model.add_objective('Weight|residual', units='kg')
+					prob.model.add_constraint('LiftRotor|HoverClimb|thrust_residual_square', lower=0, upper=0.1, units=None)
 					prob.setup(check=False)
 					prob.run_driver()
 
@@ -219,8 +219,8 @@ class WeightAnalysis(object):
 
 				elif self.fidelity['hover_climb'] == 2:
 					prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
-					prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10, upper=5000)
-					prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square')
+					prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
+					prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square', units=None)
 					prob.setup(check=False)
 					prob.run_driver()
 
