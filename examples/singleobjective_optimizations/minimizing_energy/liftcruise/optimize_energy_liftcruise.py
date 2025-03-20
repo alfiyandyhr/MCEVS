@@ -52,15 +52,15 @@ if run_with_speed_as_design_var_all_opt:
 
 		sys.stdout.flush() # To flush the above print output
 
+		cruise_speed_guess = 300 # km/h
+
 		if battery_energy_density == 250:
-			cruise_speed_guess = 300 # km/h
 			if mission_range in [30,100,140,170,160]: mtow_guess = 1500.0
 			elif mission_range in [60]: mtow_guess = 1100.0
 			elif mission_range in [170]: mtow_guess = 2500.0
 			elif mission_range in [210]: mtow_guess = 4000.0
 			else: mtow_guess = 1000.0
 		elif battery_energy_density == 400:
-			cruise_speed_guess = 300 # km/h
 			if mission_range in [40,190,210]: mtow_guess = 2500.0
 			elif mission_range in [20]: mtow_guess = 1300.0
 			elif mission_range in [30]: mtow_guess = 1200.0
@@ -70,7 +70,6 @@ if run_with_speed_as_design_var_all_opt:
 			elif mission_range in [70,90,100,150,200]: mtow_guess = 2000.0
 			else: mtow_guess = 1000.0
 		elif battery_energy_density == 550:
-			cruise_speed_guess = 300 # km/h
 			if mission_range in [10]: mtow_guess = 800.0
 			elif mission_range in [50]: mtow_guess = 1200.0
 			elif mission_range in [60]: mtow_guess = 2000.0

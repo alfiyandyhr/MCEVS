@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 
 plot_minimizing_takeoff_weight = False
 plot_minimizing_energy = False
-plot_minimizing_mission_time = False
+plot_minimizing_mission_time = True
 
-plot_minimizing_all_objs = True
+plot_minimizing_all_objs = False
 
 configuration = 'multirotor'
 # configuration = 'liftcruise'

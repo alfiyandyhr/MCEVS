@@ -7,10 +7,10 @@ import pandas as pd
 import sys
 import warnings
 
-run_with_speed_as_design_var_one_opt = True
-run_with_speed_as_design_var_all_opt = False
+run_with_speed_as_design_var_one_opt = False
+run_with_speed_as_design_var_all_opt = True
 
-battery_energy_density = 400 # [250,400,550]
+battery_energy_density = 250 # [250,400,550]
 
 # Mission requirement sweep
 range_i, range_f, d_range = 10, 230, 10 # km
@@ -52,17 +52,17 @@ if run_with_speed_as_design_var_all_opt:
 
 		sys.stdout.flush() # To flush the above print output
 
+		cruise_speed_guess = 300 # km/h
+
 		if battery_energy_density == 250:
-			cruise_speed_guess = 300 # km/h
 			if mission_range in [80,110,170,180,200]: mtow_guess = 2500.0
+			elif mission_range in [60,70]: mtow_guess = 1500.0
 			else: mtow_guess = 1000.0
 		elif battery_energy_density == 400:
-			cruise_speed_guess = 300 # km/h
 			if mission_range in [180,200]: mtow_guess = 2500.0
-			elif mission_range in [220]: mtow_guess = 1500.0
+			elif mission_range in [210,220]: mtow_guess = 1500.0
 			else: mtow_guess = 1000.0
 		elif battery_energy_density == 550:
-			cruise_speed_guess = 300 # km/h
 			mtow_guess = 1000.0
 
 		# Standard vehicle

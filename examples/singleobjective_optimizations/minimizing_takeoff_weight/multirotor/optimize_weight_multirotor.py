@@ -9,7 +9,7 @@ import warnings
 run_with_speed_as_design_var_one_opt = True
 run_with_speed_as_design_var_all_opt = False
 
-battery_energy_density = 550 # [250,400,550]
+battery_energy_density = 250 # [250,400,550]
 
 # Mission requirement sweep
 range_i, range_f, d_range = 10, 230, 10 # km
@@ -61,7 +61,7 @@ if run_with_speed_as_design_var_all_opt:
 			elif mission_range in [170, 180, 190, 200, 210, 220]:
 				mtow_guess = 5000.0
 		elif battery_energy_density == 400:
-			if mission_range in [170, 180, 190]: mtow_guess = 2000.0
+			if mission_range in [170, 180, 190, 210]: mtow_guess = 2000.0
 			else: mtow_guess = 1000.0
 		elif battery_energy_density == 550:
 			if mission_range in [30]: mtow_guess = 1500.0
@@ -90,5 +90,4 @@ if run_with_speed_as_design_var_all_opt:
 		results_df = pd.DataFrame(results, index=[i])
 
 		results_df.to_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv', mode='a', header=True if i==0 else False)
-
-
+		# results_df.to_csv(f'battery_{battery_energy_density}_Whpkg/results_test.csv', mode='a', header=True if i==0 else False)
