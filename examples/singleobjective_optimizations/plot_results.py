@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 
 plot_minimizing_takeoff_weight = False
 plot_minimizing_energy = False
-plot_minimizing_mission_time = True
+plot_minimizing_mission_time = False
 
-plot_minimizing_all_objs = False
+plot_minimizing_all_objs = True
 
 configuration = 'multirotor'
 # configuration = 'liftcruise'
@@ -120,7 +120,7 @@ if plot_minimizing_all_objs:
 			if i*3+j in [0,3,6]: axs[j,i].set_title(f'Battery {battery} Wh/kg', size=10.0)
 
 	fig.suptitle('Single-objective optimization results')
-	fig.legend(ncols=2,bbox_to_anchor=(0.78,0.96))
+	fig.legend(ncols=2,bbox_to_anchor=(0.8,0.96))
 	# plt.tight_layout()
 	plt.subplots_adjust(left=0.09, bottom=0.1, right=0.97, top=0.81, hspace=0.1)
 	plt.show()
