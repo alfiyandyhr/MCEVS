@@ -73,7 +73,12 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 						ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
 						promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed'), ('Rotor|radius', 'LiftRotor|radius')],
 						promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|total_drag'), ('Aero|f_total','Aero|Cruise|f_total'),('Aero|f_fuselage','Aero|Cruise|f_fuselage'),('Aero|f_rotor_hub','Aero|Cruise|f_rotor_hub')])
-		
+			else:
+				self.add_subsystem('parasite_drag',
+						ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
+						promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed'), ('Rotor|radius', 'LiftRotor|radius')],
+						promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|total_drag'), ('Aero|f_total','Aero|Cruise|f_total'),('Aero|f_fuselage','Aero|Cruise|f_fuselage'),('Aero|f_rotor_hub','Aero|Cruise|f_rotor_hub')])				
+
 		# Step 2: Calculate thrust required for trim and the body tilt angle
 		self.add_subsystem('trim',
 							MultirotorConstantCruiseTrim(g=g),

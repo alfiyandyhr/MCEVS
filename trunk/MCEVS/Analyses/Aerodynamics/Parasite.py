@@ -113,6 +113,8 @@ class VehicleParasiteDragFidelityOne(om.ExplicitComponent):
 		outputs['Aero|f_total_non_hub'] = f
 		outputs['Aero|f_fuselage'] = f_fuselage
 
+		# print(segment_name, vehicle.Cd0[segment_name], CD0, f, f_fuselage, outputs['Aero|parasite_drag_vehicle'])
+
 def calc_flat_plate_drag(vehicle:object, rho_air:float, mu_air:float, v_inf:float):
 	"""
 	Calculating parasite drag via a component build-up approach

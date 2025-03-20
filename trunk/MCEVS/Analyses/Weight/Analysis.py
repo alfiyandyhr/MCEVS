@@ -1,5 +1,7 @@
 import numpy as np
 import openmdao.api as om
+import os
+import sys
 
 from MCEVS.Analyses.Energy.Analysis import EnergyConsumption
 from MCEVS.Analyses.Weight.Battery.Groups import BatteryWeight
@@ -68,7 +70,11 @@ class WeightAnalysis(object):
 		if self.solved_by not in ['optimization', 'nonlinear_solver']:
 			raise NotImplementedError('"solved_by" should be either "optimization" or "nonlinear_solver"')
 
-	def evaluate(self, record=False, mtow_guess=None):
+	def evaluate(self, record=False, mtow_guess=None, print=True):
+
+		if not print: 
+			if os.name =='posix': sys.stdout = open('/dev/null', 'w')  # Redirect stdout to /dev/null
+			if os.name =='nt': sys.stdout = open(os.devnull, 'w')  # Redirect stdout to os.devnull
 
 		# --- Design parameters --- #
 
@@ -226,6 +232,9 @@ class WeightAnalysis(object):
 
 		if record:
 			record_performance_by_segments(prob, self.vehicle.configuration, self.mission)
+
+		# Reset stdout
+		sys.stdout = sys.__stdout__  # Reset stdout back to the default
 
 		return prob
 

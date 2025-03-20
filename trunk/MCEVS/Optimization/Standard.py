@@ -82,6 +82,10 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 		results['DiskLoading|LiftRotor|segment_3'] = res.get_val('DiskLoading|LiftRotor|segment_3', 'N/m**2')[0]
 		results['DiskLoading|LiftRotor|segment_5'] = res.get_val('DiskLoading|LiftRotor|segment_5', 'N/m**2')[0]
 		results['Energy|entire_mission'] = res.get_val('Energy|entire_mission', 'kW*h')[0]
+
+		results['Aero|Cruise|f_fuselage'] = res.get_val('Aero|Cruise|f_fuselage', 'm**2')[0]
+		results['Aero|Cruise|f_total'] = res.get_val('Aero|Cruise|f_total', 'm**2')[0]
+		results['Aero|Cruise|f_rotor_hub'] = res.get_val('Aero|Cruise|f_rotor_hub', 'm**2')[0]
 		results['Aero|Cruise|Cd0'] = res.get_val('Aero|Cruise|Cd0', None)[0]
 		results['Aero|Cruise|total_drag'] = res.get_val('Aero|Cruise|total_drag', 'N')[0]
 
@@ -164,6 +168,10 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 		results['DiskLoading|Propeller|segment_3'] = res.get_val('DiskLoading|Propeller|segment_3', 'N/m**2')[0]
 		results['DiskLoading|LiftRotor|segment_5'] = res.get_val('DiskLoading|LiftRotor|segment_5', 'N/m**2')[0]
 		results['Energy|entire_mission'] = res.get_val('Energy|entire_mission', 'kW*h')[0]
+
+		results['Aero|Cruise|f_fuselage'] = res.get_val('Aero|Cruise|f_fuselage', 'm**2')[0]
+		results['Aero|Cruise|f_total'] = res.get_val('Aero|Cruise|f_total', 'm**2')[0]
+		results['Aero|Cruise|f_rotor_hub'] = res.get_val('Aero|Cruise|f_rotor_hub', 'm**2')[0]
 		results['Aero|Cruise|Cd0'] = res.get_val('Aero|Cruise|Cd0', None)[0]
 		results['Aero|Cruise|total_drag'] = res.get_val('Aero|Cruise|total_drag', 'N')[0]
 
