@@ -6,8 +6,8 @@ from MCEVS.Analyses.Energy.Analysis import EnergyAnalysis
 from MCEVS.Utils.Plots import plot_mission_parameters, plot_performance_by_segments
 
 # Mission requirement
-mission_range = 96000 # m
-cruise_speed = 50.0 # m/s
+mission_range = 60 * 1609.344 # 60 miles = 96560.64 m
+cruise_speed = 150 * 1609.344 / 3600 # 150 miles/hour = 67.056 m/s
 payload_per_pax = 100.0 # kg
 
 # Hover climb config
@@ -32,10 +32,10 @@ mission.add_segment(name='Reserve Cruise', kind='ReserveCruise', duration=20*60)
 # plot_mission_parameters(mission, print_info=False)
 
 # Design and operation variables
-design_var1 = {'r_lift_rotor': 4.0}
-operation_var1 = {'RPM_lift_rotor': {'hover_climb':None,'cruise':450.0}, 'cruise_speed': cruise_speed}
-design_var2 = {'wing_area': 20.0, 'wing_aspect_ratio': 12.0, 'r_lift_rotor': 1.524, 'r_propeller': 1.37}
-operation_var2 = {'RPM_lift_rotor': {'hover_climb':None}, 'RPM_propeller': {'cruise':380.0}, 'cruise_speed': cruise_speed}
+design_var1 = {'r_lift_rotor': 4.20624} # 13.8 ft = 4.20624 m
+operation_var1 = {'RPM_lift_rotor': {'hover_climb':None,'cruise':450.0}}
+design_var2 = {'wing_area': 19.53547845, 'wing_aspect_ratio': 12.12761, 'r_lift_rotor': 1.524, 'r_propeller': 1.3716}
+operation_var2 = {'RPM_lift_rotor':{'hover_climb':None}, 'RPM_propeller': {'cruise':500.0}}
 
 # Technology factors
 tfs = {'tf_structure':0.8, 'tf_propulsion':0.8, 'tf_equipment':0.8}
@@ -47,22 +47,22 @@ vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, operation_var2, tfs, n_pax=6
 # Fidelity
 fidelity = {'aero':1, 'hover_climb':0}
 if fidelity['hover_climb'] == 0:
-	vehicle1.weight.max_takeoff = 3131.595333
+	vehicle1.weight.max_takeoff = 4121.13997362
 	vehicle1.lift_rotor.RPM['hover_climb'] = 400.0
-	vehicle2.weight.max_takeoff = 3388.152328
-	vehicle2.lift_rotor.RPM['hover_climb'] = 500.0
+	vehicle2.weight.max_takeoff = 2858.88805887
+	vehicle2.lift_rotor.RPM['hover_climb'] = 400.0
 elif fidelity['hover_climb'] == 1:
-	vehicle1.weight.max_takeoff = 3132.228911
+	vehicle1.weight.max_takeoff = 4112.30957032
 	vehicle1.lift_rotor.RPM['hover_climb'] = 400.0
-	vehicle2.weight.max_takeoff = 3255.079656
-	vehicle2.lift_rotor.RPM['hover_climb'] = 900.0
+	vehicle2.weight.max_takeoff = 2814.18805917
+	vehicle2.lift_rotor.RPM['hover_climb'] = 700.0
 elif fidelity['hover_climb'] == 2:
-	vehicle1.weight.max_takeoff = 2970.741565
-	vehicle1.lift_rotor.global_twist = 22.9467057715991
-	vehicle1.lift_rotor.RPM['hover_climb'] = 237.4888169
-	vehicle2.weight.max_takeoff = 3326.737882
-	vehicle2.lift_rotor.global_twist = 25.3994535027999
-	vehicle2.lift_rotor.RPM['hover_climb'] = 704.6420168
+	vehicle1.weight.max_takeoff = 3920.99011566
+	vehicle1.lift_rotor.global_twist = 15.43370966
+	vehicle1.lift_rotor.RPM['hover_climb'] = 289.78701964
+	vehicle2.weight.max_takeoff = 2854.57864184
+	vehicle2.lift_rotor.global_twist = 23.5959419443252
+	vehicle2.lift_rotor.RPM['hover_climb'] = 680.160987077815
 
 # Analysis (change vehicle=vehicle1 or vehicle=vehicle2)
 vehicle = vehicle1

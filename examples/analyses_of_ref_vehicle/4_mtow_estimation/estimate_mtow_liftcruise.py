@@ -1,13 +1,13 @@
-import numpy as np
 from MCEVS.Vehicles.Standard import StandardLiftPlusCruiseEVTOL
 from MCEVS.Missions.Container import Mission
 from MCEVS.Constants.Container import EarthGravityAndAtmosphere
 from MCEVS.Analyses.Weight.Analysis import WeightAnalysis
 from MCEVS.Utils.Plots import plot_mission_parameters, plot_performance_by_segments
+import numpy as np
 
 # Mission requirement
-mission_range = 96000 # m
-cruise_speed = 50.0 # m/s
+mission_range = 60 * 1609.344 # 60 miles = 96560.64 m
+cruise_speed = 150 * 1609.344 / 3600 # 150 miles/hour = 67.056 m/s
 payload_per_pax = 100.0 # kg
 
 # Hover climb config
@@ -32,8 +32,8 @@ mission.add_segment(name='Reserve Cruise', kind='ReserveCruise', duration=20*60)
 # plot_mission_parameters(mission, print_info=False)
 
 # Design and operation variables
-design_var = {'wing_area': 20.0, 'wing_aspect_ratio': 12.0, 'r_lift_rotor': 1.524, 'r_propeller': 1.37}
-operation_var = {'RPM_lift_rotor':{'hover_climb':None}, 'RPM_propeller': {'cruise':380.0}}
+design_var = {'wing_area': 19.53547845, 'wing_aspect_ratio': 12.12761, 'r_lift_rotor': 1.524, 'r_propeller': 1.3716}
+operation_var = {'RPM_lift_rotor':{'hover_climb':None}, 'RPM_propeller': {'cruise':500.0}}
 
 # Technology factors
 tfs = {'tf_structure':0.8, 'tf_propulsion':0.8, 'tf_equipment':0.8}
@@ -43,11 +43,11 @@ vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, tfs, n_pax=6, p
 # vehicle.print_info()
 
 # Solver fidelity
-fidelity = {'aero':1, 'hover_climb':0}
+fidelity = {'aero':1, 'hover_climb':2}
 if fidelity['hover_climb'] == 0:
 	vehicle.lift_rotor.RPM['hover_climb'] = 400.0
 elif fidelity['hover_climb'] == 1:
-	vehicle.lift_rotor.RPM['hover_climb'] = 900.0
+	vehicle.lift_rotor.RPM['hover_climb'] = 700.0
 elif fidelity['hover_climb'] == 2:
 	vehicle.lift_rotor.RPM['hover_climb'] = 500.0
 	vehicle.lift_rotor.motor_power_margin = 0.0
@@ -60,7 +60,8 @@ results = analysis.evaluate(record=True, mtow_guess=2500.0)
 # plot_performance_by_segments(mission=mission, vehicle=vehicle)
 
 print('--- Sanity Check: Aero Drag Coeff ---')
-print(vehicle.Cd0)
+print('f_total_non_hub_non_wing =', [vehicle.f_total_non_hub_non_wing['cruise']])
+print('Cd0 wing only =', [vehicle.wing.Cd0['cruise']])
 print('\n--- Sanity Check: Segment Powers ---')
 print('Power segment_1 = ', results.get_val('Power|segment_1', 'kW'))
 print('Power segment_2 = ', results.get_val('Power|segment_2', 'kW'))

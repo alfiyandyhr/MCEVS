@@ -1,13 +1,13 @@
-import numpy as np
 from MCEVS.Vehicles.Standard import StandardMultirotorEVTOL
 from MCEVS.Missions.Container import Mission
 from MCEVS.Constants.Container import EarthGravityAndAtmosphere
 from MCEVS.Analyses.Weight.Analysis import WeightAnalysis
 from MCEVS.Utils.Plots import plot_mission_parameters, plot_performance_by_segments
+import numpy as np
 
 # Mission requirement
-mission_range = 96000 # m
-cruise_speed = 50.0 # m/s
+mission_range = 60 * 1609.344 # 60 miles = 96560.64 m
+cruise_speed = 150 * 1609.344 / 3600 # 150 miles/hour = 67.056 m/s
 payload_per_pax = 100.0 # kg
 
 # Hover climb config
@@ -32,7 +32,7 @@ mission.add_segment(name='Reserve Cruise', kind='ReserveCruise', duration=20*60)
 # plot_mission_parameters(mission, print_info=False)
 
 # Design and operation variables
-design_var = {'r_lift_rotor': 4.0}
+design_var = {'r_lift_rotor': 4.20624} # 13.8 ft = 4.20624 m
 operation_var = {'RPM_lift_rotor': {'hover_climb':None, 'cruise':450.0}}
 
 # Technology factors
@@ -44,18 +44,23 @@ vehicle = StandardMultirotorEVTOL(design_var, operation_var, tfs, n_pax=6, paylo
 
 # Solver fidelity
 fidelity = {'aero':1, 'hover_climb':0}
-if fidelity['hover_climb'] == 0: vehicle.lift_rotor.RPM['hover_climb'] = 400.0
-elif fidelity['hover_climb'] == 1: vehicle.lift_rotor.RPM['hover_climb'] = 400.0
-elif fidelity['hover_climb'] == 2: vehicle.lift_rotor.RPM['hover_climb'] = 500.0
+if fidelity['hover_climb'] == 0:
+	vehicle.lift_rotor.RPM['hover_climb'] = 400.0
+elif fidelity['hover_climb'] == 1:
+	vehicle.lift_rotor.RPM['hover_climb'] = 400.0
+elif fidelity['hover_climb'] == 2:
+	vehicle.lift_rotor.RPM['hover_climb'] = 500.0
 
 # Analysis
 analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity, sizing_mode=True, solved_by='optimization')
-results = analysis.evaluate(record=False, mtow_guess=2500.0)
+results = analysis.evaluate(record=False, mtow_guess=4000.0)
 
 # plot_performance_by_segments(mission=mission, vehicle=vehicle)
 
 print('--- Sanity Check: Aero Drag Coeff ---')
-print(vehicle.Cd0)
+print('Aero|f_total_non_hub =', [vehicle.f_total_non_hub['cruise']])
+print('Aero|f_total = ', results.get_val('Aero|Cruise|f_total'))
+print('Aero|total_drag = ', results.get_val('Aero|Cruise|total_drag'))
 print('\n--- Sanity Check: Segment Powers ---')
 print('Power segment_1 = ', results.get_val('Power|segment_1', 'kW'))
 print('Power segment_2 = ', results.get_val('Power|segment_2', 'kW'))
@@ -73,9 +78,9 @@ print('Structure weight = ', results.get_val('Weight|structure'))
 print('Equipment weight = ', results.get_val('Weight|equipment'))
 print('MTOW = ', results.get_val('Weight|takeoff'))
 print('\n--- Sanity Check: Residuals and others---')
-print(f"LiftRotor|global_twist = {results.get_val('LiftRotor|global_twist')[0]}")
-print(f"LiftRotor|HoverClimb|RPM = {results.get_val('LiftRotor|HoverClimb|RPM')[0]}")
-print(f"LiftRotor|HoverClimb|FM = {results.get_val('LiftRotor|HoverClimb|FM')[0]}")
+print(f"LiftRotor|global_twist = {results.get_val('LiftRotor|global_twist')}")
+print(f"LiftRotor|HoverClimb|RPM = {results.get_val('LiftRotor|HoverClimb|RPM')}")
+print(f"LiftRotor|HoverClimb|FM = {results.get_val('LiftRotor|HoverClimb|FM')}")
 if fidelity['hover_climb'] == 2:
-	print(f"LiftRotor|HoverClimb|thrust_residual_square = {results.get_val('LiftRotor|HoverClimb|thrust_residual_square')[0]}")
-print('Weight|residual = ', results.get_val('Weight|residual')[0])
+	print(f"LiftRotor|HoverClimb|thrust_residual_square = {results.get_val('LiftRotor|HoverClimb|thrust_residual_square')}")
+print('Weight|residual = ', results.get_val('Weight|residual'))
