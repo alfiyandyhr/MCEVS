@@ -68,16 +68,10 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 								promotes_inputs=['Weight|takeoff', ('Aero|speed','Mission|cruise_speed'), ('Rotor|radius', 'LiftRotor|radius')],
 								promotes_outputs=[('Aero|total_drag','Aero|Cruise|total_drag'), ('Aero|Cd0','Aero|Cruise|Cd0')])
 		elif fidelity['aero'] == 1:
-			if vehicle.Cd0['cruise'] is None:
-				self.add_subsystem('parasite_drag',
-						ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
-						promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed'), ('Rotor|radius', 'LiftRotor|radius')],
-						promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|total_drag'), ('Aero|f_total','Aero|Cruise|f_total'),('Aero|f_fuselage','Aero|Cruise|f_fuselage'),('Aero|f_rotor_hub','Aero|Cruise|f_rotor_hub')])
-			else:
-				self.add_subsystem('parasite_drag',
-						ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
-						promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed'), ('Rotor|radius', 'LiftRotor|radius')],
-						promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|total_drag'), ('Aero|f_total','Aero|Cruise|f_total'),('Aero|f_fuselage','Aero|Cruise|f_fuselage'),('Aero|f_rotor_hub','Aero|Cruise|f_rotor_hub')])				
+			self.add_subsystem('parasite_drag',
+					ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
+					promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed')],
+					promotes_outputs=[('Aero|f_total','Aero|Cruise|f_total'), ('Aero|parasite_drag','Aero|Cruise|total_drag')])
 
 		# Step 2: Calculate thrust required for trim and the body tilt angle
 		self.add_subsystem('trim',
@@ -228,8 +222,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 			self.add_subsystem('parasite_drag',
 								ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
 								promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed'),'Wing|area'],
-								promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|parasite_drag'),
-												  ('Aero|f_fuselage','Aero|Cruise|f_fuselage'),('Aero|f_rotor_hub','Aero|Cruise|f_rotor_hub')])
+								promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|parasite_drag')])
 
 		self.add_subsystem('total_drag',
 							WingedAeroDrag(rho_air=rho_air),

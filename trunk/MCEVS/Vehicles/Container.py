@@ -36,10 +36,8 @@ class LiftPlusCruiseEVTOL(object):
 		# Weight
 		self.weight = VehicleWeight(mtow)
 
-		# Aero performance, used when Cd0 is evaluated using fidelity > 0
-		self.Cd0 = {'climb':None, 'cruise':None, 'descent':None}
-		self.f_total_non_hub = {'climb':None, 'cruise': None, 'descent': None} 
-		self.f_fuselage = {'climb':None, 'cruise': None, 'descent': None} 
+		# Aero performance, used when evaluated using fidelity > 0
+		self.f_total_non_hub_non_wing = {'climb':None, 'cruise': None, 'descent': None}
 
 		# Wetted area (an array of wetted area for all components) called by calc_wetted_area
 		self.S_wetted = None
@@ -135,7 +133,6 @@ class MultirotorEVTOL(object):
 		# Components
 		self.fuselage = None
 		self.landing_gear = None
-		self.empennage = None
 		self.lift_rotor = None
 		self.battery = None
 		self.boom = None
@@ -143,10 +140,8 @@ class MultirotorEVTOL(object):
 		# Weight
 		self.weight = VehicleWeight(mtow)
 
-		# Aero performance, used when Cd0 is evaluated using fidelity > 0
-		self.Cd0 = {'climb':None, 'cruise':None, 'descent':None}
-		self.f_total_non_hub = {'climb':None, 'cruise': None, 'descent': None} 
-		self.f_fuselage = {'climb':None, 'cruise': None, 'descent': None} 
+		# Aero performance, used when evaluated using fidelity > 0
+		self.f_total_non_hub = {'climb':None, 'cruise': None, 'descent': None}
 
 		# Wetted area (an array of wetted area for all components) called by calc_wetted_area
 		self.S_wetted = None

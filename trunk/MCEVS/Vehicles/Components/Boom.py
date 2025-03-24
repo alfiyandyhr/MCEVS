@@ -29,6 +29,9 @@ class Boom(object):
 
 		# Use of new material that reduces weight?
 		self.technology_factor = None
+
+		# Equivalent plat plate area (aerodynamics)
+		self.flat_plate_area = {'climb':None, 'cruise': None, 'descent': None} 
 	
 	def _initialize(self):
 		for item in list(self.kwargs):

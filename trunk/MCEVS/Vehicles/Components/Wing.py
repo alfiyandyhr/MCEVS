@@ -27,6 +27,9 @@ class Wing(object):
 		# Use of new material that reduces weight?
 		self.technology_factor = None
 
+		# Reference Cd0
+		self.Cd0 = {'climb':None, 'cruise': None, 'descent': None} 
+
 	def _initialize(self):
 		for item in list(self.kwargs):
 			if item == 'area':

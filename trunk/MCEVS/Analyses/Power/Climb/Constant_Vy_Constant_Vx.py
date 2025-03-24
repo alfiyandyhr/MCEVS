@@ -70,11 +70,10 @@ class PowerClimbConstantVyConstantVxEdgewise(om.Group):
 								promotes_inputs=['Weight|takeoff', ('Aero|speed','climb.climb_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
 								promotes_outputs=[('Aero|total_drag','Aero|Climb|total_drag'), ('Aero|Cd0','Aero|Climb|Cd0')])
 		elif fidelity['aero'] == 1:
-			if vehicle.Cd0['climb'] is None:
-				self.add_subsystem('parasite_drag',
-						ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='climb'),
-						promotes_inputs=['Weight|takeoff', ('Aero|speed', 'climb.climb_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
-						promotes_outputs=[('Aero|Cd0', 'Aero|Climb|Cd0'), ('Aero|parasite_drag','Aero|Climb|total_drag')])
+			self.add_subsystem('parasite_drag',
+					ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='climb'),
+					promotes_inputs=['Weight|takeoff', ('Aero|speed', 'climb.climb_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
+					promotes_outputs=[('Aero|Cd0', 'Aero|Climb|Cd0'), ('Aero|parasite_drag','Aero|Climb|total_drag')])
 
 		# Step 2: Calculate thrust required for trim and the body tilt angle
 		self.add_subsystem('trim',

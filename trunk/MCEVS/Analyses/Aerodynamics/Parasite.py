@@ -22,34 +22,32 @@ class ParasiteDragFidelityOne(om.Group):
 		segment_name = self.options['segment_name']
 
 		self.add_subsystem('parasite_drag_without_rotor_hub',
-							VehicleParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name=segment_name),
-							promotes_inputs=['Aero|speed', 'Rotor|radius', 'Wing|area'],
-							promotes_outputs=['Aero|Cd0_vehicle', 'Aero|parasite_drag_vehicle', 'Aero|f_total_non_hub', 'Aero|f_fuselage'])
+							ParasiteDragNonHubFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name=segment_name),
+							promotes_inputs=['Aero|speed'] if vehicle.configuration == 'Multirotor' else ['Aero|speed', 'Wing|area'],
+							promotes_outputs=['Aero|f_non_hub', 'Aero|parasite_drag_non_hub'] if vehicle.configuration == 'Multirotor' else ['Aero|f_non_hub', 'Aero|parasite_drag_non_hub', 'Aero|Cd0'])
 
-		self.add_subsystem('rotor_hub_parasite_drag',
+		self.add_subsystem('parasite_drag_rotor_hub',
 							RotorHubParasiteDragFidelityZero(vehicle=vehicle, rho_air=rho_air),
-							promotes_inputs=['Weight|takeoff', 'Aero|speed', 'Rotor|radius', 'Wing|area'],
-							promotes_outputs=['Aero|f_rotor_hub', 'Aero|Cd0_rotor_hub', 'Aero|rotor_hub_parasite_drag'])
+							promotes_inputs=['Weight|takeoff', 'Aero|speed'],
+							promotes_outputs=['Aero|f_rotor_hub', 'Aero|parasite_drag_rotor_hub'])
 
 		# Sum the vehicle parasite drag via build-up approach and empirical rotor hub drag
 		adder = om.AddSubtractComp()
+
 		adder.add_equation('Aero|f_total',
 							units='m**2',
-							input_names=['Aero|f_total_non_hub', 'Aero|f_rotor_hub'],
-							scaling_factors=[1., 1.])
-		adder.add_equation('Aero|Cd0',
-							input_names=['Aero|Cd0_vehicle', 'Aero|Cd0_rotor_hub'],
+							input_names=['Aero|f_non_hub', 'Aero|f_rotor_hub'],
 							scaling_factors=[1., 1.])
 		adder.add_equation('Aero|parasite_drag',
-							input_names=['Aero|parasite_drag_vehicle', 'Aero|rotor_hub_parasite_drag'],
+							input_names=['Aero|parasite_drag_non_hub', 'Aero|parasite_drag_rotor_hub'],
 							units='N',
 							scaling_factors=[1., 1.])
 		self.add_subsystem('total_parasite_drag',
 							adder,
 							promotes_inputs=['*'],
-							promotes_outputs=['Aero|f_total', 'Aero|Cd0', 'Aero|parasite_drag'])
+							promotes_outputs=['Aero|f_total', 'Aero|parasite_drag'])
 
-class VehicleParasiteDragFidelityOne(om.ExplicitComponent):
+class ParasiteDragNonHubFidelityOne(om.ExplicitComponent):
 	"""
 	Computes the parasite drag coefficient via a component build-up approach (fidelity one)
 	Parameters:
@@ -75,12 +73,11 @@ class VehicleParasiteDragFidelityOne(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('Aero|speed', units='m/s', desc='Air speed')
-		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
-		self.add_input('Wing|area', units='m**2', desc='Wing reference area')
-		self.add_output('Aero|Cd0_vehicle', desc='Parasite drag coefficient')
-		self.add_output('Aero|parasite_drag_vehicle', units='N', desc='Parasite drag')
-		self.add_output('Aero|f_total_non_hub', units='m**2', desc='Total quivalent flat plate area of vehicle without rotor hubs')
-		self.add_output('Aero|f_fuselage', units='m**2', desc='Fuselage equivalent flat plate area')
+		if self.options['vehicle'].configuration == 'LiftPlusCruise':
+			self.add_input('Wing|area', units='m**2', desc='Wing reference area')
+			self.add_output('Aero|Cd0', units=None, desc='Parasite drag coefficient')
+		self.add_output('Aero|f_non_hub', units='m**2', desc='Total quivalent flat plate area of vehicle without rotor hubs')
+		self.add_output('Aero|parasite_drag_non_hub', units='N', desc='Parasite drag')
 		self.declare_partials('*', '*', method='cs')
 
 	def compute(self, inputs, outputs):
@@ -89,36 +86,74 @@ class VehicleParasiteDragFidelityOne(om.ExplicitComponent):
 		mu_air = self.options['mu_air']
 		segment_name = self.options['segment_name']
 		v = inputs['Aero|speed']		# in [m/s**2]
+
+		if vehicle.configuration == 'LiftPlusCruise':
+			S_ref = inputs['Wing|area']	# in [m**2]
+
 		if vehicle.configuration == 'Multirotor':
-			r_rotor = inputs['Rotor|radius']
-			S_ref = np.pi*r_rotor**2
+			if vehicle.f_total_non_hub[segment_name] is None:
+				flat_plate_areas = calc_flat_plate_area(vehicle, rho_air, mu_air, v)
+				f_total = flat_plate_areas['f_total']
+				vehicle.fuselage.flat_plate_area[segment_name] = flat_plate_areas['f_fuselage']
+				vehicle.boom.flat_plate_area[segment_name] = flat_plate_areas['f_booms']
+				vehicle.landing_gear.flat_plate_area[segment_name] = flat_plate_areas['f_landing_gears']
+				vehicle.f_total_non_hub[segment_name] = f_total
+			else:
+				f_fuselage = vehicle.fuselage.flat_plate_area[segment_name]
+				f_booms = vehicle.boom.flat_plate_area[segment_name]
+				f_landing_gears = vehicle.landing_gear.flat_plate_area[segment_name]
+				f_total = vehicle.f_total_non_hub[segment_name]
+				
 		elif vehicle.configuration == 'LiftPlusCruise':
-			S_wing = inputs['Wing|area']	# in [m**2]
-			S_ref = S_wing
+			if vehicle.f_total_non_hub_non_wing[segment_name] is None:
+				flat_plate_areas = calc_flat_plate_area(vehicle, rho_air, mu_air, v)
+				f_fuse = flat_plate_areas['f_fuselage']
+				f_wing = flat_plate_areas['f_wing']
+				f_htail = flat_plate_areas['f_horizontal_tail']
+				f_vtail = flat_plate_areas['f_vertical_tail']
+				f_booms = flat_plate_areas['f_booms']
+				f_LGs = flat_plate_areas['f_landing_gears']
+				f_total_non_hub_non_wing = f_fuse + f_htail + f_vtail + f_booms + f_LGs
+				Cd0_wing = f_wing/S_ref
+				vehicle.fuselage.flat_plate_area[segment_name] = f_fuse
+				vehicle.wing.Cd0[segment_name] = Cd0_wing[0]
+				vehicle.horizontal_tail.flat_plate_area[segment_name] = f_htail
+				vehicle.vertical_tail.flat_plate_area[segment_name] = f_vtail
+				vehicle.boom.flat_plate_area[segment_name] = f_booms
+				vehicle.landing_gear.flat_plate_area[segment_name] = f_LGs
+				vehicle.f_total_non_hub_non_wing[segment_name] = f_total_non_hub_non_wing
+				f_total = f_total_non_hub_non_wing + Cd0_wing * S_ref
+			else: 
+				f_fuselage = vehicle.fuselage.flat_plate_area[segment_name]
+				Cd0_wing = vehicle.wing.Cd0[segment_name]
+				f_htail = vehicle.horizontal_tail.flat_plate_area[segment_name]
+				f_vtail = vehicle.vertical_tail.flat_plate_area[segment_name]
+				f_booms = vehicle.boom.flat_plate_area[segment_name]
+				f_landing_gears = vehicle.landing_gear.flat_plate_area[segment_name]
+				f_total = vehicle.f_total_non_hub_non_wing[segment_name] + Cd0_wing * S_ref
 
-		if vehicle.Cd0[segment_name] is None:
-			f, f_fuselage = calc_flat_plate_drag(vehicle, rho_air, mu_air, v) # in [m**2]
+		outputs['Aero|f_non_hub'] = f_total
+		outputs['Aero|parasite_drag_non_hub'] = 0.5 * rho_air * v * v * f_total
 
-			CD0 = f/S_ref
-			vehicle.Cd0[segment_name] = CD0
-			vehicle.f_total_non_hub[segment_name] = f
-			vehicle.f_fuselage[segment_name] = f_fuselage
-		else:
-			CD0 = vehicle.Cd0[segment_name]
-			f = vehicle.f_total_non_hub[segment_name]
-			f_fuselage = vehicle.f_fuselage[segment_name]
-		
-		outputs['Aero|Cd0_vehicle'] = CD0
-		outputs['Aero|parasite_drag_vehicle'] = 0.5 * rho_air * v * v * S_ref * CD0
-		outputs['Aero|f_total_non_hub'] = f
-		outputs['Aero|f_fuselage'] = f_fuselage
+		if vehicle.configuration == 'LiftPlusCruise':
+			outputs['Aero|Cd0'] = f_total / S_ref
 
-		# print(segment_name, vehicle.Cd0[segment_name], CD0, f, f_fuselage, outputs['Aero|parasite_drag_vehicle'])
-
-def calc_flat_plate_drag(vehicle:object, rho_air:float, mu_air:float, v_inf:float):
+def calc_flat_plate_area(vehicle:object, rho_air:float, mu_air:float, v_inf:float):
 	"""
 	Calculating parasite drag via a component build-up approach
-	Component list (e.g. for a LiftPlusCruise)
+	Component list for a Multirotor
+		1. Fuselage
+		2. Boom 1
+		3. Boom 2
+		4. Boom 3
+		5. Boom 4
+		6. Skid front 1
+		7. Skid front 2
+		8. Skid side 1
+		9. Skid side 2
+		10. Skid rear 1
+		11. Skid rear 2
+	Component list for a LiftPlusCruise
 		1. Fuselage
 		2. Wing
 		3. H Tail
@@ -197,12 +232,15 @@ def calc_flat_plate_drag(vehicle:object, rho_air:float, mu_air:float, v_inf:floa
 		elif vehicle.landing_gear.gear_type == 'skid':
 			# Parasite drag of landing skid (front, side, rear)
 			CD_pi = np.array([1.01, 1.01, 1.01, 1.01, 1.01, 1.01])
-			S_front = np.array([0.0156419, 0.00823901, 0.0156419, 0.00823901, 0.0177222, 0.0177222])
+			S_front = np.array([0.0156419, 0.0156419, 0.00823901, 0.00823901, 0.0177222, 0.0177222])
 		f_LG = CD_pi * S_front
 
-		# f total
-		f_total = np.sum(f) + np.sum(f_LG)
-		f_fuselage = f[0]
+		# Bookkeeping
+		results = {}
+		results['f_total'] = np.sum(f) + np.sum(f_LG)
+		results['f_fuselage'] = f[0]
+		results['f_booms'] = f[1] + f[2] + f[3] + f[4]
+		results['f_landing_gears'] = np.sum(f_LG)
 
 	elif vehicle.configuration == 'LiftPlusCruise':
 		n_components = 4 + int(vehicle.lift_rotor.n_rotor/2)
@@ -263,8 +301,14 @@ def calc_flat_plate_drag(vehicle:object, rho_air:float, mu_air:float, v_inf:floa
 		S_front = np.array([0.0333752, 0.0333752, 0.0333752, 0.101213, 0.101213, 0.101213])
 		f_LG = CD_pi * S_front
 
-		# f total
-		f_total = np.sum(f) + np.sum(f_LG)
-		f_fuselage = f[0]
+		# Bookkeeping
+		results = {}
+		results['f_total'] = np.sum(f) + np.sum(f_LG)
+		results['f_fuselage'] = f[0]
+		results['f_wing'] = f[1]
+		results['f_horizontal_tail'] = f[2]
+		results['f_vertical_tail'] = f[3]
+		results['f_booms'] = f[4] + f[5] + f[6] + f[7]
+		results['f_landing_gears'] = np.sum(f_LG)
 
-	return f_total, f_fuselage
+	return results

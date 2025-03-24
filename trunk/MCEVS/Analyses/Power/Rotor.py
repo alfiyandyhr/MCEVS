@@ -63,7 +63,7 @@ class PowerForwardComp(om.ExplicitComponent):
 		outputs['Power|induced_power'] = N_rotor * T_rotor * k * v_ind
 		outputs['Power|propulsive_power'] = N_rotor * T_rotor * v_inf*np.sin(a)
 		outputs['Rotor|T_to_P'] = (T_rotor / g * 1000.0) / power_fwd_each
-		# print(N_rotor, g, P0, T_rotor, a, k, v_inf, v_ind, outputs['Rotor|T_to_P'])
+		# print(P0, T_rotor, a, k, v_inf, v_ind, outputs['Rotor|T_to_P'])
 
 	def compute_partials(self, inputs, partials):
 		N_rotor = self.options['N_rotor']
@@ -161,7 +161,7 @@ class RotorProfilePower(om.ExplicitComponent):
 		P0_each = (sigma*Cd0/8) * (1 + 4.65*mu**2) * (np.pi * rho_air * omega**3 * r**5)
 		outputs['Rotor|profile_power'] = P0_each
 
-		# print(n_blade, rho_air, Cd0, mu, omega, sigma, P0_each)
+		# print(n_blade, rho_air, r, Cd0, mu, omega, sigma, P0_each)
 
 	def compute_partials(self, inputs, partials):
 		n_blade = self.options['n_blade']

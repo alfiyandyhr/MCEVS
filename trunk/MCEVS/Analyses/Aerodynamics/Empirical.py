@@ -212,8 +212,6 @@ class RotorHubParasiteDragFidelityZero(om.ExplicitComponent):
 	Inputs:
 		Weight|takeoff 	: total take-off weight [kg]
 		Aero|speed 		: air speed of the eVTOL [m/s]
-		Rotor|radius	: rotor radius [m]
-		Wing|area 		: wing area [m**2]
 	Outputs:
 		Aero|Cd0_rotor_hub				: parasite drag coefficient
 		Aero|rotor_hub_parasite_drag	: parasite drag [N]
@@ -233,11 +231,8 @@ class RotorHubParasiteDragFidelityZero(om.ExplicitComponent):
 	def setup(self):
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
 		self.add_input('Aero|speed', units='m/s', desc='Air speed')
-		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
-		self.add_input('Wing|area', units='m**2', desc='Wing reference area')
 		self.add_output('Aero|f_rotor_hub', units='m**2', desc='Rotor hub equivalent flat plate area')
-		self.add_output('Aero|Cd0_rotor_hub', desc='Rotor hub parasite drag coefficient')
-		self.add_output('Aero|rotor_hub_parasite_drag', units='N', desc='Rotor hub parasite drag of a winged config')
+		self.add_output('Aero|parasite_drag_rotor_hub', units='N', desc='Rotor hub parasite drag of a winged config')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
@@ -252,22 +247,13 @@ class RotorHubParasiteDragFidelityZero(om.ExplicitComponent):
 
 		if vehicle.configuration in ['Multirotor']:
 			N_rotor = vehicle.lift_rotor.n_rotor
-			r_rotor = inputs['Rotor|radius']		# in [m]
-			S_disk = np.pi * r_rotor**2 			# in [m**2]
-			S_ref = S_disk 							# ref area is the disk area
 			f = N_rotor * 0.85 * ((W_takeoff/N_rotor)/1000)**(2/3) * kg_to_lb * ft2_to_m2
 		elif vehicle.configuration in ['LiftPlusCruise']:
 			N_rotor = vehicle.lift_rotor.n_rotor + vehicle.propeller.n_propeller
-			S_wing = inputs['Wing|area']			# in [m**2]
-			S_ref = S_wing 							# ref area is the wing area
 			f = N_rotor * 0.40 * ((W_takeoff/N_rotor)/1000)**(2/3) * kg_to_lb * ft2_to_m2
 
-		# Rotor hub drag coefficient
-		CD0_rotor_hub = f/S_ref
-
 		outputs['Aero|f_rotor_hub'] = f
-		outputs['Aero|Cd0_rotor_hub'] = CD0_rotor_hub
-		outputs['Aero|rotor_hub_parasite_drag'] = 0.5 * rho_air * v * v * S_ref * CD0_rotor_hub
+		outputs['Aero|parasite_drag_rotor_hub'] = 0.5 * rho_air * v * v * f
 
 	def compute_partials(self, inputs, partials):
 		vehicle = self.options['vehicle']
@@ -281,24 +267,14 @@ class RotorHubParasiteDragFidelityZero(om.ExplicitComponent):
 
 		if vehicle.configuration in ['Multirotor']:
 			N_rotor = vehicle.lift_rotor.n_rotor
-			r_rotor = inputs['Rotor|radius']		# in [m]
-			S_disk = np.pi * r_rotor**2 			# in [m**2]
-			S_ref = S_disk 							# ref area is the disk area
 			f = N_rotor * 0.85 * ((W_takeoff/N_rotor)/1000)**(2/3) * kg_to_lb * ft2_to_m2
 			df_dW = N_rotor * 0.85 * (2/3) * W_takeoff**(-1/3) * (1/N_rotor/1000)**(2/3) * kg_to_lb * ft2_to_m2
 		elif vehicle.configuration in ['LiftPlusCruise']:
 			N_rotor = vehicle.lift_rotor.n_rotor + vehicle.propeller.n_propeller
-			S_wing = inputs['Wing|area']			# in [m**2]
-			S_ref = S_wing 							# ref area is the wing area
 			f = N_rotor * 0.40 * ((W_takeoff/N_rotor)/1000)**(2/3) * kg_to_lb * ft2_to_m2
 			df_dW = N_rotor * 0.40 * (2/3) * W_takeoff**(-1/3) * (1/N_rotor/1000)**(2/3) * kg_to_lb * ft2_to_m2
 
 		partials['Aero|f_rotor_hub', 'Weight|takeoff'] = df_dW
 		partials['Aero|f_rotor_hub', 'Aero|speed'] = 0
-		partials['Aero|f_rotor_hub', 'Wing|area'] = 0
-		partials['Aero|Cd0_rotor_hub', 'Weight|takeoff'] = 1/S_ref * df_dW
-		partials['Aero|Cd0_rotor_hub', 'Aero|speed'] = 0
-		partials['Aero|Cd0_rotor_hub', 'Wing|area'] = -f/(S_ref**2)
-		partials['Aero|rotor_hub_parasite_drag', 'Weight|takeoff'] = 0.5 * rho_air * v**2 * df_dW
-		partials['Aero|rotor_hub_parasite_drag', 'Aero|speed'] = rho_air * v * f
-		partials['Aero|rotor_hub_parasite_drag', 'Wing|area'] = 0
+		partials['Aero|parasite_drag_rotor_hub', 'Weight|takeoff'] = 0.5 * rho_air * v**2 * df_dW
+		partials['Aero|parasite_drag_rotor_hub', 'Aero|speed'] = rho_air * v * f

@@ -303,7 +303,7 @@ class PowerRequirement(om.Group):
 										promotes_outputs=[('Power|CruiseConstantSpeed', f'Power|LiftRotor|segment_{segment.id}'), 'LiftRotor|Cruise|T_to_P', ('Power|profile_power', f'Power|segment_{segment.id}|profile_power'),
 														  ('Power|induced_power', f'Power|segment_{segment.id}|induced_power'), ('Power|propulsive_power', f'Power|segment_{segment.id}|propulsive_power'),
 														  ('LiftRotor|Cruise|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'), 'LiftRotor|Cruise|mu',
-														  'Aero|Cruise|total_drag','Aero|Cruise|Cd0','Aero|Cruise|f_total','Aero|Cruise|f_fuselage','Aero|Cruise|f_rotor_hub'])
+														  'Aero|Cruise|total_drag','Aero|Cruise|f_total'])
 
 				elif vehicle.configuration == 'LiftPlusCruise':
 					self.add_subsystem(f'segment_{segment.id}_power',
@@ -313,7 +313,7 @@ class PowerRequirement(om.Group):
 														  ('Power|induced_power', f'Power|segment_{segment.id}|induced_power'), ('Power|propulsive_power', f'Power|segment_{segment.id}|propulsive_power'),
 														   'Aero|Cruise|CL', 'Propeller|Cruise|thrust_coefficient', 'Propeller|Cruise|J',
 														  ('Propeller|Cruise|thrust',f'Propeller|thrust_each|segment_{segment.id}'),
-														  'Aero|Cruise|total_drag','Aero|Cruise|Cd0','Aero|Cruise|f_total','Aero|Cruise|f_fuselage','Aero|Cruise|f_rotor_hub'])
+														  'Aero|Cruise|total_drag','Aero|Cruise|f_total'])
 			if segment.kind == 'ConstantPower':
 
 				self.add_subsystem(f'segment_{segment.id}_power',
