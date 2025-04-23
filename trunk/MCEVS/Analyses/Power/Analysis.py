@@ -502,7 +502,7 @@ class PowerRequirement(om.Group):
 		self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
 		self.nonlinear_solver.linesearch.options['maxiter'] = 10
 		self.nonlinear_solver.linesearch.options['iprint'] = 0
-		self.linear_solver = om.DirectSolver(assemble_jac=True)
+		self.linear_solver = om.DirectSolver(assemble_jac=True, rhs_checking=True)
 
 
 
