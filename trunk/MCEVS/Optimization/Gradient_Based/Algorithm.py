@@ -7,7 +7,7 @@ from MCEVS.Utils.Performance import record_performance_by_segments
 
 def run_gradient_based_optimization(DesignProblem:object):
 
-	prob = om.Problem()
+	prob = om.Problem(reports=False)
 
 	indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
