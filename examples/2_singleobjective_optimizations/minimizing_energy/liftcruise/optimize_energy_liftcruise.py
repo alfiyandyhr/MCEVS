@@ -59,18 +59,24 @@ if run_with_speed_as_design_var_all_opt:
 			elif mission_range in [210]: mtow_guess = 1500.0
 			else: mtow_guess = 1000.0
 		elif battery_energy_density == 400:
-			if mission_range in [70]: mtow_guess = 1500.0
+			if mission_range in [20]: mtow_guess = 950.0
 			elif mission_range in [50]: mtow_guess = 1250.0
-			elif mission_range in [40]: mtow_guess = 1100.0
-			elif mission_range in [20]: mtow_guess = 950.0
-			elif mission_range in [60,80,90,110]: mtow_guess = 1200.0
+			elif mission_range in [70]: mtow_guess = 1500.0
+			elif mission_range in [80]: mtow_guess = 1300.0
+			elif mission_range in [90]: mtow_guess = 1210.0
+			elif mission_range in [40,100]: mtow_guess = 1100.0
+			elif mission_range in [60,110]: mtow_guess = 1200.0
 			else: mtow_guess = 1000.0
 		elif battery_energy_density == 550:
 			if mission_range in [20]: mtow_guess = 1150.0
-			elif mission_range in [60]: mtow_guess = 900.0
-			elif mission_range in [30,90]: mtow_guess = 1300.0
-			elif mission_range in [50]: mtow_guess = 1100.0
-			elif mission_range in [10,30,80,110]: mtow_guess = 1500.0
+			elif mission_range in [40]: mtow_guess = 950.0
+			elif mission_range in [50]: mtow_guess = 860.0
+			elif mission_range in [60]: mtow_guess = 905.0
+			elif mission_range in [30,70]: mtow_guess = 1300.0
+			elif mission_range in [80]: mtow_guess = 1700.0
+			elif mission_range in [90]: mtow_guess = 1280.0
+			elif mission_range in [100]: mtow_guess = 1350.0
+			elif mission_range in [10,110,120]: mtow_guess = 1500.0
 			else: mtow_guess = 1000.0
 
 		# Standard vehicle
