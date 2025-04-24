@@ -8,8 +8,8 @@ plot_minimizing_mission_time = False
 
 plot_minimizing_all_objs = True
 
-# configuration = 'multirotor'
-configuration = 'liftcruise'
+configuration = 'multirotor'
+# configuration = 'liftcruise'
 
 if plot_minimizing_takeoff_weight or plot_minimizing_energy or plot_minimizing_mission_time:
 
@@ -117,19 +117,16 @@ if plot_minimizing_all_objs:
 
 			axs[j,i].plot(data_list[i*3+0]['mission_range'], data_list[i*3+0][obj_dflabel], 'r.', label=f'Weight-minimized multirotor' if i==0 and j==0 else None)
 			axs[j,i].plot(data_list[i*3+1]['mission_range'], data_list[i*3+1][obj_dflabel], 'r--', label=f'Energy-minimized multirotor' if i==0 and j==0 else None)
-			# axs[j,i].plot(data_list[i*3+2]['mission_range'], data_list[i*3+2][obj_dflabel], 'r-', label=f'Time-minimized multirotor' if i==0 and j==0 else None)
+			axs[j,i].plot(data_list[i*3+2]['mission_range'], data_list[i*3+2][obj_dflabel], 'r-', label=f'Time-minimized multirotor' if i==0 and j==0 else None)
 			axs[j,i].plot(data_list[i*3+9+0]['mission_range'], data_list[i*3+9+0][obj_dflabel], 'b.', label=f'Weight-minimized lift+cruise' if i==0 and j==0 else None)
 			axs[j,i].plot(data_list[i*3+9+1]['mission_range'], data_list[i*3+9+1][obj_dflabel], 'b--', label=f'Energy-minimized lift+cruise' if i==0 and j==0 else None)
-			# axs[j,i].plot(data_list[i*3+9+2]['mission_range'], data_list[i*3+9+2][obj_dflabel], 'b-', label=f'Time-minimized lift+cruise' if i==0 and j==0 else None)
+			axs[j,i].plot(data_list[i*3+9+2]['mission_range'], data_list[i*3+9+2][obj_dflabel], 'b-', label=f'Time-minimized lift+cruise' if i==0 and j==0 else None)
 			if i*3+j in [0,1,2]: axs[j,i].set_ylabel(obj_ylabel)
 			if i*3+j in [2,5,8]: axs[j,i].set_xlabel('Mission range [km]')
 			if i*3+j in [0,3,6]: axs[j,i].set_title(f'Battery {battery} Wh/kg', size=10.0)
-			# if i == 0 and j == 0:
-				# axs[i,j].set_ylim([1200, 4000])
 
 	fig.suptitle('Single-objective optimization results')
-	# fig.legend(ncols=2,bbox_to_anchor=(0.8,0.96))
-	fig.legend(ncols=2,bbox_to_anchor=(0.8,0.95))
+	fig.legend(ncols=2,bbox_to_anchor=(0.8,0.96))
 	# plt.tight_layout()
 	plt.subplots_adjust(left=0.09, bottom=0.1, right=0.97, top=0.81, hspace=0.1)
 	plt.show()
