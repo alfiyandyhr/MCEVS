@@ -95,7 +95,7 @@ class WeightAnalysis(object):
 			wing_aspect_ratio 		= self.vehicle.wing.aspect_ratio
 
 		# --- OpenMDAO probolem --- #
-		prob = om.Problem()
+		prob = om.Problem(reports=False)
 		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
 		for segment in self.mission.segments:
@@ -184,7 +184,8 @@ class WeightAnalysis(object):
 								  MTOWEstimation(mission=self.mission,
 								  				 vehicle=self.vehicle,
 								  				 fidelity=self.fidelity,
-								  				 sizing_mode=False if self.solved_by=='optimization' else self.sizing_mode),
+								  				 sizing_mode=False if self.solved_by=='optimization' else self.sizing_mode,
+								  				 rhs_checking=False),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
 
@@ -279,6 +280,7 @@ class MTOWEstimation(om.Group):
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
 		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
 		self.options.declare('sizing_mode', types=bool, desc='Whether to use in a sizing mode')
+		self.options.declare('rhs_checking', types=bool, desc='rhs_checking in OpenMDAO linear solver')
 
 	def setup(self):
 		
@@ -287,6 +289,7 @@ class MTOWEstimation(om.Group):
 		vehicle 	 = self.options['vehicle']
 		fidelity 	 = self.options['fidelity']
 		sizing_mode  = self.options['sizing_mode']
+		rhs_checking = self.options['rhs_checking']
 
 		# Unpacking battery parameters
 		battery_rho 			= vehicle.battery.density
@@ -297,7 +300,8 @@ class MTOWEstimation(om.Group):
 		self.add_subsystem('energy',
 							EnergyConsumption(mission=mission,
 											  vehicle=vehicle,
-											  fidelity=fidelity),
+											  fidelity=fidelity,
+											  rhs_checking=rhs_checking),
 							promotes_inputs=['*'],
 							promotes_outputs=['*'])
 

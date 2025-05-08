@@ -166,6 +166,7 @@ class EnergyConsumption(om.Group):
 		self.options.declare('mission', types=object, desc='Mission object')
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
 		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
+		self.options.declare('rhs_checking', types=bool, desc='rhs_checking in OpenMDAO linear solver')
 
 	def setup(self):
 
@@ -173,6 +174,7 @@ class EnergyConsumption(om.Group):
 		mission 	 = self.options['mission']
 		vehicle 	 = self.options['vehicle']
 		fidelity 	 = self.options['fidelity']
+		rhs_checking = self.options['rhs_checking']
 
 		# -------------------------------------------------------------#
 		# --- Calculate power consumptions for each flight segment --- #
@@ -181,7 +183,8 @@ class EnergyConsumption(om.Group):
 		self.add_subsystem('power_requirement',
 							PowerRequirement(mission=mission,
 											 vehicle=vehicle,
-											 fidelity=fidelity),
+											 fidelity=fidelity,
+											 rhs_checking=rhs_checking),
 							promotes_inputs=['*'],
 							promotes_outputs=['*'])
 

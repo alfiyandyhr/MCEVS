@@ -155,6 +155,7 @@ class PowerRequirement(om.Group):
 		self.options.declare('mission', types=object, desc='Mission object')
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
 		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
+		self.options.declare('rhs_checking', types=bool, desc='rhs_checking in OpenMDAO linear solver')
 
 	def setup(self):
 
@@ -162,6 +163,7 @@ class PowerRequirement(om.Group):
 		mission 	 = self.options['mission']
 		vehicle 	 = self.options['vehicle']
 		fidelity 	 = self.options['fidelity']
+		rhs_checking = self.options['rhs_checking']
 
 		# Unpacking cruise AoA
 		for segment in mission.segments:
@@ -502,7 +504,7 @@ class PowerRequirement(om.Group):
 		self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
 		self.nonlinear_solver.linesearch.options['maxiter'] = 10
 		self.nonlinear_solver.linesearch.options['iprint'] = 0
-		self.linear_solver = om.DirectSolver(assemble_jac=True, rhs_checking=True)
+		self.linear_solver = om.DirectSolver(assemble_jac=True, rhs_checking=rhs_checking)
 
 
 

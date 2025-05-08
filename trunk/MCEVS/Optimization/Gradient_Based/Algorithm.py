@@ -78,7 +78,8 @@ def run_gradient_based_optimization(DesignProblem:object):
 								  MTOWEstimation(mission=DesignProblem.mission,
 								  				 vehicle=DesignProblem.vehicle,
 								  				 fidelity=DesignProblem.fidelity,
-								  				 sizing_mode=False),
+								  				 sizing_mode=False,
+								  				 rhs_checking=True),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
 	else:
