@@ -141,6 +141,15 @@ folders.append('examples/2_singleobjective_optimizations/minimizing_mission_time
 folders.append('examples/2_singleobjective_optimizations/minimizing_mission_time/liftcruise/battery_250_Whpkg/.DS_Store')
 folders.append('examples/2_singleobjective_optimizations/minimizing_mission_time/liftcruise/battery_400_Whpkg/.DS_Store')
 folders.append('examples/2_singleobjective_optimizations/minimizing_mission_time/liftcruise/battery_550_Whpkg/.DS_Store')
+
+folders.append('examples/4_suboptimal_performance_evaluation/.DS_Store')
+folders.append('examples/4_suboptimal_performance_evaluation/selection_by_weight/.DS_Store')
+folders.append('examples/4_suboptimal_performance_evaluation/selection_by_weight/multirotor/.DS_Store')
+folders.append('examples/4_suboptimal_performance_evaluation/selection_by_weight/liftcruise/.DS_Store')
+folders.append('examples/4_suboptimal_performance_evaluation/selection_by_energy/.DS_Store')
+folders.append('examples/4_suboptimal_performance_evaluation/selection_by_energy/multirotor/.DS_Store')
+folders.append('examples/4_suboptimal_performance_evaluation/selection_by_energy/liftcruise/.DS_Store')
+
 folders.append('examples/vehicle_creation/.DS_Store')
 folders.append('examples/mission_visualization/.DS_Store')
 folders.append('sheets/.DS_Store')
@@ -184,6 +193,10 @@ folders.append('examples/3_optimizations_under_range_speed_sweep/selection_by_en
 folders.append('examples/3_optimizations_under_range_speed_sweep/selection_by_energy/liftcruise/Unnamed_CompGeom.txt')
 folders.append('examples/3_optimizations_under_range_speed_sweep/selection_by_weight/multirotor/Unnamed_CompGeom.txt')
 folders.append('examples/3_optimizations_under_range_speed_sweep/selection_by_weight/liftcruise/Unnamed_CompGeom.txt')
+folders.append('examples/4_suboptimal_performance_evaluation/selection_by_weight/multirotor/Unnamed_CompGeom.txt')
+folders.append('examples/4_suboptimal_performance_evaluation/selection_by_weight/liftcruise/Unnamed_CompGeom.txt')
+folders.append('examples/4_suboptimal_performance_evaluation/selection_by_energy/multirotor/Unnamed_CompGeom.txt')
+folders.append('examples/4_suboptimal_performance_evaluation/selection_by_energy/liftcruise/Unnamed_CompGeom.txt')
 
 for folder in folders:
 	try:
