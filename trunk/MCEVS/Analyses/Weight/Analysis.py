@@ -47,30 +47,42 @@ class VehicleWeight(object):
 	def __init__(self, mtow=None):
 		super(VehicleWeight, self).__init__()
 		self.max_takeoff = mtow	# defined, or sized
+		self.gross_takeoff = None
 		self.payload = None
 		self.battery = None
 		self.propulsion = None
 		self.structure = None
 		self.equipment = None
+		self.is_sized = False
 
-	def is_being_sized(self):
-		pass
+	def print_info(self):
+		print(f'Weight|maximum_takeoff= {self.max_takeoff} kg')
+		print(f'Weight|gross_takeoff= {self.gross_takeoff} kg')
+		print(f'Weight|payload= {self.payload} kg')
+		print(f'Weight|battery= {self.battery} kg')
+		print(f'Weight|propulsion= {self.propulsion} kg')
+		print(f'Weight|structure= {self.structure} kg')
+		print(f'Weight|equipment= {self.equipment} kg')
 
 class WeightAnalysis(object):
 	"""
 	docstring for WeightAnalysis
 	"""
-	def __init__(self, vehicle:object, mission:object, fidelity:dict, sizing_mode=True, solved_by='optimization'):
+	def __init__(self, vehicle:object, mission:object, fidelity:dict, weight_type=None, sizing_mode=True, solved_by='optimization'):
 		super(WeightAnalysis, self).__init__()
 		self.vehicle = vehicle
 		self.mission = mission
 		self.fidelity = fidelity
 		self.sizing_mode = sizing_mode
 		self.solved_by = solved_by
+		self.weight_type = weight_type # ['maximum', 'gross']
 		if self.solved_by not in ['optimization', 'nonlinear_solver']:
 			raise NotImplementedError('"solved_by" should be either "optimization" or "nonlinear_solver"')
 
-	def evaluate(self, record=False, mtow_guess=None, print=True):
+	def evaluate(self, record=False, weight_guess=None, print=True):
+
+		if self.weight_type not in ['maximum', 'gross']:
+			raise ValueError('"weight_type" should be either "maximum" or "gross"')
 
 		if not print: 
 			if os.name =='posix': sys.stdout = open('/dev/null', 'w')  # Redirect stdout to /dev/null
@@ -179,57 +191,133 @@ class WeightAnalysis(object):
 									  promotes_inputs=[('mean_c_to_R', 'Propeller|mean_c_to_R'), ('R', 'Propeller|radius')],
 									  promotes_outputs=[('mean_chord', 'Propeller|chord')])
 
-		# Core weight module
-		prob.model.add_subsystem('mtow_model',
-								  MTOWEstimation(mission=self.mission,
-								  				 vehicle=self.vehicle,
-								  				 fidelity=self.fidelity,
-								  				 sizing_mode=False if self.solved_by=='optimization' else self.sizing_mode,
-								  				 rhs_checking=False),
-								  promotes_inputs=['*'],
-								  promotes_outputs=['*'])
+		# --- Core weight module --- #
 
-		# Sizing or not sizing
-		if not self.sizing_mode:
-			mtow_guess = 1500.0 if mtow_guess is None else mtow_guess
-			indeps.add_output('Weight|takeoff', mtow_guess, units='kg') # mtow initial guess
-			prob.setup(check=False)
-			# prob.check_partials(compact_print=True, method='fd')
-			prob.run_model()
+		# Maximum takeoff weight
+		if self.weight_type == 'maximum':
+			prob.model.add_subsystem('mtow_model',
+									  MTOWEstimation(mission=self.mission,
+									  				 vehicle=self.vehicle,
+									  				 fidelity=self.fidelity,
+									  				 sizing_mode=False if self.solved_by=='optimization' else self.sizing_mode,
+									  				 rhs_checking=False),
+									  promotes_inputs=['*'],
+									  promotes_outputs=['*'])
+			# Sizing or not sizing
+			if not self.sizing_mode:
+				weight_guess = 1500.0 if weight_guess is None else weight_guess
+				indeps.add_output('Weight|takeoff', weight_guess, units='kg') # mtow initial guess
+				prob.setup(check=False)
+				# prob.check_partials(compact_print=True, method='fd')
+				prob.run_model()
 
-		else:
-			if self.solved_by == 'optimization':
-				prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
-				mtow_guess = 1500.0 if mtow_guess is None else mtow_guess
-				indeps.add_output('Weight|takeoff', mtow_guess, units='kg') # mtow initial guess
-
-				if self.fidelity['hover_climb'] in [0,1]:
-					prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000, units='kg')
-					prob.model.add_objective('Weight|residual', units='kg')
-					prob.setup(check=False)
-					prob.run_driver()
-
-				elif self.fidelity['hover_climb'] == 2:
-					prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
-					prob.model.add_design_var('Weight|takeoff', lower=600.0, upper=10000.0, units='kg')
-					prob.model.add_design_var('LiftRotor|global_twist', lower=0.0, upper=100.0, units='deg')
-					prob.model.add_objective('Weight|residual', units='kg')
-					prob.model.add_constraint('LiftRotor|HoverClimb|thrust_residual_square', lower=0, upper=0.1, units=None)
-					prob.setup(check=False)
-					prob.run_driver()
-
-			elif self.solved_by == 'nonlinear_solver':
-
-				if self.fidelity['hover_climb'] == 0:
-					prob.setup(check=False)
-					prob.run_model()
-
-				elif self.fidelity['hover_climb'] == 2:
+			else:
+				if self.solved_by == 'optimization':
 					prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
-					prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
-					prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square', units=None)
-					prob.setup(check=False)
-					prob.run_driver()
+					weight_guess = 1500.0 if weight_guess is None else weight_guess
+					indeps.add_output('Weight|takeoff', weight_guess, units='kg') # mtow initial guess
+
+					if self.fidelity['hover_climb'] in [0,1]:
+						prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000, units='kg')
+						prob.model.add_objective('Weight|residual', units='kg')
+						prob.setup(check=False)
+						prob.run_driver()
+
+					elif self.fidelity['hover_climb'] == 2:
+						prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
+						prob.model.add_design_var('Weight|takeoff', lower=600.0, upper=10000.0, units='kg')
+						prob.model.add_design_var('LiftRotor|global_twist', lower=0.0, upper=100.0, units='deg')
+						prob.model.add_objective('Weight|residual', units='kg')
+						prob.model.add_constraint('LiftRotor|HoverClimb|thrust_residual_square', lower=0, upper=0.1, units=None)
+						prob.setup(check=False)
+						prob.run_driver()
+
+				elif self.solved_by == 'nonlinear_solver':
+
+					if self.fidelity['hover_climb'] == 0:
+						prob.setup(check=False)
+						prob.run_model()
+
+					elif self.fidelity['hover_climb'] == 2:
+						prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
+						prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
+						prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square', units=None)
+						prob.setup(check=False)
+						prob.run_driver()
+
+			# VehicleWeight() bookkeeping
+			self.vehicle.weight.payload = prob.get_val('Weight|payload')
+			self.vehicle.weight.max_takeoff = prob.get_val('Weight|takeoff')
+			self.vehicle.weight.gross_takeoff = prob.get_val('Weight|takeoff')
+			self.vehicle.weight.battery = prob.get_val('Weight|battery')
+			self.vehicle.weight.propulsion = prob.get_val('Weight|propulsion')
+			self.vehicle.weight.structure = prob.get_val('Weight|structure')
+			self.vehicle.weight.equipment = prob.get_val('Weight|equipment')
+			self.vehicle.weight.is_sized = True
+
+		# Gross takeoff weight				
+		elif self.weight_type == 'gross':
+
+			if not self.vehicle.weight.is_sized:
+				raise ValueError('vehicle.weight.is_sized == False; vehicle should be sized first!')
+
+			indeps.add_output('Weight|propulsion', self.vehicle.weight.propulsion, units='kg')
+			indeps.add_output('Weight|structure', self.vehicle.weight.structure, units='kg')
+			indeps.add_output('Weight|equipment', self.vehicle.weight.equipment, units='kg')
+
+			prob.model.add_subsystem('gtow_model',
+									  GTOWEstimation(mission=self.mission,
+									  				 vehicle=self.vehicle,
+									  				 fidelity=self.fidelity,
+									  				 sizing_mode=False if self.solved_by=='optimization' else self.sizing_mode,
+									  				 rhs_checking=False),
+									  promotes_inputs=['*'],
+									  promotes_outputs=['*'])
+
+			# Sizing or not sizing
+			if not self.sizing_mode:
+				indeps.add_output('Weight|takeoff', self.vehicle.weight.max_takeoff if weight_guess is None else weight_guess, units='kg') # gtow initial guess
+				prob.setup(check=False)
+				# prob.check_partials(compact_print=True, method='fd')
+				prob.run_model()
+
+			else:
+				if self.solved_by == 'optimization':
+					prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
+					indeps.add_output('Weight|takeoff', self.vehicle.weight.max_takeoff if weight_guess is None else weight_guess, units='kg') # gtow initial guess
+
+					if self.fidelity['hover_climb'] in [0,1]:
+						prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000, units='kg')
+						prob.model.add_objective('Weight|residual', units='kg')
+						prob.setup(check=False)
+						prob.run_driver()
+
+					elif self.fidelity['hover_climb'] == 2:
+						prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
+						prob.model.add_design_var('Weight|takeoff', lower=600.0, upper=10000.0, units='kg')
+						prob.model.add_design_var('LiftRotor|global_twist', lower=0.0, upper=100.0, units='deg')
+						prob.model.add_objective('Weight|residual', units='kg')
+						prob.model.add_constraint('LiftRotor|HoverClimb|thrust_residual_square', lower=0, upper=0.1, units=None)
+						prob.setup(check=False)
+						prob.run_driver()
+
+				elif self.solved_by == 'nonlinear_solver':
+
+					if self.fidelity['hover_climb'] == 0:
+						prob.setup(check=False)
+						prob.run_model()
+
+					elif self.fidelity['hover_climb'] == 2:
+						prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
+						prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
+						prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square', units=None)
+						prob.setup(check=False)
+						prob.run_driver()
+
+			# VehicleWeight() bookkeeping
+			self.vehicle.weight.payload = prob.get_val('Weight|payload')
+			self.vehicle.weight.gross_takeoff = prob.get_val('Weight|takeoff')
+			self.vehicle.weight.battery = prob.get_val('Weight|battery')
 
 		if record:
 			record_performance_by_segments(prob, self.vehicle.configuration, self.mission)
@@ -241,7 +329,7 @@ class WeightAnalysis(object):
 
 class MTOWEstimation(om.Group):
 	"""
-	Computes eVTOL total weight estimation given the design variables and mission requirement.
+	Computes eVTOL maximum takeoff weight estimation given the design variables and mission requirement.
 	Must be used with an optimizer (or a nonlinear solver) to converge the weight residual.
 
 	Inputs:
@@ -261,6 +349,7 @@ class MTOWEstimation(om.Group):
 
 	Outputs:
 	(weight of each component)
+		Weight|payload
 		Weight|battery
 		Weight|propulsion
 		Weight|structure
@@ -373,6 +462,100 @@ class MTOWEstimation(om.Group):
 		# W_propulsion = W_rotors + W_motors + W_controllers
 		# W_structure = W_fuselage + W_landing_gear + W_wing
 		# W_equipment = W_avionics + W_flight_control + W_anti_icing + W_furnishings
+
+		# Payload weight
+		# 1 PAX = 100.0 kg (default)
+		n_pax = vehicle.fuselage.number_of_passenger
+		payload_per_pax = vehicle.fuselage.payload_per_pax
+		payload_weight = om.IndepVarComp('Weight|payload', val=n_pax*payload_per_pax, units='kg')
+		self.add_subsystem('payload', payload_weight, promotes=['*'])
+
+		# W_residual should then be driven to 0 by a nonlinear solver or treated as an optimization constraint
+		input_list = [('W_total', 		'Weight|takeoff'),
+					  ('W_payload', 	'Weight|payload'),
+					  ('W_battery', 	'Weight|battery'),
+					  ('W_propulsion', 	'Weight|propulsion'),
+					  ('W_structure', 	'Weight|structure'),
+					  ('W_equipment', 	'Weight|equipment')]
+
+		W_residual_eqn = 'W_residual = (W_total - W_payload - W_battery - W_propulsion - W_structure - W_equipment)**2'
+		self.add_subsystem('w_residual_comp',
+							om.ExecComp(W_residual_eqn, units='kg'),
+							promotes_inputs=input_list,
+							promotes_outputs=[('W_residual','Weight|residual')])
+
+		# If nonlinear solver to be used
+		if sizing_mode:
+			# This drives W_residual = 0 by varying W_total. LB and UB of W_total should be given.
+			residual_balance = om.BalanceComp('W_total',
+											   units='kg',
+											   eq_units='kg',
+											   lower=0.0,
+											   upper=10000.0,
+											   val=1500.0,
+											   rhs_val=0.0,
+											   use_mult=False)
+			self.add_subsystem('weight_balance',
+								residual_balance,
+								promotes_inputs=[('lhs:W_total', 'Weight|residual')],
+								promotes_outputs=[('W_total','Weight|takeoff')])
+
+			# Add solvers for implicit relations
+			self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=50, iprint=0, rtol=1e-3)
+			self.nonlinear_solver.options['err_on_non_converge'] = False
+			self.nonlinear_solver.options['reraise_child_analysiserror'] = True
+			self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
+			self.nonlinear_solver.linesearch.options['maxiter'] = 10
+			self.nonlinear_solver.linesearch.options['iprint'] = 0
+			self.linear_solver = om.DirectSolver(assemble_jac=True)
+
+class GTOWEstimation(om.Group):
+	"""
+	Computes eVTOL gross takeoff weight estimation given the design variables and mission requirement.
+	Must be used with an optimizer (or a nonlinear solver) to converge the weight residual.
+	"""
+
+	def initialize(self):
+		self.options.declare('mission', types=object, desc='Mission object')
+		self.options.declare('vehicle', types=object, desc='Vehicle object')
+		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
+		self.options.declare('sizing_mode', types=bool, desc='Whether to use in a sizing mode')
+		self.options.declare('rhs_checking', types=bool, desc='rhs_checking in OpenMDAO linear solver')
+
+	def setup(self):
+		
+		# Unpacking option objects
+		mission 	 = self.options['mission']
+		vehicle 	 = self.options['vehicle']
+		fidelity 	 = self.options['fidelity']
+		sizing_mode  = self.options['sizing_mode']
+		rhs_checking = self.options['rhs_checking']
+
+		# Unpacking battery parameters
+		battery_rho 			= vehicle.battery.density
+		battery_eff 			= vehicle.battery.efficiency
+		battery_max_discharge 	= vehicle.battery.max_discharge
+
+		# --- Calculate total energy consumptions to fly the mission --- #
+		self.add_subsystem('energy',
+							EnergyConsumption(mission=mission,
+											  vehicle=vehicle,
+											  fidelity=fidelity,
+											  rhs_checking=rhs_checking),
+							promotes_inputs=['*'],
+							promotes_outputs=['*'])
+
+		# --- Calculate weight estimation of each component --- #
+
+		# 1. Battery weight
+		# battery weight is computed taking into account loss in efficiency, avionics power, and its maximum discharge rate
+		self.add_subsystem('battery_weight',
+							BatteryWeight(battery_rho=battery_rho, battery_eff=battery_eff, battery_max_discharge=battery_max_discharge),
+							promotes_inputs=[('required_energy', 'Energy|entire_mission')],
+							promotes_outputs=['Weight|battery'])
+
+		# 5. Weight residuals
+		# W_residual = (W_total - W_payload - W_battery - W_propulsion - W_structure - W_equipment)**2
 
 		# Payload weight
 		# 1 PAX = 100.0 kg (default)
