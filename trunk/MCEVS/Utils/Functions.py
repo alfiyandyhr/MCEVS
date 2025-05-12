@@ -40,3 +40,40 @@ class SoftMax(om.ExplicitComponent):
 
 		partials['fmax', 'f1'] = np.exp(rho * f1) / tmp
 		partials['fmax', 'f2'] = np.exp(rho * f2) / tmp
+
+class BoltzmanSigmoid(om.ExplicitComponent):
+	"""
+	Compute the Boltzman Sigmoid function
+	Input:
+		t
+	Output:
+		f
+	"""
+	def initialize(self):
+		self.options.declare('a', types=float, desc='Boltzman sigmoid coefficient "a"')
+		self.options.declare('b', types=float, desc='Boltzman sigmoid coefficient "b"')
+		self.options.declare('c', types=float, desc='Boltzman sigmoid coefficient "c"')
+		self.options.declare('tau', types=float, desc='Boltzman sigmoid coefficient "tau"')
+
+	def setup(self):
+		self.add_input('t')
+		self.add_output('f')
+		self.declare_partials('f', 't')
+
+	def compute(self, inputs, outputs):
+		a = self.options['a']
+		b = self.options['b']
+		c = self.options['c']
+		tau = self.options['tau']
+		t = inputs['t']
+		
+		outputs['f'] = a + b / (1 + np.exp(c * (tau - t)))
+
+	def compute_partials(self, inputs, partials):
+		a = self.options['a']
+		b = self.options['b']
+		c = self.options['c']
+		tau = self.options['tau']
+		t = inputs['t']
+
+		partials['f','t'] = b * c * np.exp(c * (tau - t)) / ( np.exp(c * (tau - t)) + 1 )**2
