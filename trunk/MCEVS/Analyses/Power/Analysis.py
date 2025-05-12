@@ -304,7 +304,7 @@ class PowerRequirement(om.Group):
 										promotes_inputs=['Weight|*', ('Mission|cruise_speed',f'Mission|segment_{segment.id}|speed'), 'LiftRotor|*'],
 										promotes_outputs=[('Power|CruiseConstantSpeed', f'Power|LiftRotor|segment_{segment.id}'), 'LiftRotor|Cruise|T_to_P', ('Power|profile_power', f'Power|segment_{segment.id}|profile_power'),
 														  ('Power|induced_power', f'Power|segment_{segment.id}|induced_power'), ('Power|propulsive_power', f'Power|segment_{segment.id}|propulsive_power'),
-														  ('LiftRotor|Cruise|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'), 'LiftRotor|Cruise|mu',
+														  ('LiftRotor|Cruise|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'), 'LiftRotor|Cruise|mu', 'LiftRotor|Cruise|thrust_coefficient',
 														  'Aero|Cruise|total_drag','Aero|Cruise|f_total'])
 
 				elif vehicle.configuration == 'LiftPlusCruise':

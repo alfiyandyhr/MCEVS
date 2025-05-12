@@ -1,6 +1,6 @@
 import openmdao.api as om
 
-from MCEVS.Analyses.Weight.Analysis import MTOWEstimation
+from MCEVS.Analyses.Weight.Analysis import MTOWEstimation, MultiPointMTOWEstimation
 from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraint
 from MCEVS.Analyses.Geometry.Rotor import MeanChord
 from MCEVS.Utils.Performance import record_performance_by_segments
@@ -55,12 +55,21 @@ def run_gradient_based_optimization(DesignProblem:object):
 
 	elif DesignProblem.vehicle.configuration == 'LiftPlusCruise':
 		# Calculate spanwise clearance constraint for lift rotor of LPC config
-		prob.model.add_subsystem('lift_rotor_clearance',
-								  LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
-								  							   max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
-								  							   percent_max_span=95.0),
-								  promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
-								  promotes_outputs=[('clearance_constraint', 'LiftRotor|clearance_constraint')])
+		if DesignProblem.kind in ['SingleObjectiveProblem', 'MultiObjectiveProblem']:
+			prob.model.add_subsystem('lift_rotor_clearance',
+									  LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
+									  							   max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
+									  							   percent_max_span=95.0),
+									  promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
+									  promotes_outputs=[('clearance_constraint', 'LiftRotor|clearance_constraint')])
+		elif DesignProblem.kind in ['MultiPointSingleObjectiveProblem']:
+			for n in range(1,DesignProblem.multipoint_options['n_points']+1):
+	 			prob.model.add_subsystem(f'lift_rotor_clearance_{n}',
+						  LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
+						  							   max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
+						  							   percent_max_span=95.0),
+						  promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
+						  promotes_outputs=[('clearance_constraint', f'Point_{n}|LiftRotor|clearance_constraint')])
 		# Convert mean_c_to_R into mean_chord
 		prob.model.add_subsystem('chord_calc_lift_rotor',
 								  MeanChord(),
@@ -82,6 +91,16 @@ def run_gradient_based_optimization(DesignProblem:object):
 								  				 rhs_checking=True),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
+	
+	elif list(DesignProblem.objectives.keys())[0] in ['weighted_sum_of_takeoff_weight','weighted_sum_of_energy','time_averaged_takeoff_weight', 'time_averaged_energy']:
+		prob.model.add_subsystem('multipoint_weight_estimation',
+								  MultiPointMTOWEstimation(mission=DesignProblem.mission,
+								  						   vehicle=DesignProblem.vehicle,
+								  						   fidelity=DesignProblem.fidelity,
+								  						   multipoint_options=DesignProblem.multipoint_options),
+								  promotes_inputs=['*'],
+								  promotes_outputs=['*'])
+		
 	else:
 		raise NotImplementedError('Please check your "DesignProblem.objectives"')
 
@@ -108,8 +127,9 @@ def run_gradient_based_optimization(DesignProblem:object):
 	# Run optimization
 	prob.setup(check=False)
 	prob.run_driver()
+	prob.list_problem_vars(driver_scaling=False)
 
 	# Record the optimal design performance
-	record_performance_by_segments(prob, DesignProblem.vehicle.configuration, DesignProblem.mission)
+	# record_performance_by_segments(prob, DesignProblem.vehicle.configuration, DesignProblem.mission)
 
 	return prob
