@@ -150,6 +150,14 @@ folders.append('examples/4_suboptimal_performance_evaluation/selection_by_energy
 folders.append('examples/4_suboptimal_performance_evaluation/selection_by_energy/multirotor/.DS_Store')
 folders.append('examples/4_suboptimal_performance_evaluation/selection_by_energy/liftcruise/.DS_Store')
 
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/.DS_Store')
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/weighted_sum_of_takeoff_weight/.DS_Store')
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/weighted_sum_of_takeoff_weight/multirotor/.DS_Store')
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/weighted_sum_of_takeoff_weight/liftcruise/.DS_Store')
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/weighted_sum_of_energy/.DS_Store')
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/weighted_sum_of_energy/multirotor/.DS_Store')
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/weighted_sum_of_energy/liftcruise/.DS_Store')
+
 folders.append('examples/vehicle_creation/.DS_Store')
 folders.append('examples/mission_visualization/.DS_Store')
 folders.append('sheets/.DS_Store')
@@ -197,6 +205,10 @@ folders.append('examples/4_suboptimal_performance_evaluation/selection_by_weight
 folders.append('examples/4_suboptimal_performance_evaluation/selection_by_weight/liftcruise/Unnamed_CompGeom.txt')
 folders.append('examples/4_suboptimal_performance_evaluation/selection_by_energy/multirotor/Unnamed_CompGeom.txt')
 folders.append('examples/4_suboptimal_performance_evaluation/selection_by_energy/liftcruise/Unnamed_CompGeom.txt')
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/weighted_sum_of_takeoff_weight/multirotor/Unnamed_CompGeom.txt')
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/weighted_sum_of_takeoff_weight/liftcruise/Unnamed_CompGeom.txt')
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/weighted_sum_of_energy/multirotor/Unnamed_CompGeom.txt')
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/weighted_sum_of_energy/liftcruise/Unnamed_CompGeom.txt')
 
 for folder in folders:
 	try:
