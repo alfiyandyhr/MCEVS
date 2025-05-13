@@ -111,13 +111,13 @@ def run_gradient_based_optimization(DesignProblem:object):
 	prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, singular_jac_tol=1e-16, debug_print=debug_print, disp=True)
 	# prob.driver = om.pyOptSparseDriver(optimizer='', print_opt_prob=True)
 	# prob.driver = om.DifferentialEvolutionDriver(max_gen=5)
-	prob.driver.recording_options['includes'] = ['*']
-	prob.driver.recording_options['record_objectives'] = True
-	prob.driver.recording_options['record_constraints'] = True
-	prob.driver.recording_options['record_desvars'] = True
-	prob.driver.recording_options['record_inputs'] = True
-	prob.driver.recording_options['record_outputs'] = True
-	prob.driver.recording_options['record_residuals'] = True
+	# prob.driver.recording_options['includes'] = ['*']
+	# prob.driver.recording_options['record_objectives'] = True
+	# prob.driver.recording_options['record_constraints'] = True
+	# prob.driver.recording_options['record_desvars'] = True
+	# prob.driver.recording_options['record_inputs'] = True
+	# prob.driver.recording_options['record_outputs'] = True
+	# prob.driver.recording_options['record_residuals'] = True
 
 	# if DesignProblem.vehicle.configuration == 'Multirotor':
 	# 	prob.driver.add_recorder(om.SqliteRecorder("multirotor_opt_cases.sql"))
@@ -127,7 +127,7 @@ def run_gradient_based_optimization(DesignProblem:object):
 	# Run optimization
 	prob.setup(check=False)
 	prob.run_driver()
-	prob.list_problem_vars(driver_scaling=False)
+	# prob.list_problem_vars(driver_scaling=False)
 
 	# Record the optimal design performance
 	# record_performance_by_segments(prob, DesignProblem.vehicle.configuration, DesignProblem.mission)

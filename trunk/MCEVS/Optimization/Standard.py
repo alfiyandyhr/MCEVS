@@ -74,7 +74,7 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 
 	return results
 
-def RunMultiPointSingleObjectiveOptimization(type:str, n_points:int, value_list:list, objective:str, weight_coeffs:list, vehicle:object, mission:object, fidelity:dict, mtow_guess_list:bool, speed_as_design_var:bool, print=True):
+def RunMultiPointSingleObjectiveOptimization(type:str, value_list:list, objective:str, weight_coeffs:list, vehicle:object, mission:object, fidelity:dict, mtow_guess_list:bool, speed_as_design_var:bool, print=True):
 
 	if not print: 
 		if os.name =='posix': sys.stdout = open('/dev/null', 'w')  # Redirect stdout to /dev/null
@@ -100,7 +100,7 @@ def RunMultiPointSingleObjectiveOptimization(type:str, n_points:int, value_list:
 							algorithm='gradient-based')
 
 	problem.multipoint_options['type'] = type
-	problem.multipoint_options['n_points'] = n_points
+	problem.multipoint_options['n_points'] = len(value_list)
 	problem.multipoint_options['value_list'] = value_list
 	problem.multipoint_options['objective'] = objective
 	problem.multipoint_options['weight_coeffs'] = weight_coeffs
@@ -122,7 +122,7 @@ def RunMultiPointSingleObjectiveOptimization(type:str, n_points:int, value_list:
 			if speed_as_design_var:
 				problem.add_design_var(f'Mission|segment_{cruise_segment_id}|speed', 80*1000/3600, 320*1000/3600, mission.segments[cruise_segment_id-1].speed, 'm/s')
 
-			for n in range(1,n_points+1):
+			for n in range(1,problem.multipoint_options['n_points']+1):
 				problem.add_design_var(f'Point_{n}|Weight|takeoff', 100.0, 10000.0, mtow_guess_list[n-1], 'kg')
 
 				problem.add_constraint(f'Point_{n}|Weight|residual', 0.0, 0.0, 0.1, 'kg')
@@ -143,7 +143,7 @@ def RunMultiPointSingleObjectiveOptimization(type:str, n_points:int, value_list:
 			if speed_as_design_var:
 				problem.add_design_var(f'Mission|segment_{cruise_segment_id}|speed', 80*1000/3600, 320*1000/3600, mission.segments[cruise_segment_id-1].speed, 'm/s')
 
-			for n in range(1,n_points+1):
+			for n in range(1,problem.multipoint_options['n_points']+1):
 				problem.add_design_var(f'Point_{n}|Weight|takeoff', 100.0, 10000.0, mtow_guess_list[n-1], 'kg')
 
 				problem.add_constraint(f'Point_{n}|Weight|residual', 0.0, 0.0, 0.1, 'kg')
@@ -265,7 +265,7 @@ def bookkeep_results(problem:object, vehicle:object, mission:object, om_result:o
 
 		if vehicle.configuration == 'Multirotor':
 			
-			results[f"{problem.multipoint_options['objective']}"] = res.driver.get_objective_values(driver_scaling=False)
+			results[f"{problem.multipoint_options['objective']}"] = res.driver.get_objective_values(driver_scaling=False)[f"{problem.multipoint_options['objective']}"][0]
 			results['LiftRotor|radius'] = res.get_val('LiftRotor|radius', 'm')[0]
 			results['LiftRotor|Cruise|RPM'] = res.get_val('LiftRotor|Cruise|RPM', 'rpm')[0]
 
@@ -281,7 +281,26 @@ def bookkeep_results(problem:object, vehicle:object, mission:object, om_result:o
 				results[f'Point_{n}|Weight|residual'] = res.get_val(f'Point_{n}|Weight|residual', 'kg')[0]
 
 		elif vehicle.configuration == 'LiftPlusCruise':
-			pass
+
+			results[f"{problem.multipoint_options['objective']}"] = res.driver.get_objective_values(driver_scaling=False)[f"{problem.multipoint_options['objective']}"][0]
+			results['Wing|area'] = res.get_val('Wing|area', 'm**2')[0]
+			results['Wing|aspect_ratio'] = res.get_val('Wing|aspect_ratio', None)[0]
+			results['LiftRotor|radius'] = res.get_val('LiftRotor|radius', 'm')[0]
+			results['Propeller|radius'] = res.get_val('Propeller|radius', 'm')[0]
+			results['Propeller|Cruise|RPM'] = res.get_val('Propeller|Cruise|RPM', 'rpm')[0]
+
+			for n in range(1,problem.multipoint_options['n_points']+1):
+				results[f'value_{n}'] = problem.multipoint_options['value_list'][n-1]
+				results[f'Point_{n}|Weight|takeoff'] = res.get_val(f'Point_{n}|Weight|takeoff', 'kg')[0]
+				results[f'Point_{n}|Energy|entire_mission'] = res.get_val(f'Point_{n}|Energy|entire_mission', 'kW*h')[0]
+				results[f'Point_{n}|Aero|Cruise|CL'] = res.get_val(f'Point_{n}|Aero|Cruise|CL')[0]
+				results[f'Point_{n}|Propeller|Cruise|CT/sigma'] = res.get_val(f'Point_{n}|Propeller|Cruise|thrust_coefficient')[0]/vehicle.lift_rotor.solidity
+				results[f'Point_{n}|Propeller|Cruise|J'] = res.get_val(f'Point_{n}|Propeller|Cruise|J')[0]
+				results[f'Point_{n}|LiftRotor|HoverClimb|T_to_P'] = res.get_val(f'Point_{n}|LiftRotor|HoverClimb|T_to_P')[0]
+				results[f'Point_{n}|Propeller|Cruise|T_to_P'] = res.get_val(f'Point_{n}|Propeller|Cruise|T_to_P')[0]
+				results[f'Point_{n}|LiftRotor|HoverDescent|T_to_P'] = res.get_val(f'Point_{n}|LiftRotor|HoverDescent|T_to_P')[0]
+				results[f'Point_{n}|LiftRotor|clearance_constraint'] = res.get_val(f'Point_{n}|LiftRotor|clearance_constraint')[0]
+				results[f'Point_{n}|Weight|residual'] = res.get_val(f'Point_{n}|Weight|residual', 'kg')[0]
 
 	return results
 
