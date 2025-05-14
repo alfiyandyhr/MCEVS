@@ -1,0 +1,200 @@
+
+%%% Preamble Requirements %%%
+% \usepackage{geometry}
+% \usepackage{amsfonts}
+% \usepackage{amsmath}
+% \usepackage{amssymb}
+% \usepackage{tikz}
+
+% Optional packages such as sfmath set through python interface
+% \usepackage{sfmath}
+
+% \usetikzlibrary{arrows,chains,positioning,scopes,shapes.geometric,shapes.misc,shadows}
+
+%%% End Preamble Requirements %%%
+
+\input{"/opt/anaconda3/envs/mcevs/lib/python3.11/site-packages/pyxdsm/diagram_styles"}
+\begin{tikzpicture}
+
+\matrix[MatrixSetup]{
+%Row 0
+&
+\node [DataIO] (output_opt) {$\begin{array}{c}W_\text{takeoff}^\text{init}, v_\text{cruise}^\text{init} \\ S_\text{wing}^\text{init}, AR_\text{wing}^\text{init} \\ r_\text{rotor}^\text{init}, r_\text{prop}^\text{init}, RPM_\text{prop}^\text{init}\end{array}$};&
+\node [DataIO] (output_D1) {$\rho_\text{air}, g, \mathbf{p_\text{vehicle}}$};&
+\node [DataIO] (output_D2) {$g$};&
+\node [DataIO] (output_D3) {$\begin{array}{c}\rho_\text{air}, g, \mathbf{p_\text{vehicle}} \\ v_\text{climb}, v_\text{descent}\end{array}$};&
+\node [DataIO] (output_D4) {$R_\text{cruise}, t_\text{climb}, t_\text{descent}$};&
+\node [DataIO] (output_D5) {$\rho_\text{battery}$};&
+\node [DataIO] (output_D6) {$\mathbf{p_\text{vehicle}}$};&
+\node [DataIO] (output_D7) {$W_\text{payload}$};&
+\\
+%Row 1
+\node [DataIO] (left_output_opt) {$\begin{array}{c}W_\text{takeoff}^{*}, v_\text{cruise}^{*} \\ S_\text{wing}^{*}, AR_\text{wing}^{*} \\ r_\text{rotor}^{*}, r_\text{prop}^{*}, RPM_\text{prop}^{*}\end{array}$};&
+\node [Optimization] (opt) {$\text{Optimizer}$};&
+\node [DataInter] (opt-D1) {$\begin{array}{c}W_\text{takeoff}, v_\text{cruise} \\ S_\text{wing}, AR_\text{wing}\end{array}$};&
+\node [DataInter] (opt-D2) {$W_\text{takeoff}$};&
+\node [DataInter] (opt-D3) {$\begin{array}{c}r_\text{rotor}, r_\text{prop} \\ RPM_\text{prop}, v_\text{cruise}\end{array}$};&
+\node [DataInter] (opt-D4) {$v_\text{cruise}$};&
+&
+\node [DataInter] (opt-D6) {$\begin{array}{c}W_\text{takeoff}, r_\text{rotor}, r_\text{prop} \\ S_\text{wing}, AR_\text{wing}\end{array}$};&
+\node [DataInter] (opt-D7) {$W_\text{takeoff}$};&
+\\
+%Row 2
+\node [DataIO] (left_output_D1) {$G^{*}: CL_\text{cruise}^{*}$};&
+\node [DataInter] (D1-opt) {$G: CL_\text{cruise}$};&
+\node [Function] (D1) {$\text{Aerodynamics}$};&
+\node [DataInter] (D1-D2) {$D_\text{cruise}$};&
+&
+&
+&
+&
+&
+\\
+%Row 3
+&
+&
+&
+\node [Function] (D2) {$\text{Trim Analysis}$};&
+\node [DataInter] (D2-D3) {$\mathbf{T_\text{segments}}, \mathbf{\alpha_\text{segments}}$};&
+&
+&
+&
+&
+\\
+%Row 4
+\node [DataIO] (left_output_D3) {$\begin{array}{c}G^{*}: J_\text{prop}^{*}, CT/\sigma^{*}, \\ \mathbf{T/P_\text{segments}^{*}}\end{array}$};&
+\node [DataInter] (D3-opt) {$\begin{array}{c}G: J_\text{prop}, CT/\sigma, \\ \mathbf{T/P_\text{segments}}\end{array}$};&
+&
+&
+\node [Function] (D3) {$\text{Rotor Power Analysis}$};&
+\node [DataInter] (D3-D4) {$\mathbf{P_\text{segments}}$};&
+&
+\node [DataInter] (D3-D6) {$\mathbf{P_\text{segments}}$};&
+&
+\\
+%Row 5
+\node [DataIO] (left_output_D4) {$F^{*}: E_\text{total}^{*}$};&
+\node [DataInter] (D4-opt) {$F: E_\text{total}$};&
+&
+&
+&
+\node [Function] (D4) {$\text{Energy Analysis}$};&
+\node [DataInter] (D4-D5) {$E_\text{total}$};&
+&
+&
+\\
+%Row 6
+&
+&
+&
+&
+&
+&
+\node [Function] (D5) {$\text{Battery Weight}$};&
+&
+\node [DataInter] (D5-D7) {$W_\text{battery}$};&
+\\
+%Row 7
+&
+&
+&
+&
+&
+&
+&
+\node [Function] (D6) {$\text{Empty Weight}$};&
+\node [DataInter] (D6-D7) {$W_\text{empty}$};&
+\\
+%Row 8
+\node [DataIO] (left_output_D7) {$G^{*}: W_\text{residual}^{*}$};&
+\node [DataInter] (D7-opt) {$G: W_\text{residual}$};&
+&
+&
+&
+&
+&
+&
+\node [Function] (D7) {$\text{Residual Weight}$};&
+\\
+%Row 9
+&
+&
+&
+&
+&
+&
+&
+&
+&
+\\
+};
+
+% XDSM process chains
+{ [start chain=process]
+ \begin{pgfonlayer}{process} 
+\chainin (opt);
+\chainin (D1) [join=by ProcessHVA];
+\chainin (D2) [join=by ProcessHVA];
+\chainin (D3) [join=by ProcessHVA];
+\chainin (D4) [join=by ProcessHVA];
+\chainin (D5) [join=by ProcessHVA];
+\chainin (D6) [join=by ProcessHVA];
+\chainin (D7) [join=by ProcessHVA];
+\chainin (opt) [join=by ProcessHVA];
+\end{pgfonlayer}
+}
+
+\begin{pgfonlayer}{data}
+\path
+% Horizontal edges
+(opt) edge [DataLine] (opt-D1)
+(opt) edge [DataLine] (opt-D2)
+(opt) edge [DataLine] (opt-D3)
+(opt) edge [DataLine] (opt-D4)
+(opt) edge [DataLine] (opt-D6)
+(opt) edge [DataLine] (opt-D7)
+(D1) edge [DataLine] (D1-D2)
+(D2) edge [DataLine] (D2-D3)
+(D3) edge [DataLine] (D3-D4)
+(D4) edge [DataLine] (D4-D5)
+(D3) edge [DataLine] (D3-D6)
+(D5) edge [DataLine] (D5-D7)
+(D6) edge [DataLine] (D6-D7)
+(D7) edge [DataLine] (D7-opt)
+(D1) edge [DataLine] (D1-opt)
+(D3) edge [DataLine] (D3-opt)
+(D4) edge [DataLine] (D4-opt)
+(opt) edge [DataLine] (left_output_opt)
+(D1) edge [DataLine] (left_output_D1)
+(D3) edge [DataLine] (left_output_D3)
+(D4) edge [DataLine] (left_output_D4)
+(D7) edge [DataLine] (left_output_D7)
+% Vertical edges
+(opt-D1) edge [DataLine] (D1)
+(opt-D2) edge [DataLine] (D2)
+(opt-D3) edge [DataLine] (D3)
+(opt-D4) edge [DataLine] (D4)
+(opt-D6) edge [DataLine] (D6)
+(opt-D7) edge [DataLine] (D7)
+(D1-D2) edge [DataLine] (D2)
+(D2-D3) edge [DataLine] (D3)
+(D3-D4) edge [DataLine] (D4)
+(D4-D5) edge [DataLine] (D5)
+(D3-D6) edge [DataLine] (D6)
+(D5-D7) edge [DataLine] (D7)
+(D6-D7) edge [DataLine] (D7)
+(D7-opt) edge [DataLine] (opt)
+(D1-opt) edge [DataLine] (opt)
+(D3-opt) edge [DataLine] (opt)
+(D4-opt) edge [DataLine] (opt)
+(opt) edge [DataLine] (output_opt)
+(D1) edge [DataLine] (output_D1)
+(D2) edge [DataLine] (output_D2)
+(D3) edge [DataLine] (output_D3)
+(D4) edge [DataLine] (output_D4)
+(D5) edge [DataLine] (output_D5)
+(D6) edge [DataLine] (output_D6)
+(D7) edge [DataLine] (output_D7);
+\end{pgfonlayer}
+
+\end{tikzpicture}
