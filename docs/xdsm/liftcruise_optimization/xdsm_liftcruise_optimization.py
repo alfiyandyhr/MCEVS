@@ -38,7 +38,7 @@ x.connect("D3", "D6", r"\mathbf{P_\text{segments}}")
 x.connect("D5", "D7", r"W_\text{battery}")
 x.connect("D6", "D7", r"W_\text{empty}")
 x.connect("D7", "opt", r"G: W_\text{residual}")
-x.connect("D1", "opt", r"G: CL_\text{cruise}")
+x.connect("D1", "opt", r"G: C_{\text{L,cruise}}")
 x.connect("D3", "opt", [r"G: J_\text{prop}, CT/\sigma,", r"\mathbf{T/P_\text{segments}}"])
 x.connect("D4", "opt", r"F: E_\text{total}")
 
@@ -47,7 +47,7 @@ x.add_output("opt",
 			  r"S_\text{wing}^{*}, AR_\text{wing}^{*}",
 			 r"r_\text{rotor}^{*}, r_\text{prop}^{*}, RPM_\text{prop}^{*}"],
 			 side=LEFT)
-x.add_output("D1", r"G^{*}: CL_\text{cruise}^{*}")
+x.add_output("D1", r"G^{*}: C_{\text{L,cruise}}^{*}")
 x.add_output("D3", [r"G^{*}: J_\text{prop}^{*}, CT/\sigma^{*},", r"\mathbf{T/P_\text{segments}^{*}}"])
 x.add_output("D4", r"F^{*}: E_\text{total}^{*}")
 x.add_output("D7", r"G^{*}: W_\text{residual}^{*}")

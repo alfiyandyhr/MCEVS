@@ -40,8 +40,8 @@
 \node [DataInter] (opt-D7) {$W_\text{takeoff}$};&
 \\
 %Row 2
-\node [DataIO] (left_output_D1) {$G^{*}: CL_\text{cruise}^{*}$};&
-\node [DataInter] (D1-opt) {$G: CL_\text{cruise}$};&
+\node [DataIO] (left_output_D1) {$G^{*}: C_{\text{L,cruise}}^{*}$};&
+\node [DataInter] (D1-opt) {$G: C_{\text{L,cruise}}$};&
 \node [Function] (D1) {$\text{Aerodynamics}$};&
 \node [DataInter] (D1-D2) {$D_\text{cruise}$};&
 &
