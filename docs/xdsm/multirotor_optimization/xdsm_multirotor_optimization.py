@@ -18,8 +18,8 @@ x.add_input("opt",
 
 x.add_input("D1", r"\rho_\text{air}, g, \mathbf{p_\text{vehicle}}")
 x.add_input("D2", r"g")
-x.add_input("D3", [r"\rho_\text{air}, g, \mathbf{p_\text{vehicle}}", r"v_\text{climb}, v_\text{descent}"])
-x.add_input("D4", r"R_\text{cruise}, t_\text{climb}, t_\text{descent}")
+x.add_input("D3", r"\rho_\text{air}, g, \mathbf{p_\text{vehicle}}, \mathbf{p_\text{mission}}")
+x.add_input("D4", r"\mathbf{p_\text{mission}}")
 x.add_input("D5", r"\rho_\text{battery}")
 x.add_input("D6", r"\mathbf{p_\text{vehicle}}")
 x.add_input("D7", r"W_\text{payload}")

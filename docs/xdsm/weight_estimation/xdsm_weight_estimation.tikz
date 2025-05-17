@@ -22,8 +22,8 @@
 \node [DataIO] (output_opt) {$W_\text{takeoff}^{init}$};&
 \node [DataIO] (output_D1) {$\rho_\text{air}, g, v_\text{cruise}, \mathbf{p_\text{vehicle}}$};&
 \node [DataIO] (output_D2) {$g$};&
-\node [DataIO] (output_D3) {$\rho_\text{air}, g, \mathbf{v_\text{segments}}, \mathbf{p_\text{vehicle}}$};&
-\node [DataIO] (output_D4) {$\mathbf{t_\text{segments}}$};&
+\node [DataIO] (output_D3) {$\rho_\text{air}, g, \mathbf{p_\text{vehicle}}, \mathbf{p_\text{mission}}$};&
+\node [DataIO] (output_D4) {$\mathbf{p_\text{mission}}$};&
 \node [DataIO] (output_D5) {$\rho_\text{battery}$};&
 \node [DataIO] (output_D6) {$\mathbf{p_\text{vehicle}}$};&
 \node [DataIO] (output_D7) {$W_\text{payload}$};&
