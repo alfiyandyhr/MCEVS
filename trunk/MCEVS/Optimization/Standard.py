@@ -74,7 +74,7 @@ def RunStandardSingleObjectiveOptimization(vehicle:object, mission:object, fidel
 
 	return results
 
-def RunMultiPointSingleObjectiveOptimization(type:str, value_list:list, objective:str, weight_coeffs:list, vehicle:object, mission:object, fidelity:dict, mtow_guess_list:bool, speed_as_design_var:bool, print=True):
+def RunMultiPointSingleObjectiveOptimization(type:str, value_list:list, objective:str, weight_coeffs:list, with_fixed_empty_weight:bool, vehicle:object, mission:object, fidelity:dict, mtow_guess_list:bool, speed_as_design_var:bool, print=True):
 
 	if not print: 
 		if os.name =='posix': sys.stdout = open('/dev/null', 'w')  # Redirect stdout to /dev/null
@@ -96,7 +96,7 @@ def RunMultiPointSingleObjectiveOptimization(type:str, value_list:list, objectiv
 	problem = DesignProblem(vehicle=vehicle,
 							mission=mission,
 							fidelity=fidelity,
-							kind='MultiPointSingleObjectiveProblem',
+							kind='MultiPointSingleObjectiveProblemWithFixedEmptyWeight' if with_fixed_empty_weight else 'MultiPointSingleObjectiveProblem',
 							algorithm='gradient-based')
 
 	problem.multipoint_options['type'] = type
@@ -261,7 +261,7 @@ def bookkeep_results(problem:object, vehicle:object, mission:object, om_result:o
 			results['Aero|Cruise|total_drag'] = res.get_val('Aero|Cruise|total_drag', 'N')[0]
 
 	# MultiPointSingleObjectiveProblem
-	elif problem.kind == 'MultiPointSingleObjectiveProblem':
+	elif problem.kind in ['MultiPointSingleObjectiveProblem', 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight']:
 
 		if vehicle.configuration == 'Multirotor':
 			

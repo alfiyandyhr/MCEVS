@@ -1,6 +1,6 @@
 import openmdao.api as om
 
-from MCEVS.Analyses.Weight.Analysis import MTOWEstimation, MultiPointMTOWEstimation
+from MCEVS.Analyses.Weight.Analysis import MTOWEstimation, MultiPointMTOWEstimation, MultiPointMTOWEstimationWithFixedEmptyWeight
 from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraint
 from MCEVS.Analyses.Geometry.Rotor import MeanChord
 from MCEVS.Utils.Performance import record_performance_by_segments
@@ -62,7 +62,7 @@ def run_gradient_based_optimization(DesignProblem:object):
 									  							   percent_max_span=95.0),
 									  promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
 									  promotes_outputs=[('clearance_constraint', 'LiftRotor|clearance_constraint')])
-		elif DesignProblem.kind in ['MultiPointSingleObjectiveProblem']:
+		elif DesignProblem.kind in ['MultiPointSingleObjectiveProblem', 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight']:
 			for n in range(1,DesignProblem.multipoint_options['n_points']+1):
 	 			prob.model.add_subsystem(f'lift_rotor_clearance_{n}',
 						  LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
@@ -70,6 +70,7 @@ def run_gradient_based_optimization(DesignProblem:object):
 						  							   percent_max_span=95.0),
 						  promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
 						  promotes_outputs=[('clearance_constraint', f'Point_{n}|LiftRotor|clearance_constraint')])
+		
 		# Convert mean_c_to_R into mean_chord
 		prob.model.add_subsystem('chord_calc_lift_rotor',
 								  MeanChord(),
@@ -82,7 +83,7 @@ def run_gradient_based_optimization(DesignProblem:object):
 
 	# Analysis
 
-	if list(DesignProblem.objectives.keys())[0] in ['Weight|takeoff', 'Weight|residual', 'Weight|battery', 'Energy|entire_mission', 'Mission|total_time']:
+	if DesignProblem.kind == 'SingleObjectiveProblem':
 		prob.model.add_subsystem('weight_estimation',
 								  MTOWEstimation(mission=DesignProblem.mission,
 								  				 vehicle=DesignProblem.vehicle,
@@ -92,7 +93,8 @@ def run_gradient_based_optimization(DesignProblem:object):
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
 	
-	elif list(DesignProblem.objectives.keys())[0] in ['weighted_sum_of_takeoff_weight','weighted_sum_of_energy','time_averaged_takeoff_weight', 'time_averaged_energy']:
+	elif DesignProblem.kind == 'MultiPointSingleObjectiveProblem':
+		
 		prob.model.add_subsystem('multipoint_weight_estimation',
 								  MultiPointMTOWEstimation(mission=DesignProblem.mission,
 								  						   vehicle=DesignProblem.vehicle,
@@ -100,6 +102,17 @@ def run_gradient_based_optimization(DesignProblem:object):
 								  						   multipoint_options=DesignProblem.multipoint_options),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
+
+	elif DesignProblem.kind == 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight':
+
+		prob.model.add_subsystem('multipoint_weight_estimation',
+								  MultiPointMTOWEstimationWithFixedEmptyWeight(mission=DesignProblem.mission,
+								  											   vehicle=DesignProblem.vehicle,
+								  											   fidelity=DesignProblem.fidelity,
+								  											   multipoint_options=DesignProblem.multipoint_options),
+								  promotes_inputs=['*'],
+								  promotes_outputs=['*'])
+
 		
 	else:
 		raise NotImplementedError('Please check your "DesignProblem.objectives"')

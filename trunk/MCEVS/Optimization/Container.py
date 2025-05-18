@@ -18,7 +18,7 @@ class DesignProblem(object):
 	"""
 	def __init__(self, vehicle:object, mission:object, fidelity:dict, kind:str, algorithm:'str'):
 		super(DesignProblem, self).__init__()
-		self.kind = kind # ['SingleObjectiveProblem', 'MultiObjectiveProblem', 'MultiPointSingleObjectiveProblem']
+		self.kind = kind # ['SingleObjectiveProblem', 'MultiObjectiveProblem', 'MultiPointSingleObjectiveProblem', 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight']
 
 		# MCEVS core objects
 		self.vehicle 	= vehicle
@@ -40,7 +40,7 @@ class DesignProblem(object):
 		self.optimal_design			= None
 
 		# Multipoint options
-		if self.kind == 'MultiPointSingleObjectiveProblem':
+		if self.kind in ['MultiPointSingleObjectiveProblem', 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight']:
 			self.multipoint_options = {'type':str, 'n_points': int, 'value_list':list, 'objective':str, 'weight_coeffs': list}
 
 	def run_optimization(self):

@@ -398,20 +398,8 @@ class MTOWEstimation(om.Group):
 		# --- Calculate weight estimation of each component --- #
 
 		# 1. Battery weight
-		# battery weight is computed taking into account loss in efficiency,
-		# avionics power, and its maximum discharge rate
-		# battery_weight_comp = om.ExecComp('W_battery = energy_req / (battery_rho * battery_eff * battery_max_discharge)',
-		# 								   W_battery={'units': 'kg'},
-		# 								   energy_req={'units': 'W * h'},
-		# 								   battery_rho={'units': 'W * h / kg', 'val': battery_rho},
-		# 								   battery_eff={'val': battery_eff},
-		# 								   battery_max_discharge={'val': battery_max_discharge})
-		# self.add_subsystem('battery_weight',
-		# 					battery_weight_comp,
-		# 					promotes_outputs=[('W_battery', 'Weight|battery')])
-		# self.connect('Energy|entire_mission', 'battery_weight.energy_req')
+		# battery weight is computed taking into account loss in efficiency, avionics power, and its maximum discharge rate
 
-		# Alternative approach
 		self.add_subsystem('battery_weight',
 							BatteryWeight(battery_rho=battery_rho, battery_eff=battery_eff, battery_max_discharge=battery_max_discharge),
 							promotes_inputs=[('required_energy', 'Energy|entire_mission')],
@@ -555,7 +543,7 @@ class GTOWEstimation(om.Group):
 							promotes_inputs=[('required_energy', 'Energy|entire_mission')],
 							promotes_outputs=['Weight|battery'])
 
-		# 5. Weight residuals
+		# 2. Weight residuals
 		# W_residual = (W_total - W_payload - W_battery - W_propulsion - W_structure - W_equipment)**2
 
 		# Payload weight
@@ -666,7 +654,7 @@ class MultiPointMTOWEstimation(om.Group):
 								  				   sizing_mode=False,
 								  				   rhs_checking=True),
 									promotes_inputs=[('Weight|takeoff', f'Point_{n}|Weight|takeoff'),'*'],
-									promotes_outputs=output_list[n-1])
+									promotes_outputs=output_list[n-1])			
 
 		# Weighted sum of takeoff weight or energy
 		# weighted_sum_of_metric = coeff_1 * metric_1 + ... + coeff_n * metric_n
@@ -699,6 +687,118 @@ class MultiPointMTOWEstimation(om.Group):
 			for n in range(1,multipoint_options['n_points']+1):
 				self.connect(f'multipoint_coeffs.coeff_{n}', f'multipoint_single_obj.coeff_{n}')
 
+class MultiPointMTOWEstimationWithFixedEmptyWeight(om.Group):
+	"""
+	Computes one MTOWEstimation() and multiple GTOWEstimation()
+	"""
+
+	def initialize(self):
+		self.options.declare('mission', types=object, desc='Mission object')
+		self.options.declare('vehicle', types=object, desc='Vehicle object')
+		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
+		self.options.declare('multipoint_options', types=dict, desc='Multipoint options, see DesignProblem()')
+
+	def setup(self):
+		
+		# Unpacking option objects
+		mission 	 		= self.options['mission']
+		vehicle 	 		= self.options['vehicle']
+		fidelity 	 		= self.options['fidelity']
+		multipoint_options 	= self.options['multipoint_options']
+
+		# --- GTOWEstimation at multiple points based on the multipoint type --- #
+
+		# Vehicle configuration
+		output_list = []
+
+		for n in range(1,multipoint_options['n_points']+1):
+			if vehicle.configuration == 'Multirotor':
+				output_list.append([('Energy|entire_mission', f'Point_{n}|Energy|entire_mission'),
+									('Weight|residual', f'Point_{n}|Weight|residual'),
+									('LiftRotor|Cruise|mu', f'Point_{n}|LiftRotor|Cruise|mu'),
+									('LiftRotor|Cruise|thrust_coefficient', f'Point_{n}|LiftRotor|Cruise|thrust_coefficient'),
+									('LiftRotor|HoverClimb|T_to_P', f'Point_{n}|LiftRotor|HoverClimb|T_to_P'),
+									('LiftRotor|Cruise|T_to_P', f'Point_{n}|LiftRotor|Cruise|T_to_P'),
+									('LiftRotor|HoverDescent|T_to_P', f'Point_{n}|LiftRotor|HoverDescent|T_to_P')])
+
+			elif vehicle.configuration == 'LiftPlusCruise':
+				output_list.append([('Energy|entire_mission', f'Point_{n}|Energy|entire_mission'),
+									('Weight|residual', f'Point_{n}|Weight|residual'),
+									('Aero|Cruise|CL', f'Point_{n}|Aero|Cruise|CL'),
+									('Propeller|Cruise|J', f'Point_{n}|Propeller|Cruise|J'),
+									('Propeller|Cruise|thrust_coefficient', f'Point_{n}|Propeller|Cruise|thrust_coefficient'),
+									('LiftRotor|HoverClimb|T_to_P', f'Point_{n}|LiftRotor|HoverClimb|T_to_P'),
+									('Propeller|Cruise|T_to_P', f'Point_{n}|Propeller|Cruise|T_to_P'),
+									('LiftRotor|HoverDescent|T_to_P', f'Point_{n}|LiftRotor|HoverDescent|T_to_P')])
+
+		# Battery energy density
+		if multipoint_options['type'] == 'battery_energy_density':
+
+			vehicles = []
+
+			for n in range(1,multipoint_options['n_points']+1):
+
+				if n == 1: vehicles.append(vehicle)
+				else: vehicles.append(copy.deepcopy(vehicle))
+				vehicles[n-1].battery.density = multipoint_options['value_list'][n-1]
+
+				if n == 1:
+					output_list[0].append(('Weight|propulsion', 'Point_1|Weight|propulsion'))
+					output_list[0].append(('Weight|structure', 'Point_1|Weight|structure'))
+					output_list[0].append(('Weight|equipment', 'Point_1|Weight|equipment'))
+					self.add_subsystem(f'point_{n}_analysis',
+										MTOWEstimation(mission=mission,
+									  				   vehicle=vehicles[n-1],
+									  				   fidelity=fidelity,
+									  				   sizing_mode=False,
+									  				   rhs_checking=True),
+										promotes_inputs=[('Weight|takeoff', f'Point_{n}|Weight|takeoff'),'*'],
+										promotes_outputs=output_list[n-1])
+
+				else:
+					suboptimal_input = [('Weight|takeoff', f'Point_{n}|Weight|takeoff'),
+										('Weight|propulsion', 'Point_1|Weight|propulsion'),
+										('Weight|structure', 'Point_1|Weight|structure'),
+										('Weight|equipment', 'Point_1|Weight|equipment'),'*']
+					self.add_subsystem(f'point_{n}_analysis',
+										GTOWEstimation(mission=mission,
+									  				   vehicle=vehicles[n-1],
+									  				   fidelity=fidelity,
+									  				   sizing_mode=False,
+									  				   rhs_checking=True),
+										promotes_inputs=suboptimal_input,
+										promotes_outputs=output_list[n-1])		
+
+		# Weighted sum of takeoff weight or energy
+		# weighted_sum_of_metric = coeff_1 * metric_1 + ... + coeff_n * metric_n
+		if multipoint_options['objective'] in ['weighted_sum_of_takeoff_weight', 'weighted_sum_of_energy']:
+			metric_eq = f"{multipoint_options['objective']} = "
+			kwargs_coeff  = {}
+			kwargs_metric  = {f"{multipoint_options['objective']}": {'units': 'kg' if multipoint_options['objective'] == 'weighted_sum_of_takeoff_weight' else 'W*h'}}
+			input_list = []
+			indep = self.add_subsystem('multipoint_coeffs', om.IndepVarComp())
+			for n in range(1,multipoint_options['n_points']+1):
+				indep.add_output(f'coeff_{n}', val=multipoint_options['weight_coeffs'][n-1], units=None)
+				if n == multipoint_options['n_points']:
+					metric_eq += f'coeff_{n} * metric_{n}'
+				else:
+					metric_eq += f'coeff_{n} * metric_{n} + '
+				kwargs_coeff[f'coeff_{n}'] = {'units': None}
+				if multipoint_options['objective'] == 'weighted_sum_of_takeoff_weight':
+					kwargs_metric[f'metric_{n}'] = {'units': 'kg'}
+					input_list.append((f'metric_{n}', f'Point_{n}|Weight|takeoff'))
+				elif multipoint_options['objective'] == 'weighted_sum_of_energy':
+					kwargs_metric[f'metric_{n}'] = {'units': 'kW*h'}
+					input_list.append((f'metric_{n}', f'Point_{n}|Energy|entire_mission'))
+
+			# Objective evaluation
+			self.add_subsystem('multipoint_single_obj',
+								om.ExecComp(metric_eq, **kwargs_coeff, **kwargs_metric),
+								promotes_inputs=input_list,
+								promotes_outputs=[f"{multipoint_options['objective']}"])
+			
+			for n in range(1,multipoint_options['n_points']+1):
+				self.connect(f'multipoint_coeffs.coeff_{n}', f'multipoint_single_obj.coeff_{n}')
 
 
 
