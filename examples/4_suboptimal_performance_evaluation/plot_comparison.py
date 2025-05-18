@@ -234,14 +234,14 @@ if plot_compare_optimals:
 	# Weight-based optimization
 	axes[0].plot(opt_results11['battery_energy_density'], opt_results11['Weight|takeoff'], 'r-', label='multirotor')
 	axes[0].plot(opt_results12['battery_energy_density'], opt_results12['Weight|takeoff'], 'b-', label='lift+cruise')
-	axes[0].set_xlabel(r'Battery GED $[Wh/kg]$')
+	axes[0].set_xlabel(r'Test battery GED $[Wh/kg]$')
 	axes[0].set_ylabel(r'Gross takeoff weight $[kg]$' if with_fixed_empty_weight else r'Maximum takeoff weight $[kg]$')
 	axes[0].set_title('Weight-based optimization',size=10)
 
 	# Energy-based optimization
 	axes[1].plot(opt_results21['battery_energy_density'], opt_results21['Energy|entire_mission'], 'r-')
 	axes[1].plot(opt_results22['battery_energy_density'], opt_results22['Energy|entire_mission'], 'b-')
-	axes[1].set_xlabel(r'Battery GED $[Wh/kg]$')
+	axes[1].set_xlabel(r'Test battery GED $[Wh/kg]$')
 	axes[1].set_ylabel(r'Required energy $[kWh]$', rotation=270, labelpad=15)
 	axes[1].yaxis.set_label_position('right')
 	axes[1].yaxis.tick_right()
