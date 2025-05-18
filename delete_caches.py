@@ -158,6 +158,7 @@ folders.append('examples/4_suboptimal_performance_evaluation/without_fixed_empty
 folders.append('examples/4_suboptimal_performance_evaluation/without_fixed_empty_weight/selection_by_energy/multirotor/.DS_Store')
 folders.append('examples/4_suboptimal_performance_evaluation/without_fixed_empty_weight/selection_by_energy/liftcruise/.DS_Store')
 
+folders.append('examples/6_multipoint_optimization_with_varying_batteries/.DS_Store')
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/with_fixed_empty_weight/.DS_Store')
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/with_fixed_empty_weight/weighted_sum_of_takeoff_weight/.DS_Store')
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/with_fixed_empty_weight/weighted_sum_of_takeoff_weight/multirotor/.DS_Store')
