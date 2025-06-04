@@ -21,10 +21,10 @@ vehicle_list = [vehicle1]
 label_list = ['baseline']
 cruise_speed_list = [241.0]
 
-plot_geometries(vehicle_list, label_list, cruise_speed_list)
+plot_geometries(vehicle_list, label_list, cruise_speed_list, figname=f'multirotor_geom', savefig=False)
 
 vehicle_list = [vehicle2]
 label_list = ['baseline']
 cruise_speed_list = [241.0]
 
-plot_geometries(vehicle_list, label_list, cruise_speed_list)
+plot_geometries(vehicle_list, label_list, cruise_speed_list, figname=f'liftcruise_geom', savefig=False)
