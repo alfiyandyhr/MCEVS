@@ -8,6 +8,9 @@ plot_minimizing_mission_time = False
 
 plot_minimizing_all_objs = True
 
+figname = 'opt_exploring_objectives'
+savefig = False
+
 configuration = 'multirotor'
 # configuration = 'liftcruise'
 
@@ -15,21 +18,21 @@ if plot_minimizing_takeoff_weight or plot_minimizing_energy or plot_minimizing_m
 
 	if plot_minimizing_takeoff_weight:
 		folder = 'minimizing_takeoff_weight'
-		label = 'Weight-minimized'
+		label = 'Weight-minimal'
 		df_label = 'Weight|takeoff'
 		# df_label = 'Energy|entire_mission'
 		# df_label = 'cruise_speed'
 		y_label = 'Takeoff weight [kg]'
 	if plot_minimizing_energy:
 		folder = 'minimizing_energy'
-		label = 'Energy-minimized'
+		label = 'Energy-minimal'
 		df_label = 'Energy|entire_mission'
 		df_label = 'Weight|takeoff'
 		# df_label = 'cruise_speed'
 		y_label = 'Energy [kWh]'
 	if plot_minimizing_mission_time:
 		folder = 'minimizing_mission_time'
-		label = 'Time-minimized'
+		label = 'Time-minimal'
 		df_label = 'mission_time'
 		# df_label = 'Weight|takeoff'
 		# df_label = 'Energy|entire_mission'
@@ -115,18 +118,17 @@ if plot_minimizing_all_objs:
 				obj_ylabel = 'Mission time [mins]'
 				obj_dflabel = 'mission_time'
 
-			axs[j,i].plot(data_list[i*3+0]['mission_range'], data_list[i*3+0][obj_dflabel], 'r.', label=f'Weight-minimized multirotor' if i==0 and j==0 else None)
-			axs[j,i].plot(data_list[i*3+1]['mission_range'], data_list[i*3+1][obj_dflabel], 'r--', label=f'Energy-minimized multirotor' if i==0 and j==0 else None)
-			axs[j,i].plot(data_list[i*3+2]['mission_range'], data_list[i*3+2][obj_dflabel], 'r-', label=f'Time-minimized multirotor' if i==0 and j==0 else None)
-			axs[j,i].plot(data_list[i*3+9+0]['mission_range'], data_list[i*3+9+0][obj_dflabel], 'b.', label=f'Weight-minimized lift+cruise' if i==0 and j==0 else None)
-			axs[j,i].plot(data_list[i*3+9+1]['mission_range'], data_list[i*3+9+1][obj_dflabel], 'b--', label=f'Energy-minimized lift+cruise' if i==0 and j==0 else None)
-			axs[j,i].plot(data_list[i*3+9+2]['mission_range'], data_list[i*3+9+2][obj_dflabel], 'b-', label=f'Time-minimized lift+cruise' if i==0 and j==0 else None)
+			axs[j,i].plot(data_list[i*3+0]['mission_range'], data_list[i*3+0][obj_dflabel], 'r.', label=f'Weight-minimal multirotor' if i==0 and j==0 else None)
+			axs[j,i].plot(data_list[i*3+1]['mission_range'], data_list[i*3+1][obj_dflabel], 'r--', label=f'Energy-minimal multirotor' if i==0 and j==0 else None)
+			axs[j,i].plot(data_list[i*3+2]['mission_range'], data_list[i*3+2][obj_dflabel], 'r-', label=f'Time-minimal multirotor' if i==0 and j==0 else None)
+			axs[j,i].plot(data_list[i*3+9+0]['mission_range'], data_list[i*3+9+0][obj_dflabel], 'b.', label=f'Weight-minimal lift+cruise' if i==0 and j==0 else None)
+			axs[j,i].plot(data_list[i*3+9+1]['mission_range'], data_list[i*3+9+1][obj_dflabel], 'b--', label=f'Energy-minimal lift+cruise' if i==0 and j==0 else None)
+			axs[j,i].plot(data_list[i*3+9+2]['mission_range'], data_list[i*3+9+2][obj_dflabel], 'b-', label=f'Time-minimal lift+cruise' if i==0 and j==0 else None)
 			if i*3+j in [0,1,2]: axs[j,i].set_ylabel(obj_ylabel)
 			if i*3+j in [2,5,8]: axs[j,i].set_xlabel('Mission range [km]')
 			if i*3+j in [0,3,6]: axs[j,i].set_title(f'Battery {battery} Wh/kg', size=10.0)
 
 	fig.suptitle('Single-objective optimization results')
-	fig.legend(ncols=2,bbox_to_anchor=(0.8,0.96))
-	# plt.tight_layout()
+	fig.legend(ncols=2,bbox_to_anchor=(0.78,0.96))
 	plt.subplots_adjust(left=0.09, bottom=0.1, right=0.97, top=0.81, hspace=0.1)
-	plt.show()
+	plt.savefig(f'{figname}.pdf', format='pdf', dpi=300) if savefig else plt.show()
