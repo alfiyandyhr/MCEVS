@@ -3,7 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 plot_2D = False
-plot_contour = True
+plot_contour = False
+plot_contour_all = True; savefig = False
 plot_surface = False
 
 print_best_speed_for_all_range = False
@@ -12,6 +13,7 @@ check_best_speed_for_all_range = False
 plot_2D_with_speed_as_design_var = False
 
 battery_energy_density = 250 # [250,400,550]
+battery_energy_density_list = [250,400,550]
 
 if print_best_speed_for_all_range:
 	data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
@@ -188,3 +190,57 @@ if plot_surface:
 	# Show the plot
 	plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.045))
 	plt.show()
+
+if plot_contour_all:
+
+	# Create a figure and subplots
+	fig, axes = plt.subplots(1, 3, figsize=(14, 6), sharey=True)  # 1 row, 3 columns of subplots
+
+	for i, battery_energy_density in enumerate(battery_energy_density_list):
+
+		# Read data for the current battery energy density
+		data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
+		data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
+
+		# Apply filtering conditions
+		data_df.loc[data_df['Weight|residual'] > 0.1, 'Weight|takeoff'] = 10000.0
+		data_df.loc[data_df['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Weight|takeoff'] = 10000.0
+		data_df.loc[data_df['LiftRotor|Cruise|T_to_P'] > 12.01, 'Weight|takeoff'] = 10000.0
+		data_df.loc[data_df['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Weight|takeoff'] = 10000.0
+		data_df.loc[data_df['LiftRotor|Cruise|mu'] > 1, 'Weight|takeoff'] = 10000.0
+		data_df.loc[data_df['LiftRotor|Cruise|CT/sigma'] > 0.15, 'Weight|takeoff'] = 10000.0
+
+		data_df2.loc[data_df2['Weight|residual'] > 0.1, 'cruise_speed'] = None
+		data_df2.loc[data_df2['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'cruise_speed'] = None
+		data_df2.loc[data_df2['LiftRotor|Cruise|T_to_P'] > 12.01, 'cruise_speed'] = None
+		data_df2.loc[data_df2['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'cruise_speed'] = None
+		data_df2.loc[data_df2['LiftRotor|Cruise|mu'] > 1, 'cruise_speed'] = None
+		data_df2.loc[data_df2['LiftRotor|Cruise|CT/sigma'] > 0.15, 'cruise_speed'] = None
+
+		# Prepare data for contour plot
+		range_array = np.unique(data_df['mission_range'].to_numpy())
+		speed_array = np.unique(data_df['cruise_speed'].to_numpy())
+
+		X, Y = np.meshgrid(range_array, speed_array)
+		Z = data_df['Weight|takeoff'].to_numpy().reshape(len(range_array), len(speed_array)).T
+
+		# Plot in the corresponding subplot
+		ax = axes[i]
+		cp = ax.contourf(X, Y, Z, 30, cmap='viridis', vmin=np.nanmin(Z), vmax=np.nanmax(Z), extend='both')
+		ax.plot(data_df2['mission_range'], data_df2['cruise_speed'], 'r--', label='Optimal cruise speed path')
+		ax.set_title(f'Battery GED: {battery_energy_density} Wh/kg')
+		ax.set_xlabel('Mission range (km)')
+		if i == 0: ax.set_ylabel('Cruise speed (km/h)')
+		# ax.legend()
+
+	# Add a single legend for the "Optimal cruise speed path" line
+	fig.legend(['Optimal cruise speed path'], loc='upper center', bbox_to_anchor=(0.49, 0.94), ncol=1, prop={'size': 12})
+
+	# Add a horizontal colorbar below the subplots
+	cbar = fig.colorbar(cp, ax=axes, orientation='horizontal', fraction=0.05, pad=0.1)
+	cbar.set_label('Optimal MTOW (kg)')
+
+	# Adjust layout to prevent overlap
+	fig.suptitle('Weight-based optimization results for Multirotor', size=16)
+	plt.subplots_adjust(bottom=0.25, top=0.82, wspace=0.03) 
+	plt.savefig('weight_opt_range_speed_space_multirotor.pdf', format='pdf', dpi=300) if savefig else plt.show()
