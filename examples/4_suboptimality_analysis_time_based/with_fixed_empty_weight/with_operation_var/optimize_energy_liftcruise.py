@@ -56,63 +56,61 @@ if produce_utopian_data:
 
 			k = 41*i+j
 
-			if scenario == 'aggresive' and year in [2046]:
+			battery_energy_density = battery_dict[scenario][j]
 
-				battery_energy_density = battery_dict[scenario][j]
+			print(f'{k}, Scenario= {scenario}; Year= {year}; Battery GED= {battery_energy_density} Wh/kg')
+			sys.stdout.flush() # To flush the above print output
 
-				print(f'{k}, Scenario= {scenario}; Year= {year}; Battery GED= {battery_energy_density} Wh/kg')
-				sys.stdout.flush() # To flush the above print output
+			if scenario == 'aggresive':
+				if year in [2033,2049,2051,2070]: mtow_guess = 1500.0 # kg
+				elif year in [2030,2034,2045,2047]: mtow_guess = 1200.0 # kg
+				elif year in [2035,2048]: mtow_guess = 2400.0 # kg
+				elif year in [2041,2042,2043,2044,2053,2064,2066]: mtow_guess = 1030.0 # kg
+				elif year in [2058]: mtow_guess = 1300.0 # kg
+				elif year in [2046]: mtow_guess = 1100.0 # kg
+				else: mtow_guess = 1000.0 # kg
 
-				if scenario == 'aggresive':
-					if year in [2033,2049,2051,2070]: mtow_guess = 1500.0 # kg
-					elif year in [2030,2034,2045,2047]: mtow_guess = 1200.0 # kg
-					elif year in [2035,2048]: mtow_guess = 2400.0 # kg
-					elif year in [2041,2042,2043,2044,2053,2064,2066]: mtow_guess = 1030.0 # kg
-					elif year in [2058]: mtow_guess = 1300.0 # kg
-					elif year in [2046]: mtow_guess = 1100.0 # kg
-					else: mtow_guess = 1000.0 # kg
+			if scenario == 'nominal':
+				if year in [2042,2045,2050,2055,2066]: mtow_guess = 1500.0 # kg
+				elif year in [2034,2036,2039,2040,2043,2044,2049,2062]: mtow_guess = 2000.0 # kg
+				elif year in [2041,2047,2051]: mtow_guess = 1700.0 # kg
+				elif year in [2057,2064,2067]: mtow_guess = 1350.0 # kg
+				elif year in [2059]: mtow_guess = 2350.0 # kg
+				elif year in [2056,2060]: mtow_guess = 2010.0 # kg
+				elif year in [2063]: mtow_guess = 1365.0 # kg
+				elif year in [2065]: mtow_guess = 2020.0 # kg
+				elif year in [2068]: mtow_guess = 3000.0 # kg
+				elif year in [2052,2054]: mtow_guess = 2500.0 # kg
+				elif year in [2070]: mtow_guess = 2450.0 # kg
+				elif year in [2048]: mtow_guess = 2550.0 # kg
+				else: mtow_guess = 1000.0 # kg
 
-				if scenario == 'nominal':
-					if year in [2042,2045,2050,2055,2066]: mtow_guess = 1500.0 # kg
-					elif year in [2034,2036,2039,2040,2043,2044,2049,2062]: mtow_guess = 2000.0 # kg
-					elif year in [2041,2047,2051]: mtow_guess = 1700.0 # kg
-					elif year in [2057,2064,2067]: mtow_guess = 1350.0 # kg
-					elif year in [2059]: mtow_guess = 2350.0 # kg
-					elif year in [2056,2060]: mtow_guess = 2010.0 # kg
-					elif year in [2063]: mtow_guess = 1365.0 # kg
-					elif year in [2065]: mtow_guess = 2020.0 # kg
-					elif year in [2068]: mtow_guess = 3000.0 # kg
-					elif year in [2052,2054]: mtow_guess = 2500.0 # kg
-					elif year in [2070]: mtow_guess = 2450.0 # kg
-					elif year in [2048]: mtow_guess = 2550.0 # kg
-					else: mtow_guess = 1000.0 # kg
+			if scenario == 'conservative':
+				if year in [2046,2060]: mtow_guess = 1500.0 # kg
+				elif year in [2068,2069]: mtow_guess = 1700.0 # kg
+				elif year in [2064,2065,2066,2067,2070]: mtow_guess = 2000.0 # kg
+				else: mtow_guess = 1000.0 # kg
 
-				if scenario == 'conservative':
-					if year in [2046,2060]: mtow_guess = 1500.0 # kg
-					elif year in [2068,2069]: mtow_guess = 1700.0 # kg
-					elif year in [2064,2065,2066,2067,2070]: mtow_guess = 2000.0 # kg
-					else: mtow_guess = 1000.0 # kg
+			# Standard vehicle
+			design_var = {'wing_area': 19.53547845, 'wing_aspect_ratio': 12.12761, 'r_lift_rotor': 1.524, 'r_propeller': 1.3716}
+			operation_var = {'RPM_lift_rotor':{'hover_climb':400.0}, 'RPM_propeller': {'cruise':500.0}}
+			tfs = {'tf_structure':0.8, 'tf_propulsion':0.8, 'tf_equipment':0.8}
+			vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, tfs, n_pax=6, payload_per_pax=100.0)
 
-				# Standard vehicle
-				design_var = {'wing_area': 19.53547845, 'wing_aspect_ratio': 12.12761, 'r_lift_rotor': 1.524, 'r_propeller': 1.3716}
-				operation_var = {'RPM_lift_rotor':{'hover_climb':400.0}, 'RPM_propeller': {'cruise':500.0}}
-				tfs = {'tf_structure':0.8, 'tf_propulsion':0.8, 'tf_equipment':0.8}
-				vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, tfs, n_pax=6, payload_per_pax=100.0)
+			# Changed battery density
+			vehicle.battery.density = float(battery_energy_density)
 
-				# Changed battery density
-				vehicle.battery.density = float(battery_energy_density)
+			# Standard mission
+			mission = StandardMissionProfile(mission_range, cruise_speed_ref)
 
-				# Standard mission
-				mission = StandardMissionProfile(mission_range, cruise_speed_ref)
-
-				# Standard optimization
-				with warnings.catch_warnings():
-					warnings.simplefilter("ignore")
-					results = {'scenario':scenario, 'year':year, 'battery_energy_density':battery_energy_density}
-					results.update(RunStandardSingleObjectiveOptimization(vehicle, mission, solution_fidelity, 'energy', mtow_guess, speed_as_design_var=True, print=True))
-					results_df = pd.DataFrame(results, index=[k])
-					# print(results['Energy|entire_mission'], results['Wing|area'])
-					results_df.to_csv(f'optimal_results_by_scenario_by_year_test.csv', mode='a', header=True if k==0 else False)
+			# Standard optimization
+			with warnings.catch_warnings():
+				warnings.simplefilter("ignore")
+				results = {'scenario':scenario, 'year':year, 'battery_energy_density':battery_energy_density}
+				results.update(RunStandardSingleObjectiveOptimization(vehicle, mission, solution_fidelity, 'energy', mtow_guess, speed_as_design_var=True, print=True))
+				results_df = pd.DataFrame(results, index=[k])
+				# print(results['Energy|entire_mission'], results['Wing|area'])
+				results_df.to_csv(f'optimal_results_by_scenario_by_year_test.csv', mode='a', header=True if k==0 else False)
 
 if evaluate_selected_designs:
 
