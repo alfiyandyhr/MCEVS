@@ -2,7 +2,6 @@ from MCEVS.Vehicles.Standard import StandardLiftPlusCruiseEVTOL
 from MCEVS.Missions.Standard import StandardMissionProfile
 from MCEVS.Optimization.Standard import RunStandardSingleObjectiveOptimization, RunOffDesignSingleObjectiveOptimization
 from MCEVS.Analyses.Weight.Analysis import WeightAnalysis
-from MCEVS.Optimization.Container import DesignProblem
 import numpy as np
 import pandas as pd
 import warnings
