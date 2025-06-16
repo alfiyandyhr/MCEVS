@@ -165,6 +165,9 @@ folders.append('examples/4_suboptimality_analysis_time_based/with_fixed_empty_we
 folders.append('examples/4_suboptimality_analysis_time_based/without_fixed_empty_weight/with_operation_var/.DS_Store')
 folders.append('examples/4_suboptimality_analysis_time_based/without_fixed_empty_weight/without_operation_var/.DS_Store')
 
+folders.append('examples/5_battery_GED_projection_consideration/.DS_Store')
+folders.append('examples/5_battery_GED_projection_consideration/optimal_results_by_scenario_by_year/.DS_Store')
+
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/.DS_Store')
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/with_fixed_empty_weight/.DS_Store')
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/with_fixed_empty_weight/weighted_sum_of_takeoff_weight/.DS_Store')
@@ -243,6 +246,7 @@ folders.append('examples/4_suboptimality_analysis_time_based/with_fixed_empty_we
 folders.append('examples/4_suboptimality_analysis_time_based/with_fixed_empty_weight/without_operation_var/Unnamed_CompGeom.txt')
 folders.append('examples/4_suboptimality_analysis_time_based/without_fixed_empty_weight/with_operation_var/Unnamed_CompGeom.txt')
 folders.append('examples/4_suboptimality_analysis_time_based/without_fixed_empty_weight/without_operation_var/Unnamed_CompGeom.txt')
+folders.append('examples/5_battery_GED_projection_consideration/Unnamed_CompGeom.txt')
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/with_fixed_empty_weight/weighted_sum_of_takeoff_weight/multirotor/Unnamed_CompGeom.txt')
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/with_fixed_empty_weight/weighted_sum_of_takeoff_weight/liftcruise/Unnamed_CompGeom.txt')
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/with_fixed_empty_weight/weighted_sum_of_energy/multirotor/Unnamed_CompGeom.txt')
