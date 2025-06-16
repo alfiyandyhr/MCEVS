@@ -181,6 +181,12 @@ folders.append('examples/6_multipoint_optimization_with_varying_batteries/withou
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/without_fixed_empty_weight/weighted_sum_of_energy/multirotor/.DS_Store')
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/without_fixed_empty_weight/weighted_sum_of_energy/liftcruise/.DS_Store')
 
+folders.append('examples/7_future_aware_optimization_considering_different_scenarios/.DS_Store')
+folders.append('examples/7_future_aware_optimization_considering_different_scenarios/with_fixed_empty_weight/.DS_Store')
+folders.append('examples/7_future_aware_optimization_considering_different_scenarios/with_fixed_empty_weight/without_operation_var/.DS_Store')
+folders.append('examples/7_future_aware_optimization_considering_different_scenarios/without_fixed_empty_weight/.DS_Store')
+folders.append('examples/7_future_aware_optimization_considering_different_scenarios/without_fixed_empty_weight/without_operation_var/.DS_Store')
+
 
 folders.append('examples/vehicle_creation/.DS_Store')
 folders.append('examples/mission_visualization/.DS_Store')
@@ -245,6 +251,9 @@ folders.append('examples/6_multipoint_optimization_with_varying_batteries/withou
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/without_fixed_empty_weight/weighted_sum_of_takeoff_weight/liftcruise/Unnamed_CompGeom.txt')
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/without_fixed_empty_weight/weighted_sum_of_energy/multirotor/Unnamed_CompGeom.txt')
 folders.append('examples/6_multipoint_optimization_with_varying_batteries/without_fixed_empty_weight/weighted_sum_of_energy/liftcruise/Unnamed_CompGeom.txt')
+folders.append('examples/7_future_aware_optimization_considering_different_scenarios/with_fixed_empty_weight/without_operation_var/Unnamed_CompGeom.txt')
+folders.append('examples/7_future_aware_optimization_considering_different_scenarios/without_fixed_empty_weight/without_operation_var/Unnamed_CompGeom.txt')
+
 
 for folder in folders:
 	try:
