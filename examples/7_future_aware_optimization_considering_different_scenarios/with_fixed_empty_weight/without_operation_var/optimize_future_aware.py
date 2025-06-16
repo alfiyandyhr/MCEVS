@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import joblib
 import numpy as np
-from scipy.integrate import simpson, quad
+from scipy.integrate import simpson
 from scipy.optimize import minimize
 
 calc_utopian_J = False
