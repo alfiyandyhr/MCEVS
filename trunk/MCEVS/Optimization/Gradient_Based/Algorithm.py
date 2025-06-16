@@ -1,6 +1,7 @@
 import openmdao.api as om
 
-from MCEVS.Analyses.Weight.Analysis import MTOWEstimation, MultiPointMTOWEstimation, MultiPointMTOWEstimationWithFixedEmptyWeight
+from MCEVS.Analyses.Weight.Analysis import MTOWEstimation, GTOWEstimation, OffDesignMTOWEstimation
+from MCEVS.Analyses.Weight.Analysis import MultiPointMTOWEstimation, MultiPointMTOWEstimationWithFixedEmptyWeight
 from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraint
 from MCEVS.Analyses.Geometry.Rotor import MeanChord
 from MCEVS.Utils.Performance import record_performance_by_segments
@@ -55,7 +56,7 @@ def run_gradient_based_optimization(DesignProblem:object):
 
 	elif DesignProblem.vehicle.configuration == 'LiftPlusCruise':
 		# Calculate spanwise clearance constraint for lift rotor of LPC config
-		if DesignProblem.kind in ['SingleObjectiveProblem', 'MultiObjectiveProblem']:
+		if DesignProblem.kind in ['SingleObjectiveProblem', 'MultiObjectiveProblem', 'GTOWSingleObjectiveProblem']:
 			prob.model.add_subsystem('lift_rotor_clearance',
 									  LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
 									  							   max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
@@ -70,6 +71,15 @@ def run_gradient_based_optimization(DesignProblem:object):
 						  							   percent_max_span=95.0),
 						  promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
 						  promotes_outputs=[('clearance_constraint', f'Point_{n}|LiftRotor|clearance_constraint')])
+		elif DesignProblem.kind in ['OffDesignSingleObjectiveProblem']:
+			points = ['OnDesign', 'OffDesign']
+			for point in points:
+	 			prob.model.add_subsystem(f'lift_rotor_clearance_{point}',
+						  LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
+						  							   max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
+						  							   percent_max_span=95.0),
+						  promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
+						  promotes_outputs=[('clearance_constraint', f'{point}|LiftRotor|clearance_constraint')])
 		
 		# Convert mean_c_to_R into mean_chord
 		prob.model.add_subsystem('chord_calc_lift_rotor',
@@ -113,15 +123,40 @@ def run_gradient_based_optimization(DesignProblem:object):
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
 
-		
+	elif DesignProblem.kind == 'OffDesignSingleObjectiveProblem':
+
+		prob.model.add_subsystem('off_design_weight_estimation',
+								  OffDesignMTOWEstimation(mission=DesignProblem.mission,
+								  						  vehicle=DesignProblem.vehicle,
+								  						  fidelity=DesignProblem.fidelity,
+								  						  offdesign_options=DesignProblem.offdesign_options),
+								  promotes_inputs=['*'],
+								  promotes_outputs=['*'])
+
+	elif DesignProblem.kind == 'GTOWSingleObjectiveProblem':
+
+		indeps.add_output('Weight|propulsion', DesignProblem.vehicle.weight.propulsion, units='kg')
+		indeps.add_output('Weight|structure', DesignProblem.vehicle.weight.structure, units='kg')
+		indeps.add_output('Weight|equipment', DesignProblem.vehicle.weight.equipment, units='kg')
+		prob.model.add_subsystem('weight_estimation',
+								  GTOWEstimation(mission=DesignProblem.mission,
+								  				 vehicle=DesignProblem.vehicle,
+								  				 fidelity=DesignProblem.fidelity,
+								  				 sizing_mode=False,
+								  				 rhs_checking=True),
+								  promotes_inputs=['*'],
+								  promotes_outputs=['*'])
+
 	else:
 		raise NotImplementedError('Please check your "DesignProblem.objectives"')
 
 	# Optimizer settings
 	# debug_print = ['desvars', 'nl_cons', 'objs']
 	# debug_print = ['desvars', 'nl_cons', 'objs', 'totals']
+	# debug_print = ['objs', 'desvars', 'nl_cons']
 	debug_print = []
 	prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, singular_jac_tol=1e-16, debug_print=debug_print, disp=True)
+	# prob.driver = om.ScipyOptimizeDriver(optimizer='shgo', tol=1e-3, singular_jac_tol=1e-16, debug_print=debug_print, disp=True)
 	# prob.driver = om.pyOptSparseDriver(optimizer='', print_opt_prob=True)
 	# prob.driver = om.DifferentialEvolutionDriver(max_gen=5)
 	# prob.driver.recording_options['includes'] = ['*']
@@ -139,10 +174,11 @@ def run_gradient_based_optimization(DesignProblem:object):
 
 	# Run optimization
 	prob.setup(check=False)
-	prob.run_driver()
+	res_info = prob.run_driver()
+
 	# prob.list_problem_vars(driver_scaling=False)
 
 	# Record the optimal design performance
 	# record_performance_by_segments(prob, DesignProblem.vehicle.configuration, DesignProblem.mission)
 
-	return prob
+	return prob, res_info

@@ -800,6 +800,176 @@ class MultiPointMTOWEstimationWithFixedEmptyWeight(om.Group):
 			for n in range(1,multipoint_options['n_points']+1):
 				self.connect(f'multipoint_coeffs.coeff_{n}', f'multipoint_single_obj.coeff_{n}')
 
+class OffDesignMTOWEstimation(om.Group):
+	"""
+	Computes one MTOWEstimation() and one off-design GTOWEstimation()
+	"""
+
+	def initialize(self):
+		self.options.declare('mission', types=object, desc='Mission object')
+		self.options.declare('vehicle', types=object, desc='Vehicle object')
+		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
+		self.options.declare('offdesign_options', types=dict, desc='Off-design options, see DesignProblem()')
+
+	def setup(self):
+		
+		# Unpacking option objects
+		mission 	 		= self.options['mission']
+		vehicle 	 		= self.options['vehicle']
+		fidelity 	 		= self.options['fidelity']
+		offdesign_options 	= self.options['offdesign_options']
+
+		# --- GTOWEstimation at one off-design point --- #
+
+		points = ['OnDesign', 'OffDesign']
+		output_list = []
+
+		for point in points:
+
+			if vehicle.configuration == 'Multirotor':
+				output_list.append([('Energy|entire_mission', f'{point}|Energy|entire_mission'),
+									('Weight|residual', f'{point}|Weight|residual'),
+									('Weight|battery', f'{point}|Weight|battery'),
+									('LiftRotor|Cruise|mu', f'{point}|LiftRotor|Cruise|mu'),
+									('LiftRotor|Cruise|thrust_coefficient', f'{point}|LiftRotor|Cruise|thrust_coefficient'),
+									('LiftRotor|HoverClimb|T_to_P', f'{point}|LiftRotor|HoverClimb|T_to_P'),
+									('LiftRotor|Cruise|T_to_P', f'{point}|LiftRotor|Cruise|T_to_P'),
+									('LiftRotor|HoverDescent|T_to_P', f'{point}|LiftRotor|HoverDescent|T_to_P')])
+
+			elif vehicle.configuration == 'LiftPlusCruise':
+				output_list.append([('Energy|entire_mission', f'{point}|Energy|entire_mission'),
+									('Weight|residual', f'{point}|Weight|residual'),
+									('Weight|battery', f'{point}|Weight|battery'),
+									('Aero|Cruise|CL', f'{point}|Aero|Cruise|CL'),
+									('Propeller|Cruise|J', f'{point}|Propeller|Cruise|J'),
+									('Propeller|Cruise|thrust_coefficient', f'{point}|Propeller|Cruise|thrust_coefficient'),
+									('LiftRotor|HoverClimb|T_to_P', f'{point}|LiftRotor|HoverClimb|T_to_P'),
+									('Propeller|Cruise|T_to_P', f'{point}|Propeller|Cruise|T_to_P'),
+									('LiftRotor|HoverDescent|T_to_P', f'{point}|LiftRotor|HoverDescent|T_to_P')])
+
+		# Battery energy density
+		if offdesign_options['type'] == 'battery_energy_density':
+
+			vehicles = [vehicle, copy.deepcopy(vehicle)]
+			vehicles[0].battery.density = offdesign_options['empty_weight_sized_at']
+			vehicles[1].battery.density = offdesign_options['off_design_at']
+
+			# On-design analysis (where empty weight is sized)
+			output_list[0].append(('Weight|propulsion', 'OnDesign|Weight|propulsion'))
+			output_list[0].append(('Weight|structure', 'OnDesign|Weight|structure'))
+			output_list[0].append(('Weight|equipment', 'OnDesign|Weight|equipment'))
+			self.add_subsystem(f'ondesign_analysis',
+								MTOWEstimation(mission=mission,
+							  				   vehicle=vehicles[0],
+							  				   fidelity=fidelity,
+							  				   sizing_mode=False,
+							  				   rhs_checking=True),
+								promotes_inputs=[('Weight|takeoff', 'OnDesign|Weight|takeoff'),'*'],
+								promotes_outputs=output_list[0])
+
+			# Off-design analysis (where objective function is evaluated)
+			ondesign_input = [('Weight|takeoff', 'OffDesign|Weight|takeoff'), # W_takeoff is suited to off-design
+							  ('Weight|propulsion', 'OnDesign|Weight|propulsion'),
+							  ('Weight|structure', 'OnDesign|Weight|structure'),
+							  ('Weight|equipment', 'OnDesign|Weight|equipment'),'*']
+			self.add_subsystem('offdesign_analysis',
+								GTOWEstimation(mission=mission,
+							  				   vehicle=vehicles[1],
+							  				   fidelity=fidelity,
+							  				   sizing_mode=False,
+							  				   rhs_checking=True),
+								promotes_inputs=ondesign_input,
+								promotes_outputs=output_list[1])
+
+class OffDesignMTOWEstimation2(om.Group):
+	"""
+	Computes one MTOWEstimation() and one off-design GTOWEstimation()
+	"""
+
+	def initialize(self):
+		self.options.declare('mission', types=object, desc='Mission object')
+		self.options.declare('vehicle', types=object, desc='Vehicle object')
+		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
+		self.options.declare('offdesign_options', types=dict, desc='Off-design options, see DesignProblem()')
+
+	def setup(self):
+		
+		# Unpacking option objects
+		mission 	 		= self.options['mission']
+		vehicle 	 		= self.options['vehicle']
+		fidelity 	 		= self.options['fidelity']
+		offdesign_options 	= self.options['offdesign_options']
+
+		# --- GTOWEstimation at one off-design point --- #
+
+		points = ['OnDesign', 'OffDesign']
+		output_list = []
+
+		for point in points:
+
+			if vehicle.configuration == 'Multirotor':
+				output_list.append([('Energy|entire_mission', f'{point}|Energy|entire_mission'),
+									('Weight|residual', f'{point}|Weight|residual'),
+									('LiftRotor|Cruise|mu', f'{point}|LiftRotor|Cruise|mu'),
+									('LiftRotor|Cruise|thrust_coefficient', f'{point}|LiftRotor|Cruise|thrust_coefficient'),
+									('LiftRotor|HoverClimb|T_to_P', f'{point}|LiftRotor|HoverClimb|T_to_P'),
+									('LiftRotor|Cruise|T_to_P', f'{point}|LiftRotor|Cruise|T_to_P'),
+									('LiftRotor|HoverDescent|T_to_P', f'{point}|LiftRotor|HoverDescent|T_to_P')])
+
+			elif vehicle.configuration == 'LiftPlusCruise':
+				output_list.append([('Energy|entire_mission', f'{point}|Energy|entire_mission'),
+									('Weight|residual', f'{point}|Weight|residual'),
+									('Aero|Cruise|CL', f'{point}|Aero|Cruise|CL'),
+									('Propeller|Cruise|J', f'{point}|Propeller|Cruise|J'),
+									('Propeller|Cruise|thrust_coefficient', f'{point}|Propeller|Cruise|thrust_coefficient'),
+									('LiftRotor|HoverClimb|T_to_P', f'{point}|LiftRotor|HoverClimb|T_to_P'),
+									('Propeller|Cruise|T_to_P', f'{point}|Propeller|Cruise|T_to_P'),
+									('LiftRotor|HoverDescent|T_to_P', f'{point}|LiftRotor|HoverDescent|T_to_P')])
+
+		# Battery energy density
+		if offdesign_options['type'] == 'battery_energy_density':
+
+			vehicles = [vehicle, copy.deepcopy(vehicle)]
+			vehicles[0].battery.density = offdesign_options['empty_weight_sized_at']
+			vehicles[1].battery.density = offdesign_options['off_design_at']
+
+			# On-design analysis (where empty weight is sized)
+			output_list[0].append(('Weight|propulsion', 'OnDesign|Weight|propulsion'))
+			output_list[0].append(('Weight|structure', 'OnDesign|Weight|structure'))
+			output_list[0].append(('Weight|equipment', 'OnDesign|Weight|equipment'))
+			self.add_subsystem(f'ondesign_analysis',
+								MTOWEstimation(mission=mission,
+							  				   vehicle=vehicles[0],
+							  				   fidelity=fidelity,
+							  				   sizing_mode=False,
+							  				   rhs_checking=True),
+								promotes_inputs=[('Weight|takeoff', 'OnDesign|Weight|takeoff'),'*'],
+								promotes_outputs=output_list[0])
+
+			# Off-design analysis (where objective function is evaluated)
+			output_list[1].append(('Weight|propulsion', 'OffDesign|Weight|propulsion'))
+			output_list[1].append(('Weight|structure', 'OffDesign|Weight|structure'))
+			output_list[1].append(('Weight|equipment', 'OffDesign|Weight|equipment'))
+			self.add_subsystem(f'offdesign_analysis',
+								MTOWEstimation(mission=mission,
+							  				   vehicle=vehicles[1],
+							  				   fidelity=fidelity,
+							  				   sizing_mode=False,
+							  				   rhs_checking=True),
+								promotes_inputs=[('Weight|takeoff', 'OffDesign|Weight|takeoff'),'*'],
+								promotes_outputs=output_list[1])
+
+			# Constraint evaluation
+			input_list = [('W_prop1', 'OnDesign|Weight|propulsion'), ('W_struct1', 'OnDesign|Weight|structure'), ('W_equip1', 'OnDesign|Weight|equipment'),
+						  ('W_prop2', 'OffDesign|Weight|propulsion'), ('W_struct2', 'OffDesign|Weight|structure'), ('W_equip2', 'OffDesign|Weight|equipment')]
+			self.add_subsystem('constraint_eval',
+								om.ExecComp('W_empty_constr = (W_prop1 + W_struct1 + W_equip1 - W_prop2 - W_struct2 - W_equip2)**2',
+											W_empty_constr={'units':'kg**2'},
+											W_prop1={'units':'kg'}, W_struct1={'units':'kg'}, W_equip1={'units':'kg'},
+											W_prop2={'units':'kg'}, W_struct2={'units':'kg'}, W_equip2={'units':'kg'}),
+								promotes_inputs=input_list,
+								promotes_outputs=["W_empty_constr"])
+
 
 
 

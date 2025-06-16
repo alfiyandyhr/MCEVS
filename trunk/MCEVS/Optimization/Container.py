@@ -43,6 +43,11 @@ class DesignProblem(object):
 		if self.kind in ['MultiPointSingleObjectiveProblem', 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight']:
 			self.multipoint_options = {'type':str, 'n_points': int, 'value_list':list, 'objective':str, 'weight_coeffs': list}
 
+		# Off design options
+		if self.kind in ['OffDesignSingleObjectiveProblem']:
+			self.offdesign_options = {'type':str, 'objective':str, 'empty_weight_sized_at': float, 'off_design_at': float}
+
+
 	def run_optimization(self):
 		"""
 		Run the optimization and actually solve the problem
