@@ -1,10 +1,10 @@
 import numpy as np
 import openmdao.api as om
 
-from MCEVS.Analyses.Aerodynamics.Parasite import ParasiteDragFidelityOne
-from MCEVS.Analyses.Aerodynamics.Empirical import MultirotorParasiteDrag
-from MCEVS.Analyses.Aerodynamics.Empirical import WingedParasiteDrag
-from MCEVS.Analyses.Aerodynamics.Parabolic import WingedAeroDrag
+from MCEVS.Analyses.Aerodynamics.Parasite import ParasiteDragViaDragBuildUpApproach
+from MCEVS.Analyses.Aerodynamics.Empirical import MultirotorParasiteDragViaWeightBasedRegression
+from MCEVS.Analyses.Aerodynamics.Empirical import WingedParasiteDragViaWeightBasedRegression
+from MCEVS.Analyses.Aerodynamics.Parabolic import WingedAeroDragViaParabolicDragPolar
 
 from MCEVS.Analyses.Stability.Trim import MultirotorConstantCruiseTrim
 
@@ -62,16 +62,16 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 		fidelity = self.options['fidelity']
 
 		# Step 1: Calculate the drag for the multirotor in cruise
-		if fidelity['aero'] == 0:
+		if fidelity['aerodynamics']['cruise'] == 'WeightBasedRegression':
 			self.add_subsystem('parasite_drag',
-								MultirotorParasiteDrag(N_rotor=N_rotor, rho_air=rho_air),
+								MultirotorParasiteDragViaWeightBasedRegression(N_rotor=N_rotor, rho_air=rho_air),
 								promotes_inputs=['Weight|takeoff', ('Aero|speed','Mission|cruise_speed'), ('Rotor|radius', 'LiftRotor|radius')],
 								promotes_outputs=[('Aero|total_drag','Aero|Cruise|total_drag'), ('Aero|Cd0','Aero|Cruise|Cd0')])
-		elif fidelity['aero'] == 1:
+		elif fidelity['aerodynamics']['cruise'] == 'DragBuildUp':
 			self.add_subsystem('parasite_drag',
-					ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
-					promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed')],
-					promotes_outputs=[('Aero|f_total','Aero|Cruise|f_total'), ('Aero|parasite_drag','Aero|Cruise|total_drag')])
+								ParasiteDragViaDragBuildUpApproach(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
+								promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed')],
+								promotes_outputs=[('Aero|f_total','Aero|Cruise|f_total'), ('Aero|parasite_drag','Aero|Cruise|total_drag')])
 
 		# Step 2: Calculate thrust required for trim and the body tilt angle
 		self.add_subsystem('trim',
@@ -212,20 +212,20 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 							promotes_outputs=[('lift', 'Aero|Cruise|lift')])
 
 		# Step 2: Calculate drag in cruise using simple polar equations
-		if fidelity['aero'] == 0:
+		if fidelity['aerodynamics']['cruise'] == 'WeightBasedRegression':
 			self.add_subsystem('parasite_drag',
-								WingedParasiteDrag(rho_air=rho_air),
+								WingedParasiteDragViaWeightBasedRegression(rho_air=rho_air),
 								promotes_inputs=['Weight|takeoff', 'Wing|area', ('Aero|speed', 'Mission|cruise_speed')],
 								promotes_outputs=[('Aero|Cd0','Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|parasite_drag')])
 
-		elif fidelity['aero'] == 1:
+		elif fidelity['aerodynamics']['cruise'] == 'DragBuildUp':
 			self.add_subsystem('parasite_drag',
-								ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
+								ParasiteDragViaDragBuildUpApproach(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
 								promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed'),'Wing|area'],
 								promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|parasite_drag')])
 
 		self.add_subsystem('total_drag',
-							WingedAeroDrag(rho_air=rho_air),
+							WingedAeroDragViaParabolicDragPolar(rho_air=rho_air),
 							promotes_inputs=[('Aero|Cd0','Aero|Cruise|Cd0'), ('Aero|lift','Aero|Cruise|lift'), 'Wing|*', ('Aero|speed', 'Mission|cruise_speed')],
 							promotes_outputs=[('Aero|total_drag','Aero|Cruise|total_drag'), ('Aero|CL','Aero|Cruise|CL'), ('Aero|f_total', 'Aero|Cruise|f_total')])
 

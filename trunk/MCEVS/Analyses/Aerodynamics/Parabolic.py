@@ -1,7 +1,7 @@
 import numpy as np
 import openmdao.api as om
 
-class WingedAeroDrag(om.ExplicitComponent):
+class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
 	"""
 	Computes the drag of a winged configuration in flight (cruise, climb, descent).
 	Parameters:

@@ -55,7 +55,7 @@ class CylindricalBodyDrag(om.ExplicitComponent):
 		partials['Aero|total_drag', 'Aero|speed'] = rho_air * v * S_body * CD_body
 		partials['Aero|total_drag', 'Body|sin_beta'] = 0.5 * rho_air * v * v * S_body * dCD_dsinB
 
-class MultirotorParasiteDrag(om.ExplicitComponent):
+class MultirotorParasiteDragViaWeightBasedRegression(om.ExplicitComponent):
 	"""
 	Computes the drag of a multirotor body
 	Parameters:
@@ -130,7 +130,7 @@ class MultirotorParasiteDrag(om.ExplicitComponent):
 		partials['Aero|total_drag', 'Weight|takeoff'] = 0.5 * rho_air * v**2 * df_dW
 		partials['Aero|total_drag', 'Aero|speed'] = rho_air * v * f
 
-class WingedParasiteDrag(om.ExplicitComponent):
+class WingedParasiteDragViaWeightBasedRegression(om.ExplicitComponent):
 	"""
 	Computes the drag of a winged configuration
 	Parameters:
