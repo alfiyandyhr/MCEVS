@@ -126,7 +126,7 @@ if __name__ == '__main__':
 	prob.set_val('m4_boom_weight.Wing|area', 19.53547845)
 	prob.set_val('m4_boom_weight.Wing|aspect_ratio', 12.12761)
 	prob.set_val('m4_boom_weight.Fuselage|length', 9.144)
-	prob.set_val('m4_boom_weight.Weight|battery', 819.95083265)
+	prob.set_val('m4_boom_weight.Weight|battery', 819.95084106)
 	prob.set_val('m4_boom_weight.v_cruise', 67.056)
 
 	prob.run_model()
