@@ -1,18 +1,18 @@
 import numpy as np
 import openmdao.api as om
 
-class HorizontalTailWeight(om.ExplicitComponent):
+class HorizontalTailWeightRoskam(om.ExplicitComponent):
 	"""
 	Computes horizontal tail weight
 	Parameters:
-		htail_AR	: horizontal tail aspect ratio (default=2.0)
-		t_rh		: maximum root thickness [m]
-		tf 			: technology factor (a reduction due to the use of composites, e.g., 0.8)
+		htail_AR				: horizontal tail aspect ratio (default=2.0)
+		t_rh					: maximum root thickness [m]
+		tf 						: technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
-		Weight|takeoff : total take-off weight [kg]
-		Htail|area	: horizontal tail area [m**2]
+		Weight|takeoff 			: total take-off weight [kg]
+		Htail|area				: horizontal tail area [m**2]
 	Outputs:
-		Weight|horizontal_tail : horizontal tail weight [kg]
+		Weight|horizontal_tail 	: horizontal tail weight [kg]
 	Notes:
 		> Class II Cessna method for General Aviation airplanes
 		> Used for small, relatively low performance type airplanes
@@ -70,19 +70,19 @@ class HorizontalTailWeight(om.ExplicitComponent):
 		partials['Weight|horizontal_tail', 'Htail|area'] = tf * dWhtail_dShtail
 
 
-class VerticalTailWeight(om.ExplicitComponent):
+class VerticalTailWeightRoskam(om.ExplicitComponent):
 	"""
 	Computes vertical tail weight
 	Parameters:
-		vtail_AR	: horizontal tail aspect ratio (default=1.3)
-		vtail_sweep	: vertical tail quarter chord sweep angle [deg]
-		t_rv		: maximum root thickness [m]
-		tf 			: technology factor (a reduction due to the use of composites, e.g., 0.8)
+		vtail_AR				: horizontal tail aspect ratio (default=1.3)
+		vtail_sweep				: vertical tail quarter chord sweep angle [deg]
+		t_rv					: maximum root thickness [m]
+		tf 						: technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
-		Weight|takeoff : total take-off weight [kg]
-		Vtail|area	: horizontal tail area [m**2]
+		Weight|takeoff 			: total take-off weight [kg]
+		Vtail|area				: horizontal tail area [m**2]
 	Outputs:
-		Weight|vertical_tail : horizontal tail weight [kg]
+		Weight|vertical_tail 	: horizontal tail weight [kg]
 	Notes:
 		> Class II Cessna method for General Aviation airplanes
 		> Used for small, relatively low performance type airplanes
@@ -143,7 +143,71 @@ class VerticalTailWeight(om.ExplicitComponent):
 		partials['Weight|vertical_tail', 'Weight|takeoff'] = tf * dWvtail_dWtakeoff
 		partials['Weight|vertical_tail', 'Vtail|area'] = tf * dWvtail_dSvtail
 
+class EmpennageWeightM4ModelsForNASALPC(om.ExplicitComponent):
+	"""
+	Computes HTail and VTail weights using M4 structural weight regression models for NACA LPC
+	Parameters:
+		tf 					: technology factor (default=1.0)
+	Inputs:
+		HTail|area 			: horizontal tail area [m**2]
+		Vtail|area 			: vertical tail area [m**2]
+	Outputs:
+		Weight|empennage 	: empennage (HTail and VTail) weight [kg]
+	Notes:
+		> Physics-based structural sizing models for a wide variety of design parameters
+		> Then, the optimized weight results serve as empirical weight data from which new regression models
+		  can be trained to predict structural component mass properties for subclasses of UAM vehicles.
+		> The physics-based models are generated using M4 Structures Studio (M4SS)
+		> M4SS is a parameterized structural modeling tool that creates finite element models for NASTRAN
+		> It has been validated against historical aircraft weight data and used to predict structural weights for various UAM configurations
+	Sources:
+		1. Winter, T. F., Robinson, J. H., Sutton, M., Chua, J., Gamez, A., and Nascenzi, T.,
+		   “Structural Weight Prediction for an Urban Air Mobility Concept,” presented at the AIAA AVIATION 2020 FORUM, VIRTUAL EVENT, 2020.
+		   https://doi.org/10.2514/6.2020-2653
+		2. Ruh, M. L., et al, “Large-Scale Multidisciplinary Design Optimization of a NASA Air Taxi Concept Using a Comprehensive Physics-Based System Model,”
+		   presented at the AIAA SCITECH 2024 Forum, Orlando, FL, 2024. https://doi.org/10.2514/6.2024-0771
+	"""
 
+	def initialize(self):
+		self.options.declare('tf', types=float, default=1.0, desc='Technology factor')
+
+	def setup(self):
+		self.add_input('HTail|area', units='m**2', desc='Horizontal tail area')
+		self.add_input('VTail|area', units='m**2', desc='Vertical tail area')
+		self.add_output('Weight|empennage', units='kg', desc='Empennage weight')
+		self.declare_partials('*', '*')
+
+	def compute(self, inputs, outputs):
+		tf = self.options['tf']
+		S_htail = inputs['HTail|area']
+		S_vtail = inputs['VTail|area']
+		coeffs = [ 8.43266623, 10.05410839, -0.19944806479469435 ]
+		W_wing = coeffs[0]*S_htail + coeffs[1]*S_vtail + coeffs[2]
+
+		outputs['Weight|empennage'] = tf * W_wing
+
+	def compute_partials(self, inputs, partials):
+		tf = self.options['tf']
+		S_htail = inputs['HTail|area']
+		S_vtail = inputs['VTail|area']
+		coeffs = [ 8.43266623, 10.05410839, -0.19944806479469435 ]
+
+		partials['Weight|empennage', 'S_htail'] = tf * coeffs[0]
+		partials['Weight|empennage', 'S_vtail'] = tf * coeffs[1]
+		
+if __name__ == '__main__':
+	
+	model = om.Group()
+	model.add_subsystem('m4_empennage_weight', EmpennageWeightM4ModelsForNASALPC())
+
+	prob = om.Problem(model)
+	prob.setup()
+
+	prob.set_val('m4_empennage_weight.HTail|area', 3.6707105940480003)
+	prob.set_val('m4_empennage_weight.VTail|area', 2.54027104848)
+
+	prob.run_model()
+	print(prob['m4_empennage_weight.Weight|empennage'])
 
 
 
