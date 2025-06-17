@@ -5,13 +5,13 @@ class MotorWeight(om.ExplicitComponent):
 	"""
 	Computes motor weight
 	Parameters:
-		N_motor	: number of motors
-		tf 		: technology factor
-		PM 		: power margin
+		N_motor						: number of motors
+		tf 							: technology factor
+		PM 							: power margin
 	Inputs:
-		max_power : maximum power, i.e., power during climb [W]
+		max_power 					: maximum power, i.e., power during climb [W]
 	Outputs:
-		Weight|motors : weight of all motors [kg]
+		Weight|propulsion|motors 	: weight of all motors [kg]
 	Notes:
 		> An empirical equation based on power density regression on DC electric motors
 		> It is suggested to renew the equation as more data become available
@@ -25,8 +25,8 @@ class MotorWeight(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('max_power', units='W', desc='Maximum power')
-		self.add_output('Weight|motors', units='kg', desc='Weight of all motors')
-		self.declare_partials('Weight|motors', 'max_power')
+		self.add_output('Weight|propulsion|motors', units='kg', desc='Weight of all motors')
+		self.declare_partials('Weight|propulsion|motors', 'max_power')
 
 	def compute(self, inputs, outputs):
 		N_motor = self.options['N_motor']
@@ -37,21 +37,21 @@ class MotorWeight(om.ExplicitComponent):
 		W_motor = 0.2138 * p_max/N_motor
 		W_motors = N_motor * W_motor
 
-		outputs['Weight|motors'] = tf * W_motors # in [kg]
+		outputs['Weight|propulsion|motors'] = tf * W_motors # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		partials['Weight|motors', 'max_power'] = tf * 0.2138/1000.0 * (1 + self.options['PM']/100)
+		partials['Weight|propulsion|motors', 'max_power'] = tf * 0.2138/1000.0 * (1 + self.options['PM']/100)
 
 class MotorWeightV1(om.ExplicitComponent):
 	"""
 	Computes motor weight
 	Parameters:
-		N_motor	: number of motors
+		N_motor						: number of motors
 	Inputs:
-		max_power : maximum power, i.e., power during climb [W]
+		max_power 					: maximum power, i.e., power during climb [W]
 	Outputs:
-		Weight|motors : weight of all motors [kg]
+		Weight|propulsion|motors 	: weight of all motors [kg]
 	Notes:
 		> An empirical equation based on power density regression on DC electric motors
 	Source:
@@ -63,8 +63,8 @@ class MotorWeightV1(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('max_power', units='W', desc='Maximum power')
-		self.add_output('Weight|motors', units='kg', desc='Weight of all motors')
-		self.declare_partials('Weight|motors', 'max_power')
+		self.add_output('Weight|propulsion|motors', units='kg', desc='Weight of all motors')
+		self.declare_partials('Weight|propulsion|motors', 'max_power')
 
 	def compute(self, inputs, outputs):
 		N_motor = self.options['N_motor']
@@ -74,20 +74,20 @@ class MotorWeightV1(om.ExplicitComponent):
 		W_motor = (0.188 * p_max + 5.836)/N_motor
 		W_motors = N_motor * W_motor
 
-		outputs['Weight|motors'] = W_motors # in [kg]
+		outputs['Weight|propulsion|motors'] = W_motors # in [kg]
 
 	def compute_partials(self, inputs, partials):
-		partials['Weight|motors', 'max_power'] = 0.188/1000.0
+		partials['Weight|propulsion|motors', 'max_power'] = 0.188/1000.0
 
 class MotorWeightV2(om.ExplicitComponent):
 	"""
 	Computes motor weight
 	Parameters:
-		N_motor	: number of motors
+		N_motor						: number of motors
 	Inputs:
-		max_torque : maximum torque, i.e., torque during hover [Nm]
+		max_torque 					: maximum torque, i.e., torque during hover [Nm]
 	Outputs:
-		Weight|motors : weight of all motors [kg]
+		Weight|propulsion|motors 	: weight of all motors [kg]
 	Notes:
 	Source:
 		1. Kadhiresan, A. R., and Duffy, M. J., “Conceptual Design and Mission Analysis for EVTOL Urban Air Mobility Flight Vehicle Configurations,”
@@ -100,8 +100,8 @@ class MotorWeightV2(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('max_torque', units='N*m', desc='Maximum torque')
-		self.add_output('Weight|motors', units='kg', desc='Weight of all motors')
-		self.declare_partials('Weight|motors', 'max_torque')
+		self.add_output('Weight|propulsion|motors', units='kg', desc='Weight of all motors')
+		self.declare_partials('Weight|propulsion|motors', 'max_torque')
 
 	def compute(self, inputs, outputs):
 		N_motor = self.options['N_motor']
@@ -111,10 +111,10 @@ class MotorWeightV2(om.ExplicitComponent):
 		W_motor = 58/990 * (tau_max - 10.0) + 2.0
 		W_motors = N_motor * W_motor
 
-		outputs['Weight|motors'] = W_motors # in [kg]
+		outputs['Weight|propulsion|motors'] = W_motors # in [kg]
 
 	def compute_partials(self, inputs, partials):
-		partials['Weight|motors', 'max_torque'] = 58/990
+		partials['Weight|propulsion|motors', 'max_torque'] = 58/990
 
 
 

@@ -6,12 +6,12 @@ class RotorAndHubWeight(om.ExplicitComponent):
 	"""
 	Computes rotors and hubs weight
 	Parameters:
-		N_rotor					: number of rotors
-		tf 						: technology factor
+		N_rotor								: number of rotors
+		tf 									: technology factor
 	Inputs:
-		max_thrust				: maximum thrust, i.e., thrust during climb [W]
+		max_thrust							: maximum thrust, i.e., thrust during climb [W]
 	Outputs:
-		Weight|rotors_and_hubs	: weight of all rotors and hubs [kg]
+		Weight|propulsion|rotors_and_hubs	: weight of all rotors and hubs [kg]
 	Notes:
 		> technology_factor SHOULD BE 1, since the data is quite new
 		> Valid for rotor with thrust > 200 N
@@ -25,8 +25,8 @@ class RotorAndHubWeight(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('max_thrust', units='N', desc='Maximum thrust')
-		self.add_output('Weight|rotors_and_hubs', units='kg', desc='Weight of all rotors and hubs')
-		self.declare_partials('Weight|rotors_and_hubs', 'max_thrust')
+		self.add_output('Weight|propulsion|rotors_and_hubs', units='kg', desc='Weight of all rotors and hubs')
+		self.declare_partials('Weight|propulsion|rotors_and_hubs', 'max_thrust')
 
 	def compute(self, inputs, outputs):
 		N_rotor = self.options['N_rotor']
@@ -36,30 +36,30 @@ class RotorAndHubWeight(om.ExplicitComponent):
 		W_rotor_and_hub = 0.0095 * T_max - 1.9275 # in [kg]
 		W_rotors_and_hubs = N_rotor * W_rotor_and_hub
 
-		outputs['Weight|rotors_and_hubs'] = tf * W_rotors_and_hubs
+		outputs['Weight|propulsion|rotors_and_hubs'] = tf * W_rotors_and_hubs
 
 	def compute_partials(self, inputs, partials):
 		N_rotor = self.options['N_rotor']
 		tf = self.options['tf']
 		T_max = inputs['max_thrust']	# in [N]
 
-		partials['Weight|rotors_and_hubs','max_thrust'] = tf * N_rotor * 0.0095
+		partials['Weight|propulsion|rotors_and_hubs','max_thrust'] = tf * N_rotor * 0.0095
 
 class ExtraHubWeight(om.ExplicitComponent):
 	"""
 	Computes extra hub weight for multirotor and helicopter
 	Parameters:
-		N_rotor				: number of rotors
-		N_bl				: number of blades per rotor
-		g 					: gravitational acceleration [m/s**2]
-		tf 					: technology factor (a reduction due to the use of composites, e.g., 0.8)
+		N_rotor							: number of rotors
+		N_bl							: number of blades per rotor
+		g 								: gravitational acceleration [m/s**2]
+		tf 								: technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
-		Weight|rotors 		: rotor weight [kg]
-		Rotor|radius 		: rotor radius [m]
-		Rotor|chord 		: rotor chord [m]
-		Rotor|rpm 	 		: rotor rpm [RPM]
+		Weight|propulsion|rotors 		: rotor weight [kg]
+		Rotor|radius 					: rotor radius [m]
+		Rotor|chord 					: rotor chord [m]
+		Rotor|rpm 	 					: rotor rpm [RPM]
 	Outputs:
-		Weight|extra_hubs	: weight of extra hubs [kg]
+		Weight|propulsion|extra_hubs	: weight of extra hubs [kg]
 	Notes:
 		> Extra hubs to penalize the heavier hub weights of multirotor/helicopter due to high speed loading
 	Source:  
@@ -72,11 +72,11 @@ class ExtraHubWeight(om.ExplicitComponent):
 		self.options.declare('tf', types=float, default=0.8, desc='Technology factor')
 
 	def setup(self):
-		self.add_input('Weight|rotors', units='kg', desc='Rotor weight')
+		self.add_input('Weight|propulsion|rotors', units='kg', desc='Rotor weight')
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
 		self.add_input('Rotor|chord', units='m', desc='Rotor chord')
 		self.add_input('Rotor|rpm', units='rpm', desc='Rotor rpm')
-		self.add_output('Weight|extra_hubs', units='kg', desc='Weight of extra hubs')
+		self.add_output('Weight|propulsion|extra_hubs', units='kg', desc='Weight of extra hubs')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
@@ -84,7 +84,7 @@ class ExtraHubWeight(om.ExplicitComponent):
 		N_bl = self.options['N_bl']
 		g = self.options['g']
 		tf = self.options['tf']
-		W_rotors = inputs['Weight|rotors']
+		W_rotors = inputs['Weight|propulsion|rotors']
 		r = inputs['Rotor|radius']
 		c = inputs['Rotor|chord']
 		rpm = inputs['Rotor|rpm']
@@ -114,14 +114,14 @@ class ExtraHubWeight(om.ExplicitComponent):
 			
 			W_extra_hub = (W1 * (W2 + W3)**0.55) * lb_to_kg
 
-		outputs['Weight|extra_hubs'] = tf * N_rotor * W_extra_hub
+		outputs['Weight|propulsion|extra_hubs'] = tf * N_rotor * W_extra_hub
 
 	def compute_partials(self, inputs, partials):
 		N_rotor = self.options['N_rotor']
 		N_bl = self.options['N_bl']
 		g = self.options['g']
 		tf = self.options['tf']
-		W_rotors = inputs['Weight|rotors']
+		W_rotors = inputs['Weight|propulsion|rotors']
 		r = inputs['Rotor|radius']
 		c = inputs['Rotor|chord']
 		rpm = inputs['Rotor|rpm']
@@ -154,27 +154,27 @@ class ExtraHubWeight(om.ExplicitComponent):
 		dW_dc = W1 * 0.55*(W2 + W3)**(-0.45) * dW2_dc * lb_to_kg
 		dW_drpm = (dW1_drpm * (W2 + W3)**0.55 + W1 * 0.55*(W2 + W3)**(-0.45) * dW2_drpm) * lb_to_kg
 
-		partials['Weight|extra_hubs','Weight|rotors'] = tf * N_rotor * dW_dWr
-		partials['Weight|extra_hubs','Rotor|radius'] = tf * N_rotor * dW_dr
-		partials['Weight|extra_hubs','Rotor|chord'] = tf * N_rotor * dW_dc
-		partials['Weight|extra_hubs','Rotor|rpm'] = tf * N_rotor * dW_drpm
+		partials['Weight|propulsion|extra_hubs','Weight|propulsion|rotors'] = tf * N_rotor * dW_dWr
+		partials['Weight|propulsion|extra_hubs','Rotor|radius'] = tf * N_rotor * dW_dr
+		partials['Weight|propulsion|extra_hubs','Rotor|chord'] = tf * N_rotor * dW_dc
+		partials['Weight|propulsion|extra_hubs','Rotor|rpm'] = tf * N_rotor * dW_drpm
 
 class ExtraHubWeightWithFixedVtip(om.ExplicitComponent):
 	"""
 	Computes extra hub weight for multirotor and helicopter
 	Parameters:
-		N_rotor				: number of rotors
-		N_bl				: number of blades per rotor
-		g 					: gravitational acceleration [m/s**2]
-		tf 					: technology factor (a reduction due to the use of composites, e.g., 0.8)
-		v_tip 				: rotor tip speed [m/s]
+		N_rotor						: number of rotors
+		N_bl						: number of blades per rotor
+		g 							: gravitational acceleration [m/s**2]
+		tf 							: technology factor (a reduction due to the use of composites, e.g., 0.8)
+		v_tip 						: rotor tip speed [m/s]
 	Inputs:
-		Weight|rotors 		: rotor weight [kg]
-		Rotor|radius 		: rotor radius [m]
-		Rotor|chord 		: rotor chord [m]
-		Rotor|rpm 	 		: rotor rpm [RPM]
+		Weight|propulsion|rotors 	: rotor weight [kg]
+		Rotor|radius 				: rotor radius [m]
+		Rotor|chord 				: rotor chord [m]
+		Rotor|rpm 	 				: rotor rpm [RPM]
 	Outputs:
-		Weight|extra_hubs	: weight of extra hubs [kg]
+		Weight|propulsion|extra_hubs	: weight of extra hubs [kg]
 	Notes:
 		> Extra hubs to penalize the heavier hub weights of multirotor/helicopter due to high speed loading
 	Source:  
@@ -188,10 +188,10 @@ class ExtraHubWeightWithFixedVtip(om.ExplicitComponent):
 		self.options.declare('tf', types=float, default=0.8, desc='Technology factor')
 
 	def setup(self):
-		self.add_input('Weight|rotors', units='kg', desc='Rotor weight')
+		self.add_input('Weight|propulsion|rotors', units='kg', desc='Rotor weight')
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
 		self.add_input('Rotor|chord', units='m', desc='Rotor chord')
-		self.add_output('Weight|extra_hubs', units='kg', desc='Weight of extra hubs')
+		self.add_output('Weight|propulsion|extra_hubs', units='kg', desc='Weight of extra hubs')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
@@ -200,7 +200,7 @@ class ExtraHubWeightWithFixedVtip(om.ExplicitComponent):
 		v_tip = self.options['v_tip']
 		g = self.options['g']
 		tf = self.options['tf']
-		W_rotors = inputs['Weight|rotors']
+		W_rotors = inputs['Weight|propulsion|rotors']
 		r = inputs['Rotor|radius']
 		c = inputs['Rotor|chord']
 
@@ -224,7 +224,7 @@ class ExtraHubWeightWithFixedVtip(om.ExplicitComponent):
 			
 			W_extra_hub = (W1 * (W2 + W3)**0.55) * lb_to_kg
 
-		outputs['Weight|extra_hubs'] = tf * N_rotor * W_extra_hub
+		outputs['Weight|propulsion|extra_hubs'] = tf * N_rotor * W_extra_hub
 
 	def compute_partials(self, inputs, partials):
 		N_rotor = self.options['N_rotor']
@@ -232,7 +232,7 @@ class ExtraHubWeightWithFixedVtip(om.ExplicitComponent):
 		v_tip = self.options['v_tip']
 		g = self.options['g']
 		tf = self.options['tf']
-		W_rotors = inputs['Weight|rotors']
+		W_rotors = inputs['Weight|propulsion|rotors']
 		r = inputs['Rotor|radius']
 		c = inputs['Rotor|chord']
 
@@ -258,11 +258,11 @@ class ExtraHubWeightWithFixedVtip(om.ExplicitComponent):
 		dW_dr = (dW1_dr * (W2 + W3)**0.55 + W1 * 0.55*(W2 + W3)**(-0.45) * dW2_dr) * lb_to_kg
 		dW_dc = W1 * 0.55*(W2 + W3)**(-0.45) * dW2_dc * lb_to_kg
 
-		partials['Weight|extra_hubs','Weight|rotors'] = tf * N_rotor * dW_dWr
-		partials['Weight|extra_hubs','Rotor|radius'] = tf * N_rotor * dW_dr
-		partials['Weight|extra_hubs','Rotor|chord'] = tf * N_rotor * dW_dc
+		partials['Weight|propulsion|extra_hubs','Weight|propulsion|rotors'] = tf * N_rotor * dW_dWr
+		partials['Weight|propulsion|extra_hubs','Rotor|radius'] = tf * N_rotor * dW_dr
+		partials['Weight|propulsion|extra_hubs','Rotor|chord'] = tf * N_rotor * dW_dc
 
-class RotorWeightRoskamMethod(om.ExplicitComponent):
+class RotorWeightRoskam(om.ExplicitComponent):
 	"""
 	Computes rotors weight
 	Parameters:
@@ -273,7 +273,7 @@ class RotorWeightRoskamMethod(om.ExplicitComponent):
 		Rotor|radius 	: rotor radius [m]
 		max_power		: maximum power, i.e., power during climb [W]
 	Outputs:
-		Weight|rotors	: weight of all rotors [kg]
+		Weight|propulsion|rotors	: weight of all rotors [kg]
 	Notes:
 		> Torenbeek method for Commercial Transport Airplanes (propeller section)
 		> For GA airplanes, it is recommended to use propeller manufacturer data
@@ -290,9 +290,9 @@ class RotorWeightRoskamMethod(om.ExplicitComponent):
 	def setup(self):
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
 		self.add_input('max_power', units='W', desc='Maximum power')
-		self.add_output('Weight|rotors', units='kg', desc='Weight of all rotors')
-		self.declare_partials('Weight|rotors', 'Rotor|radius')
-		self.declare_partials('Weight|rotors', 'max_power')
+		self.add_output('Weight|propulsion|rotors', units='kg', desc='Weight of all rotors')
+		self.declare_partials('Weight|propulsion|rotors', 'Rotor|radius')
+		self.declare_partials('Weight|propulsion|rotors', 'max_power')
 
 	def compute(self, inputs, outputs):
 		N_rotor = self.options['N_rotor']
@@ -311,7 +311,7 @@ class RotorWeightRoskamMethod(om.ExplicitComponent):
 		W_rotor = k_prop * (2*r * (p_max/N_rotor) * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 		W_rotors = N_rotor * W_rotor
 
-		outputs['Weight|rotors'] = tf * W_rotors # in [kg]
+		outputs['Weight|propulsion|rotors'] = tf * W_rotors # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		N_rotor = self.options['N_rotor']
@@ -330,5 +330,5 @@ class RotorWeightRoskamMethod(om.ExplicitComponent):
 		dWrotors_dr = N_rotor * k_prop * 0.782 * r**(-0.218) * (2 * (p_max/N_rotor) * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 		dWrotors_dp = N_rotor * k_prop * 0.782 * p_max**(-0.218) * (2*r / N_rotor * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 
-		partials['Weight|rotors', 'Rotor|radius'] = tf * dWrotors_dr
-		partials['Weight|rotors', 'max_power'] = tf * dWrotors_dp
+		partials['Weight|propulsion|rotors', 'Rotor|radius'] = tf * dWrotors_dr
+		partials['Weight|propulsion|rotors', 'max_power'] = tf * dWrotors_dp

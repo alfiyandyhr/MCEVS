@@ -22,30 +22,30 @@ class EquipmentWeight(om.Group):
 		self.add_subsystem('avionics_weight',
 							AvionicsWeight(tf=tf_equipment),
 							promotes_inputs=['Weight|takeoff'],
-							promotes_outputs=['Weight|avionics'])
+							promotes_outputs=['Weight|equipment|avionics'])
 
 		# Flight control weight
 		self.add_subsystem('flight_control_weight',
 							FlightControlWeight(tf=tf_equipment),
 							promotes_inputs=['Weight|takeoff'],
-							promotes_outputs=['Weight|flight_control'])
+							promotes_outputs=['Weight|equipment|flight_control'])
 
 		# Anti icing weight
 		self.add_subsystem('anti_icing_weight',
 							AntiIcingSystemWeight(tf=tf_equipment),
 							promotes_inputs=['Weight|takeoff'],
-							promotes_outputs=['Weight|anti_icing'])
+							promotes_outputs=['Weight|equipment|anti_icing'])
 
 		# Furnishing weight
 		self.add_subsystem('furnishing_weight',
 							FurnishingWeight(tf=tf_equipment),
 							promotes_inputs=['Weight|takeoff'],
-							promotes_outputs=['Weight|furnishings'])
+							promotes_outputs=['Weight|equipment|furnishings'])
 
 		# Sum up
 		adder = om.AddSubtractComp()
 		adder.add_equation('Weight|equipment',
-							input_names=['Weight|avionics', 'Weight|flight_control', 'Weight|anti_icing', 'Weight|furnishings'],
+							input_names=['Weight|equipment|avionics', 'Weight|equipment|flight_control', 'Weight|equipment|anti_icing', 'Weight|equipment|furnishings'],
 							units='kg',
 							scaling_factors=[1., 1., 1., 1.])
 		self.add_subsystem('equipment_sum_weight',

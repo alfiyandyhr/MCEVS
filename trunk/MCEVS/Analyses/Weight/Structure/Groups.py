@@ -2,7 +2,7 @@ import numpy as np
 import openmdao.api as om
 
 from MCEVS.Analyses.Weight.Structure.Fuselage import FuselageWeightRoskam, FuselageWeightM4ModelsForNASALPC
-from MCEVS.Analyses.Weight.Structure.Landing_Gear import LandingGearWeightNDARCFractionalMethod
+from MCEVS.Analyses.Weight.Structure.Landing_Gear import LandingGearWeightNDARCFractional
 from MCEVS.Analyses.Weight.Structure.Wing import WingWeightRoskam, WingWeightM4ModelsForNASALPC
 from MCEVS.Analyses.Weight.Structure.Tail import HorizontalTailWeightRoskam, VerticalTailWeightRoskam, EmpennageWeightM4ModelsForNASALPC
 from MCEVS.Analyses.Weight.Structure.Boom import BoomWeightRoskam, BoomWeightM4ModelsForNASALPC
@@ -43,13 +43,13 @@ class StructureWeight(om.Group):
 			self.add_subsystem('fuselage_weight',
 								FuselageWeightRoskam(n_pax=n_pax,l_fuse=l_fuse,p_max=np.pi*d_max, tf=tf_structure),
 								promotes_inputs=['Weight|takeoff'],
-								promotes_outputs=['Weight|fuselage'])
+								promotes_outputs=['Weight|structure|fuselage'])
 
 			# Boom weight
 			self.add_subsystem('boom_weight',
 								BoomWeightRoskam(tf=tf_structure),
 								promotes_inputs=['total_req_takeoff_power'],
-								promotes_outputs=['Weight|boom'])
+								promotes_outputs=['Weight|structure|booms'])
 
 			# Wing weight
 			# wing is possessed by lift+cruise, tiltrotor, and tiltiwing configurations
@@ -57,31 +57,31 @@ class StructureWeight(om.Group):
 				self.add_subsystem('wing_weight',
 									WingWeightRoskam(n_ult=n_ult_wing, tf=tf_structure),
 									promotes_inputs=['Weight|takeoff', 'Wing|area', 'Wing|aspect_ratio'],
-									promotes_outputs=['Weight|wing'])
+									promotes_outputs=['Weight|structure|wing'])
 
 			# Tails weight
 			if vehicle.configuration == 'LiftPlusCruise':
 				self.add_subsystem('htail_weight',
 									HorizontalTailWeightRoskam(tf=tf_structure),
 									promotes_inputs=['Weight|takeoff', 'HorizontalTail|area', 'HorizontalTail|aspect_ratio', 'HorizontalTail|max_root_thickness'],
-									promotes_outputs=['Weight|horizontal_tail'])
+									promotes_outputs=['Weight|structure|horizontal_tail'])
 				self.add_subsystem('vtail_weight',
 									VerticalTailWeightRoskam(tf=tf_structure),
 									promotes_inputs=['Weight|takeoff', 'VerticalTail|area', 'VerticalTail|aspect_ratio', 'VerticalTail|max_root_thickness', 'VerticalTail|sweep_angle'],
-									promotes_outputs=['Weight|vertical_tail'])
+									promotes_outputs=['Weight|structure|vertical_tail'])
 
 		# Landing gear weight
 		self.add_subsystem('landing_gear_weight',
-							LandingGearWeightNDARCFractionalMethod(gear_type=gear_type, tf=tf_structure),
+							LandingGearWeightNDARCFractional(gear_type=gear_type, tf=tf_structure),
 							promotes_inputs=['Weight|takeoff'],
-							promotes_outputs=['Weight|landing_gear'])
+							promotes_outputs=['Weight|structure|landing_gear'])
 
 		# Sum up
 		if vehicle.configuration == 'Multirotor':
-			input_names_list = ['Weight|fuselage', 'Weight|landing_gear', 'Weight|boom']
+			input_names_list = ['Weight|structure|fuselage', 'Weight|structure|landing_gear', 'Weight|structure|booms']
 			sfs = [1., 1., 1.]
 		elif vehicle.configuration == 'LiftPlusCruise':
-			input_names_list = ['Weight|fuselage', 'Weight|landing_gear', 'Weight|wing', 'Weight|horizontal_tail', 'Weight|vertical_tail', 'Weight|boom']
+			input_names_list = ['Weight|structure|fuselage', 'Weight|structure|landing_gear', 'Weight|structure|wing', 'Weight|structure|horizontal_tail', 'Weight|structure|vertical_tail', 'Weight|structure|booms']
 			sfs = [1., 1., 1., 1., 1., 1.]
 		adder = om.AddSubtractComp()
 		adder.add_equation('Weight|structure',

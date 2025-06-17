@@ -1,16 +1,16 @@
 import numpy as np
 import openmdao.api as om
 
-class LandingGearWeightNDARCFractionalMethod(om.ExplicitComponent):
+class LandingGearWeightNDARCFractional(om.ExplicitComponent):
 	"""
-	Computes landing gear weight
+	Computes landing gear weight via NDARC method
 	Parameters:
 		gear_type : landing gear type; either "wheeled" or "skid"
 		tf 		  : technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
 		Weight|takeoff : total take-off weight [kg]
 	Outputs:
-		Weight|landing_gear : landing gear weight [kg]
+		Weight|structure|landing_gear : landing gear weight [kg]
 	Notes:
 		> 
 	Source:
@@ -22,8 +22,8 @@ class LandingGearWeightNDARCFractionalMethod(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
-		self.add_output('Weight|landing_gear', units='kg', desc='Landing gear weight')
-		self.declare_partials('Weight|landing_gear', 'Weight|takeoff')
+		self.add_output('Weight|structure|landing_gear', units='kg', desc='Landing gear weight')
+		self.declare_partials('Weight|structure|landing_gear', 'Weight|takeoff')
 
 	def compute(self, inputs, outputs):
 		gear_type = self.options['gear_type']
@@ -37,7 +37,7 @@ class LandingGearWeightNDARCFractionalMethod(om.ExplicitComponent):
 
 		W_landing_gear = f_LG * W_takeoff
 
-		outputs['Weight|landing_gear'] = tf * W_landing_gear # in [kg]
+		outputs['Weight|structure|landing_gear'] = tf * W_landing_gear # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		gear_type = self.options['gear_type']
@@ -49,11 +49,11 @@ class LandingGearWeightNDARCFractionalMethod(om.ExplicitComponent):
 		elif gear_type == 'skid': f_LG = 0.014
 		else: raise ValueError('Gear type should be either "wheeled" or "skid".')
 
-		partials['Weight|landing_gear', 'Weight|takeoff'] = tf * f_LG
+		partials['Weight|structure|landing_gear', 'Weight|takeoff'] = tf * f_LG
 
-class LandingGearWeightRoskamMethod(om.ExplicitComponent):
+class LandingGearWeightRoskam(om.ExplicitComponent):
 	"""
-	Computes landing gear weight
+	Computes landing gear weight via Roskam method
 	Parameters:
 		l_sm 	: shock strut length for main gear [m]
 		n_ult	: design ultimate load factor for landing (=5.7)
@@ -61,7 +61,7 @@ class LandingGearWeightRoskamMethod(om.ExplicitComponent):
 	Inputs:
 		Weight|takeoff : total take-off weight [kg]
 	Outputs:
-		Weight|landing_gear : landing gear weight [kg]
+		Weight|structure|landing_gear : landing gear weight [kg]
 	Notes:
 		> Class II USAF Method for General Aviation airplanes
 		> Used for light and utility type airplanes
@@ -78,8 +78,8 @@ class LandingGearWeightRoskamMethod(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
-		self.add_output('Weight|landing_gear', units='kg', desc='Landing gear weight')
-		self.declare_partials('Weight|landing_gear', 'Weight|takeoff')
+		self.add_output('Weight|structure|landing_gear', units='kg', desc='Landing gear weight')
+		self.declare_partials('Weight|structure|landing_gear', 'Weight|takeoff')
 
 	def compute(self, inputs, outputs):
 		l_sm = self.options['l_sm']
@@ -94,7 +94,7 @@ class LandingGearWeightRoskamMethod(om.ExplicitComponent):
 
 		W_landing_gear = 0.054 * l_sm**0.501 * (W_takeoff*n_ult)**0.684 * kg_to_lb * m_to_ft * lb_to_kg
 
-		outputs['Weight|landing_gear'] = tf * W_landing_gear # in [kg]
+		outputs['Weight|structure|landing_gear'] = tf * W_landing_gear # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		l_sm = self.options['l_sm']
@@ -109,10 +109,4 @@ class LandingGearWeightRoskamMethod(om.ExplicitComponent):
 
 		dWlg_dWtakeoff = 0.054 * l_sm**0.501 * 0.684 * W_takeoff**(-0.316) * n_ult**0.684 * kg_to_lb * m_to_ft * lb_to_kg
 
-		partials['Weight|landing_gear', 'Weight|takeoff'] = tf * dWlg_dWtakeoff
-
-
-
-
-
-
+		partials['Weight|structure|landing_gear', 'Weight|takeoff'] = tf * dWlg_dWtakeoff

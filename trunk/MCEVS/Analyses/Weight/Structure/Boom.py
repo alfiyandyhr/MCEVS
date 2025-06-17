@@ -22,8 +22,8 @@ class BoomWeightRoskam(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('total_req_takeoff_power', units='W', desc='Total required takeoff power')
-		self.add_output('Weight|booms', units='kg', desc='Total booms weight')
-		self.declare_partials('Weight|booms', 'total_req_takeoff_power')
+		self.add_output('Weight|structure|booms', units='kg', desc='Total booms weight')
+		self.declare_partials('Weight|structure|booms', 'total_req_takeoff_power')
 
 	def compute(self, inputs, outputs):
 		tf = self.options['tf']
@@ -35,7 +35,7 @@ class BoomWeightRoskam(om.ExplicitComponent):
 		
 		W_booms = 0.14 * total_req_takeoff_power * W_to_hp * lb_to_kg
 
-		outputs['Weight|booms'] = tf * W_booms # in [kg]
+		outputs['Weight|structure|booms'] = tf * W_booms # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
@@ -45,7 +45,7 @@ class BoomWeightRoskam(om.ExplicitComponent):
 		lb_to_kg = 0.453592
 		dWbooms_dPtakeoff = 0.14 * W_to_hp * lb_to_kg
 
-		partials['Weight|booms', 'total_req_takeoff_power'] = tf * dWbooms_dPtakeoff
+		partials['Weight|structure|booms', 'total_req_takeoff_power'] = tf * dWbooms_dPtakeoff
 
 class BoomWeightM4ModelsForNASALPC(om.ExplicitComponent):
 	"""
@@ -59,7 +59,7 @@ class BoomWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		Weight|battery 		: battery weight [kg]
 		v_cruise	 		: cruise speed [m/s]
 	Outputs:
-		Weight|booms 		: total booms weight [kg]
+		Weight|structure|booms 		: total booms weight [kg]
 	Notes:
 		> Physics-based structural sizing models for a wide variety of design parameters
 		> Then, the optimized weight results serve as empirical weight data from which new regression models
@@ -84,7 +84,7 @@ class BoomWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		self.add_input('Fuselage|length', units='m', desc='Fuselage length')
 		self.add_input('Weight|battery', units='kg', desc='Battery weight')
 		self.add_input('v_cruise', units='m/s', desc='Cruise speed')
-		self.add_output('Weight|booms', units='kg', desc='Total boom weight')
+		self.add_output('Weight|structure|booms', units='kg', desc='Total boom weight')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
@@ -98,7 +98,7 @@ class BoomWeightM4ModelsForNASALPC(om.ExplicitComponent):
 
 		W_booms = coeffs[0]*S_wing + coeffs[1]*AR_wing + coeffs[2]*l_fuse + coeffs[3]*W_batt + coeffs[4]*v_cruise + coeffs[5]
 
-		outputs['Weight|booms'] = tf * W_booms
+		outputs['Weight|structure|booms'] = tf * W_booms
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
@@ -109,11 +109,11 @@ class BoomWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		v_cruise = inputs['v_cruise']
 		coeffs = [ 3.33883108e+00, 5.40016118e+00, -9.17180256e-02, 1.28646937e-04, -6.25697773e-03, -1.17008833e+01 ]
 
-		partials['Weight|booms', 'S_wing'] = tf * coeffs[0]
-		partials['Weight|booms', 'AR_wing'] = tf * coeffs[1]
-		partials['Weight|booms', 'l_fuse'] = tf * coeffs[2]
-		partials['Weight|booms', 'W_batt'] = tf * coeffs[3]
-		partials['Weight|booms', 'v_cruise'] = tf * coeffs[4]
+		partials['Weight|structure|booms', 'S_wing'] = tf * coeffs[0]
+		partials['Weight|structure|booms', 'AR_wing'] = tf * coeffs[1]
+		partials['Weight|structure|booms', 'l_fuse'] = tf * coeffs[2]
+		partials['Weight|structure|booms', 'W_batt'] = tf * coeffs[3]
+		partials['Weight|structure|booms', 'v_cruise'] = tf * coeffs[4]
 		
 if __name__ == '__main__':
 	
@@ -130,4 +130,4 @@ if __name__ == '__main__':
 	prob.set_val('m4_boom_weight.v_cruise', 67.056)
 
 	prob.run_model()
-	print(prob['m4_boom_weight.Weight|booms'])
+	print(prob['m4_boom_weight.Weight|structure|booms'])

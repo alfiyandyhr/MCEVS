@@ -12,7 +12,7 @@ class HorizontalTailWeightRoskam(om.ExplicitComponent):
 		HorizontalTail|aspect_ratio			: horizontal tail aspect ratio (default=2.0)
 		HorizontalTail|max_root_thickness 	: horizontal tail maximum root thickness [m]
 	Outputs:
-		Weight|horizontal_tail 				: horizontal tail weight [kg]
+		Weight|structure|horizontal_tail 	: horizontal tail weight [kg]
 	Notes:
 		> Class II Cessna method for General Aviation airplanes
 		> Used for small, relatively low performance type airplanes
@@ -29,7 +29,7 @@ class HorizontalTailWeightRoskam(om.ExplicitComponent):
 		self.add_input('HorizontalTail|area', units='m**2', desc='Horizontal tail area')
 		self.add_input('HorizontalTail|aspect_ratio', units=None, desc='Horizontal tail aspect ratio')
 		self.add_input('HorizontalTail|max_root_thickness', units='m', desc='Horizontal tail maximum root thickness')
-		self.add_output('Weight|horizontal_tail', units='kg', desc='Horizontal tail weight')
+		self.add_output('Weight|structure|horizontal_tail', units='kg', desc='Horizontal tail weight')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
@@ -47,7 +47,7 @@ class HorizontalTailWeightRoskam(om.ExplicitComponent):
 		
 		W_htail = (3.184 * W_takeoff**0.887 * S_htail**0.101 * AR_htail**0.138)/(174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
-		outputs['Weight|horizontal_tail'] = tf * W_htail # in [kg]
+		outputs['Weight|structure|horizontal_tail'] = tf * W_htail # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		W_takeoff = inputs['Weight|takeoff']				# in [kg]
@@ -67,10 +67,10 @@ class HorizontalTailWeightRoskam(om.ExplicitComponent):
 		dWhtail_dARhtail = (3.184 * W_takeoff**0.887 * S_htail**0.101 * 0.138 * AR_htail**(-0.862))/(174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 		dWhtail_dtrh = (3.184 * W_takeoff**0.887 * S_htail**0.101 * AR_htail**0.138)/174.04 * (-0.233) * t_rh**(-1.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
-		partials['Weight|horizontal_tail', 'Weight|takeoff'] = tf * dWhtail_dWtakeoff
-		partials['Weight|horizontal_tail', 'HorizontalTail|area'] = tf * dWhtail_dShtail
-		partials['Weight|horizontal_tail', 'HorizontalTail|aspect_ratio'] = tf * dWhtail_dARhtail
-		partials['Weight|horizontal_tail', 'HorizontalTail|max_root_thickness'] = tf * dWhtail_dtrh
+		partials['Weight|structure|horizontal_tail', 'Weight|takeoff'] = tf * dWhtail_dWtakeoff
+		partials['Weight|structure|horizontal_tail', 'HorizontalTail|area'] = tf * dWhtail_dShtail
+		partials['Weight|structure|horizontal_tail', 'HorizontalTail|aspect_ratio'] = tf * dWhtail_dARhtail
+		partials['Weight|structure|horizontal_tail', 'HorizontalTail|max_root_thickness'] = tf * dWhtail_dtrh
 
 class VerticalTailWeightRoskam(om.ExplicitComponent):
 	"""
@@ -84,7 +84,7 @@ class VerticalTailWeightRoskam(om.ExplicitComponent):
 		VerticalTail|sweep_angle		: vertical tail quarter chord sweep angle [deg]
 		VerticalTail|max_root_thickness	: vertical tail maximum root thickness [m]
 	Outputs:
-		Weight|vertical_tail 	: horizontal tail weight [kg]
+		Weight|structure|vertical_tail 	: horizontal tail weight [kg]
 	Notes:
 		> Class II Cessna method for General Aviation airplanes
 		> Used for small, relatively low performance type airplanes
@@ -101,7 +101,7 @@ class VerticalTailWeightRoskam(om.ExplicitComponent):
 		self.add_input('VerticalTail|aspect_ratio', units=None, desc='Vertical tail aspect ratio')
 		self.add_input('VerticalTail|sweep_angle', units='deg', desc='Vertical tail quarter chord sweep angle')
 		self.add_input('VerticalTail|max_root_thickness', units='m', desc='Vertical tail maximum root thickness')
-		self.add_output('Weight|vertical_tail', units='kg', desc='Horizontal tail weight')
+		self.add_output('Weight|structure|vertical_tail', units='kg', desc='Horizontal tail weight')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
@@ -121,7 +121,7 @@ class VerticalTailWeightRoskam(om.ExplicitComponent):
 		
 		W_vtail = (1.68 * W_takeoff**0.567 * S_vtail**1.249 * AR_vtail**0.482)/(639.95 * t_rv**0.747 * (np.cos(vtail_sweep))**0.882 ) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
-		outputs['Weight|vertical_tail'] = tf * W_vtail # in [kg]
+		outputs['Weight|structure|vertical_tail'] = tf * W_vtail # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		W_takeoff = inputs['Weight|takeoff']				# in [kg]
@@ -145,22 +145,22 @@ class VerticalTailWeightRoskam(om.ExplicitComponent):
 		dWvtail_dtrv = (1.68 * W_takeoff**0.567 * S_vtail**1.249 * AR_vtail**0.482) / 639.95 * (-0.747)*t_rv**(-1.747) * (np.cos(vtail_sweep))**(-0.882)  * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
 
-		partials['Weight|vertical_tail', 'Weight|takeoff'] = tf * dWvtail_dWtakeoff
-		partials['Weight|vertical_tail', 'VerticalTail|area'] = tf * dWvtail_dSvtail
-		partials['Weight|vertical_tail', 'VerticalTail|aspect_ratio'] = tf * dWvtail_dARvtail
-		partials['Weight|vertical_tail', 'VerticalTail|sweep_angle'] = tf * dWvtail_dSweep
-		partials['Weight|vertical_tail', 'VerticalTail|max_root_thickness'] = tf * dWvtail_dtrv
+		partials['Weight|structure|vertical_tail', 'Weight|takeoff'] = tf * dWvtail_dWtakeoff
+		partials['Weight|structure|vertical_tail', 'VerticalTail|area'] = tf * dWvtail_dSvtail
+		partials['Weight|structure|vertical_tail', 'VerticalTail|aspect_ratio'] = tf * dWvtail_dARvtail
+		partials['Weight|structure|vertical_tail', 'VerticalTail|sweep_angle'] = tf * dWvtail_dSweep
+		partials['Weight|structure|vertical_tail', 'VerticalTail|max_root_thickness'] = tf * dWvtail_dtrv
 
 class EmpennageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 	"""
 	Computes HTail and VTail weights using M4 structural weight regression models for NACA LPC
 	Parameters:
-		tf 					: technology factor (default=1.0)
+		tf 							: technology factor (default=1.0)
 	Inputs:
-		HorizontalTail|area 			: horizontal tail area [m**2]
+		HorizontalTail|area 		: horizontal tail area [m**2]
 		VerticalTail|area 			: vertical tail area [m**2]
 	Outputs:
-		Weight|empennage 	: empennage (HTail and VTail) weight [kg]
+		Weight|structure|empennage 	: empennage (HTail and VTail) weight [kg]
 	Notes:
 		> Physics-based structural sizing models for a wide variety of design parameters
 		> Then, the optimized weight results serve as empirical weight data from which new regression models
@@ -182,7 +182,7 @@ class EmpennageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 	def setup(self):
 		self.add_input('HorizontalTail|area', units='m**2', desc='Horizontal tail area')
 		self.add_input('VerticalTail|area', units='m**2', desc='Vertical tail area')
-		self.add_output('Weight|empennage', units='kg', desc='Empennage weight')
+		self.add_output('Weight|structure|empennage', units='kg', desc='Empennage weight')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
@@ -192,7 +192,7 @@ class EmpennageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		coeffs = [ 8.43266623, 10.05410839, -0.19944806479469435 ]
 		W_wing = coeffs[0]*S_htail + coeffs[1]*S_vtail + coeffs[2]
 
-		outputs['Weight|empennage'] = tf * W_wing
+		outputs['Weight|structure|empennage'] = tf * W_wing
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
@@ -200,8 +200,8 @@ class EmpennageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		S_vtail = inputs['VerticalTail|area']
 		coeffs = [ 8.43266623, 10.05410839, -0.19944806479469435 ]
 
-		partials['Weight|empennage', 'S_htail'] = tf * coeffs[0]
-		partials['Weight|empennage', 'S_vtail'] = tf * coeffs[1]
+		partials['Weight|structure|empennage', 'S_htail'] = tf * coeffs[0]
+		partials['Weight|structure|empennage', 'S_vtail'] = tf * coeffs[1]
 		
 if __name__ == '__main__':
 	
@@ -215,26 +215,5 @@ if __name__ == '__main__':
 	prob.set_val('m4_empennage_weight.VerticalTail|area', 2.54027104848)
 
 	prob.run_model()
-	print(prob['m4_empennage_weight.Weight|empennage'])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	print(prob['m4_empennage_weight.Weight|structure|empennage'])
 

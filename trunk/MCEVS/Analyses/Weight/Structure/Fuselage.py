@@ -5,14 +5,14 @@ class FuselageWeightRoskam(om.ExplicitComponent):
 	"""
 	Computes fuselage weight
 	Parameters:
-		n_pax	: number of passengers including the pilots
-		l_fuse	: fuselage length, not including nose mounted nacelle length [m]
-		p_max	: maximum fuselage perimeter [m]
-		tf 		: technology factor (a reduction due to the use of composites, e.g., 0.8)
+		n_pax						: number of passengers including the pilots
+		l_fuse						: fuselage length, not including nose mounted nacelle length [m]
+		p_max						: maximum fuselage perimeter [m]
+		tf 							: technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
-		Weight|takeoff : total take-off weight [kg]
+		Weight|takeoff 				: total take-off weight [kg]
 	Outputs:
-		Weight|fuselage : fuselage weight [kg]
+		Weight|structure|fuselage 	: fuselage weight [kg]
 	Notes:
 		> Class II Cessna method for General Aviation airplanes
 		> Used for small, relatively low performance type airplanes
@@ -29,8 +29,8 @@ class FuselageWeightRoskam(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('Weight|takeoff', units='kg', desc='Total weight')
-		self.add_output('Weight|fuselage', units='kg', desc='Fuselage weight')
-		self.declare_partials('Weight|fuselage', 'Weight|takeoff')
+		self.add_output('Weight|structure|fuselage', units='kg', desc='Fuselage weight')
+		self.declare_partials('Weight|structure|fuselage', 'Weight|takeoff')
 
 	def compute(self, inputs, outputs):
 		n_pax = self.options['n_pax']
@@ -46,7 +46,7 @@ class FuselageWeightRoskam(om.ExplicitComponent):
 		
 		W_fuselage = 14.86 * W_takeoff**0.144 * (l_fuse/p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
 
-		outputs['Weight|fuselage'] = tf * W_fuselage # in [kg]
+		outputs['Weight|structure|fuselage'] = tf * W_fuselage # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		n_pax = self.options['n_pax']
@@ -60,21 +60,21 @@ class FuselageWeightRoskam(om.ExplicitComponent):
 		lb_to_kg = 0.453592
 		dWfuse_dWtakeoff = 14.86 * 0.144 * W_takeoff**(-0.856) * (l_fuse/p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
 
-		partials['Weight|fuselage', 'Weight|takeoff'] = tf * dWfuse_dWtakeoff
+		partials['Weight|structure|fuselage', 'Weight|takeoff'] = tf * dWfuse_dWtakeoff
 
 class FuselageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 	"""
 	Computes fuselage weight using M4 structural weight regression models for NACA LPC
 	Parameters:
-		tf 					: technology factor (default=1.0)
+		tf 							: technology factor (default=1.0)
 	Inputs:
-		Wing|area 			: wing area [m**2]
-		Wing|aspect_ratio 	: wing aspect ratio
-		Fuselage|length 	: fuselage length [m]
-		Weight|battery 		: battery weight [kg]
-		v_cruise	 		: cruise speed [m/s]
+		Wing|area 					: wing area [m**2]
+		Wing|aspect_ratio 			: wing aspect ratio
+		Fuselage|length 			: fuselage length [m]
+		Weight|battery 				: battery weight [kg]
+		v_cruise	 				: cruise speed [m/s]
 	Outputs:
-		Weight|wing 		: wing weight [kg]
+		Weight|structure|fuselage 	: fuselage weight [kg]
 	Notes:
 		> Physics-based structural sizing models for a wide variety of design parameters
 		> Then, the optimized weight results serve as empirical weight data from which new regression models
@@ -99,7 +99,7 @@ class FuselageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		self.add_input('Fuselage|length', units='m', desc='Fuselage length')
 		self.add_input('Weight|battery', units='kg', desc='Battery weight')
 		self.add_input('v_cruise', units='m/s', desc='Cruise speed')
-		self.add_output('Weight|fuselage', units='kg', desc='Wing weight')
+		self.add_output('Weight|structure|fuselage', units='kg', desc='Wing weight')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
@@ -113,7 +113,7 @@ class FuselageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 
 		W_fuse = coeffs[0]*S_wing + coeffs[1]*AR_wing + coeffs[2]*l_fuse + coeffs[3]*W_batt + coeffs[4]*v_cruise + coeffs[5]
 
-		outputs['Weight|fuselage'] = tf * W_fuse
+		outputs['Weight|structure|fuselage'] = tf * W_fuse
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
@@ -124,11 +124,11 @@ class FuselageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		v_cruise = inputs['v_cruise']
 		coeffs = [ 1.01472161e+00, -4.06758251e-01, 4.25974124e+01, 3.10575276e-02, 6.87345416e-02, -1.16727769e+02 ]
 
-		partials['Weight|fuselage', 'S_wing'] = tf * coeffs[0]
-		partials['Weight|fuselage', 'AR_wing'] = tf * coeffs[1]
-		partials['Weight|fuselage', 'l_fuse'] = tf * coeffs[2]
-		partials['Weight|fuselage', 'W_batt'] = tf * coeffs[3]
-		partials['Weight|fuselage', 'v_cruise'] = tf * coeffs[4]
+		partials['Weight|structure|fuselage', 'S_wing'] = tf * coeffs[0]
+		partials['Weight|structure|fuselage', 'AR_wing'] = tf * coeffs[1]
+		partials['Weight|structure|fuselage', 'l_fuse'] = tf * coeffs[2]
+		partials['Weight|structure|fuselage', 'W_batt'] = tf * coeffs[3]
+		partials['Weight|structure|fuselage', 'v_cruise'] = tf * coeffs[4]
 		
 if __name__ == '__main__':
 	
@@ -145,4 +145,4 @@ if __name__ == '__main__':
 	prob.set_val('m4_fuse_weight.v_cruise', 67.056)
 
 	prob.run_model()
-	print(prob['m4_fuse_weight.Weight|fuselage'])		
+	print(prob['m4_fuse_weight.Weight|structure|fuselage'])		

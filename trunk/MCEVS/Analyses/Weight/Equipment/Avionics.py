@@ -9,7 +9,7 @@ class AvionicsWeight(om.ExplicitComponent):
 	Inputs:
 		Weight|takeoff : total take-off weight [kg]
 	Outputs:
-		Weight|avionics : weight of all avionics systems [kg]
+		Weight|equipment|avionics : weight of all avionics systems [kg]
 	Notes:
 		> This equation has been checked to be the same as electrical system weight found in Roskam.
 	Source:
@@ -22,8 +22,8 @@ class AvionicsWeight(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
-		self.add_output('Weight|avionics', units='kg', desc='Weight of all avionics systems')
-		self.declare_partials('Weight|avionics', 'Weight|takeoff')
+		self.add_output('Weight|equipment|avionics', units='kg', desc='Weight of all avionics systems')
+		self.declare_partials('Weight|equipment|avionics', 'Weight|takeoff')
 
 	def compute(self, inputs, outputs):
 		tf = self.options['tf']
@@ -32,10 +32,10 @@ class AvionicsWeight(om.ExplicitComponent):
 		# Calculating W_avionics
 		W_avionics = 0.0268 * W_takeoff
 
-		outputs['Weight|avionics'] = tf * W_avionics # in [kg]
+		outputs['Weight|equipment|avionics'] = tf * W_avionics # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		partials['Weight|avionics', 'Weight|takeoff'] = tf * 0.0268
+		partials['Weight|equipment|avionics', 'Weight|takeoff'] = tf * 0.0268
 
 

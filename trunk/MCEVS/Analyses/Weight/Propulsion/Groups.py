@@ -33,43 +33,43 @@ class PropulsionWeight(om.Group):
 		if vehicle.configuration == 'Multirotor':
 			self.add_subsystem('lift_rotor_weight',
 								RotorAndHubWeight(N_rotor=N_lift_rotor, tf=tf_propulsion),
-								promotes_outputs=['Weight|rotors_and_hubs'])
+								promotes_outputs=['Weight|propulsion|rotors_and_hubs'])
 			self.add_subsystem('extra_hub_weight',
 								ExtraHubWeight(N_rotor=N_lift_rotor, N_bl=N_blade_lift_rotor, tf=tf_propulsion),
-								promotes_inputs=[('Weight|rotors','Weight|rotors_and_hubs'), ('Rotor|radius','LiftRotor|radius'), ('Rotor|chord', 'LiftRotor|chord'), ('Rotor|rpm','LiftRotor|HoverClimb|RPM')],
-								promotes_outputs=['Weight|extra_hubs'])
+								promotes_inputs=[('Weight|propulsion|rotors','Weight|propulsion|rotors_and_hubs'), ('Rotor|radius','LiftRotor|radius'), ('Rotor|chord', 'LiftRotor|chord'), ('Rotor|rpm','LiftRotor|HoverClimb|RPM')],
+								promotes_outputs=['Weight|propulsion|extra_hubs'])
 			self.add_subsystem('lift_rotor_motor_weight',
 								MotorWeight(N_motor=N_lift_rotor, PM=vehicle.lift_rotor.motor_power_margin, tf=tf_propulsion), # one rotor typically has one motor
-								promotes_outputs=['Weight|motors'])
+								promotes_outputs=['Weight|propulsion|motors'])
 			self.add_subsystem('lift_rotor_controller_weight',
 								MotorControllerWeight(N_motor=N_lift_rotor, PM=vehicle.lift_rotor.motor_power_margin, tf=tf_propulsion), # one motor has one controller
-								promotes_outputs=['Weight|controllers']) 	
+								promotes_outputs=['Weight|propulsion|controllers']) 	
 			
-			input_names = ['Weight|rotors_and_hubs', 'Weight|extra_hubs', 'Weight|motors', 'Weight|controllers']
+			input_names = ['Weight|propulsion|rotors_and_hubs', 'Weight|propulsion|extra_hubs', 'Weight|propulsion|motors', 'Weight|propulsion|controllers']
 			sfs = [1., 1., 1., 1.]			
 
 		elif vehicle.configuration == 'LiftPlusCruise':
 			# Lift rotors
 			self.add_subsystem('lift_rotor_weight',
 								RotorAndHubWeight(N_rotor=N_lift_rotor, tf=tf_propulsion),
-								promotes_outputs=[('Weight|rotors_and_hubs', 'W_rotors_and_hubs_lift_rotor')])
+								promotes_outputs=[('Weight|propulsion|rotors_and_hubs', 'W_rotors_and_hubs_lift_rotor')])
 			self.add_subsystem('lift_rotor_motor_weight',
 								MotorWeight(N_motor=N_lift_rotor, PM=vehicle.lift_rotor.motor_power_margin, tf=tf_propulsion), # one rotor typically has one motor
-								promotes_outputs=[('Weight|motors', 'W_motors_lift_rotor')])
+								promotes_outputs=[('Weight|propulsion|motors', 'W_motors_lift_rotor')])
 			self.add_subsystem('lift_rotor_controller_weight',
 								MotorControllerWeight(N_motor=N_lift_rotor, PM=vehicle.lift_rotor.motor_power_margin, tf=tf_propulsion), # one motor has one controller
-								promotes_outputs=[('Weight|controllers', 'W_controllers_lift_rotor')])
+								promotes_outputs=[('Weight|propulsion|controllers', 'W_controllers_lift_rotor')])
 
 			# Cruising rotors
 			self.add_subsystem('propeller_weight',
 								RotorAndHubWeight(N_rotor=N_propeller, tf=tf_propulsion),
-								promotes_outputs=[('Weight|rotors_and_hubs', 'W_rotors_and_hubs_propeller')])
+								promotes_outputs=[('Weight|propulsion|rotors_and_hubs', 'W_rotors_and_hubs_propeller')])
 			self.add_subsystem('propeller_motor_weight',
 								MotorWeight(N_motor=N_propeller, PM=vehicle.propeller.motor_power_margin, tf=tf_propulsion), # one rotor typically has one motor
-								promotes_outputs=[('Weight|motors', 'W_motors_propeller')])
+								promotes_outputs=[('Weight|propulsion|motors', 'W_motors_propeller')])
 			self.add_subsystem('propeller_controller_weight',
 								MotorControllerWeight(N_motor=N_propeller, PM=vehicle.propeller.motor_power_margin, tf=tf_propulsion),
-								promotes_outputs=[('Weight|controllers', 'W_controllers_propeller')]) # one motor has one controller
+								promotes_outputs=[('Weight|propulsion|controllers', 'W_controllers_propeller')]) # one motor has one controller
 
 			# Sum both systems weight
 			adder = om.AddSubtractComp()
@@ -88,9 +88,9 @@ class PropulsionWeight(om.Group):
 			self.add_subsystem('propulsion_weight',
 								adder,
 								promotes_inputs=['*'],
-								promotes_outputs=[('W_rotors_and_hubs', 'Weight|rotors_and_hubs'), ('W_motors', 'Weight|motors'), ('W_controllers', 'Weight|controllers')])
+								promotes_outputs=[('W_rotors_and_hubs', 'Weight|propulsion|rotors_and_hubs'), ('W_motors', 'Weight|propulsion|motors'), ('W_controllers', 'Weight|propulsion|controllers')])
 
-			input_names = ['Weight|rotors_and_hubs', 'Weight|motors', 'Weight|controllers']
+			input_names = ['Weight|propulsion|rotors_and_hubs', 'Weight|propulsion|motors', 'Weight|propulsion|controllers']
 			sfs = [1., 1., 1.]
 
 

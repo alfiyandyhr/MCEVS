@@ -9,7 +9,7 @@ class AntiIcingSystemWeight(om.ExplicitComponent):
 	Inputs:
 		Weight|takeoff : total take-off weight [kg]
 	Outputs:
-		Weight|anti_icing : weight of all anti-icing systems [kg]
+		Weight|equipment|anti_icing : weight of all anti-icing systems [kg]
 	Notes:
 		> It also takes into account air conditioning system
 	Source:
@@ -20,8 +20,8 @@ class AntiIcingSystemWeight(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
-		self.add_output('Weight|anti_icing', units='kg', desc='Weight of all anti-icing systems')
-		self.declare_partials('Weight|anti_icing', 'Weight|takeoff')
+		self.add_output('Weight|equipment|anti_icing', units='kg', desc='Weight of all anti-icing systems')
+		self.declare_partials('Weight|equipment|anti_icing', 'Weight|takeoff')
 
 	def compute(self, inputs, outputs):
 		tf = self.options['tf']
@@ -30,10 +30,10 @@ class AntiIcingSystemWeight(om.ExplicitComponent):
 		# Calculating W_anti_icing
 		W_anti_icing = 8.0 * (W_takeoff/1000.0)
 
-		outputs['Weight|anti_icing'] = tf * W_anti_icing # in [kg]
+		outputs['Weight|equipment|anti_icing'] = tf * W_anti_icing # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		partials['Weight|anti_icing', 'Weight|takeoff'] = tf * 0.008
+		partials['Weight|equipment|anti_icing', 'Weight|takeoff'] = tf * 0.008
 
 

@@ -5,14 +5,14 @@ class WingWeightRoskam(om.ExplicitComponent):
 	"""
 	Computes cantilever wing weight
 	Parameters:
-		n_ult	: design ultimate load factor (default=3.0)
-		tf 		: technology factor (a reduction due to the use of composites, e.g., 0.8)
+		n_ult					: design ultimate load factor (default=3.0)
+		tf 						: technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
-		Weight|takeoff : total take-off weight [kg]
-		Wing|area	: wing area [m**2]
-		Wing|aspect_ratio	: wing aspect ratio
+		Weight|takeoff 			: total take-off weight [kg]
+		Wing|area				: wing area [m**2]
+		Wing|aspect_ratio		: wing aspect ratio
 	Outputs:
-		Weight|wing	: wing weight [kg]
+		Weight|structure|wing	: wing weight [kg]
 	Notes:
 		> Class II Cessna method for General Aviation airplanes
 		> Used for small, relatively low performance type airplanes
@@ -36,10 +36,10 @@ class WingWeightRoskam(om.ExplicitComponent):
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
 		self.add_input('Wing|area', units='m**2', desc='Wing area')
 		self.add_input('Wing|aspect_ratio', desc='Wing aspect ratio')
-		self.add_output('Weight|wing', units='kg', desc='Wing weight')
-		self.declare_partials('Weight|wing', 'Weight|takeoff')
-		self.declare_partials('Weight|wing', 'Wing|area')
-		self.declare_partials('Weight|wing', 'Wing|aspect_ratio')
+		self.add_output('Weight|structure|wing', units='kg', desc='Wing weight')
+		self.declare_partials('Weight|structure|wing', 'Weight|takeoff')
+		self.declare_partials('Weight|structure|wing', 'Wing|area')
+		self.declare_partials('Weight|structure|wing', 'Wing|aspect_ratio')
 
 	def compute(self, inputs, outputs):
 		n_ult = self.options['n_ult']
@@ -55,7 +55,7 @@ class WingWeightRoskam(om.ExplicitComponent):
 
 		W_wing = 0.04674 * W_takeoff**0.397 * S_wing**0.360 * n_ult**0.397 * AR_wing**1.712 * kg_to_lb * m2_to_ft2 * lb_to_kg
 
-		outputs['Weight|wing'] = tf * W_wing # in [kg]
+		outputs['Weight|structure|wing'] = tf * W_wing # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		n_ult = self.options['n_ult']
@@ -75,9 +75,9 @@ class WingWeightRoskam(om.ExplicitComponent):
 
 		dWwing_dARwing = 0.04674 * W_takeoff**0.397 * S_wing**0.360 * n_ult**0.397 * 1.712 * AR_wing**0.712 * kg_to_lb * m2_to_ft2 * lb_to_kg
 
-		partials['Weight|wing', 'Weight|takeoff'] = tf * dWwing_dWtakeoff
-		partials['Weight|wing', 'Wing|area'] = tf * dWwing_dSwing
-		partials['Weight|wing', 'Wing|aspect_ratio'] = tf * dWwing_dARwing
+		partials['Weight|structure|wing', 'Weight|takeoff'] = tf * dWwing_dWtakeoff
+		partials['Weight|structure|wing', 'Wing|area'] = tf * dWwing_dSwing
+		partials['Weight|structure|wing', 'Wing|aspect_ratio'] = tf * dWwing_dARwing
 
 class WingWeightM4ModelsForNASALPC(om.ExplicitComponent):
 	"""
@@ -91,7 +91,7 @@ class WingWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		Weight|battery 		: battery weight [kg]
 		v_cruise	 		: cruise speed [m/s]
 	Outputs:
-		Weight|wing 		: wing weight [kg]
+		Weight|structure|wing 		: wing weight [kg]
 	Notes:
 		> Physics-based structural sizing models for a wide variety of design parameters
 		> Then, the optimized weight results serve as empirical weight data from which new regression models
@@ -116,7 +116,7 @@ class WingWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		self.add_input('Fuselage|length', units='m', desc='Fuselage length')
 		self.add_input('Weight|battery', units='kg', desc='Battery weight')
 		self.add_input('v_cruise', units='m/s', desc='Cruise speed')
-		self.add_output('Weight|wing', units='kg', desc='Wing weight')
+		self.add_output('Weight|structure|wing', units='kg', desc='Wing weight')
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
@@ -130,7 +130,7 @@ class WingWeightM4ModelsForNASALPC(om.ExplicitComponent):
 
 		W_wing = coeffs[0]*S_wing + coeffs[1]*AR_wing + coeffs[2]*l_fuse + coeffs[3]*W_batt + coeffs[4]*v_cruise + coeffs[5]
 
-		outputs['Weight|wing'] = tf * W_wing
+		outputs['Weight|structure|wing'] = tf * W_wing
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
@@ -141,11 +141,11 @@ class WingWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		v_cruise = inputs['v_cruise']
 		coeffs = [ 1.11379136e+01,  3.14761829e+01,  7.89132288e-01, -2.14257921e-02, 2.40041303e-01, -3.20236992e+02 ]
 
-		partials['Weight|wing', 'S_wing'] = tf * coeffs[0]
-		partials['Weight|wing', 'AR_wing'] = tf * coeffs[1]
-		partials['Weight|wing', 'l_fuse'] = tf * coeffs[2]
-		partials['Weight|wing', 'W_batt'] = tf * coeffs[3]
-		partials['Weight|wing', 'v_cruise'] = tf * coeffs[4]
+		partials['Weight|structure|wing', 'S_wing'] = tf * coeffs[0]
+		partials['Weight|structure|wing', 'AR_wing'] = tf * coeffs[1]
+		partials['Weight|structure|wing', 'l_fuse'] = tf * coeffs[2]
+		partials['Weight|structure|wing', 'W_batt'] = tf * coeffs[3]
+		partials['Weight|structure|wing', 'v_cruise'] = tf * coeffs[4]
 		
 if __name__ == '__main__':
 	
@@ -162,4 +162,4 @@ if __name__ == '__main__':
 	prob.set_val('m4_wing_weight.v_cruise', 67.056)
 
 	prob.run_model()
-	print(prob['m4_wing_weight.Weight|wing'])
+	print(prob['m4_wing_weight.Weight|structure|wing'])
