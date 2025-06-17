@@ -113,6 +113,7 @@ class WeightAnalysis(object):
 			vtail_aspect_ratio 			= self.vehicle.vertical_tail.aspect_ratio
 			vtail_max_root_thickness 	= self.vehicle.vertical_tail.max_root_thickness 	# m
 			vtail_sweep_angle 			= self.vehicle.vertical_tail.sweep_angle 			# deg
+			l_fuse 						= self.vehicle.fuselage.length 						# m
 
 		# --- OpenMDAO probolem --- #
 		prob = om.Problem(reports=False)
@@ -162,6 +163,7 @@ class WeightAnalysis(object):
 			indeps.add_output('VerticalTail|aspect_ratio', vtail_aspect_ratio)
 			indeps.add_output('VerticalTail|max_root_thickness', vtail_max_root_thickness, units='m')
 			indeps.add_output('VerticalTail|sweep_angle', vtail_sweep_angle, units='deg')
+			indeps.add_output('Fuselage|length', l_fuse, units='m')
 
 		# Variables needed for BEMT
 		if self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
@@ -445,14 +447,20 @@ class MTOWEstimation(om.Group):
 				input_list_struct = ['Weight|takeoff']
 			elif vehicle.configuration == 'LiftPlusCruise':
 				input_list_struct = ['Weight|takeoff', 'Wing|*', 'HorizontalTail|*', 'VerticalTail|*']
+		elif fidelity['weight_model']['structure'] == 'M4Regression':
+			if vehicle.configuration == 'LiftPlusCruise':
+				for segment in mission.segments:
+					if segment.kind == 'CruiseConstantSpeed': cruise_segment_id = segment.id
+				input_list_struct = ['Weight|takeoff', 'Weight|battery', 'Wing|*', 'HorizontalTail|*', 'VerticalTail|*', 'Fuselage|length', ('v_cruise', f'Mission|segment_{cruise_segment_id}|speed')]
 		self.add_subsystem('structure_weight',
 							StructureWeight(vehicle=vehicle, fidelity=fidelity, tf_structure=vehicle.tf_structure),
 							promotes_inputs=input_list_struct,
 							promotes_outputs=['Weight|*'])
-		# includes mission segment power for takeoff for sizing booms
-		for i,segment in enumerate(mission.segments):
-			if segment.kind in ['HoverClimbConstantSpeed']:
-				self.connect(f'Power|LiftRotor|segment_{i+1}','structure_weight.total_req_takeoff_power')
+		# includes mission segment power for takeoff for sizing booms if using Roskam method
+		if fidelity['weight_model']['structure'] == 'Roskam':
+			for i,segment in enumerate(mission.segments):
+				if segment.kind in ['HoverClimbConstantSpeed']:
+					self.connect(f'Power|LiftRotor|segment_{i+1}','structure_weight.total_req_takeoff_power')
 
 		# 4. Equipment weight
 		# includes avionics, flight control, anti icing, and furnishing

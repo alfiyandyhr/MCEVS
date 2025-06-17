@@ -200,8 +200,8 @@ class EmpennageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		S_vtail = inputs['VerticalTail|area']
 		coeffs = [ 8.43266623, 10.05410839, -0.19944806479469435 ]
 
-		partials['Weight|structure|empennage', 'S_htail'] = tf * coeffs[0]
-		partials['Weight|structure|empennage', 'S_vtail'] = tf * coeffs[1]
+		partials['Weight|structure|empennage', 'HorizontalTail|area'] = tf * coeffs[0]
+		partials['Weight|structure|empennage', 'VerticalTail|area'] = tf * coeffs[1]
 		
 if __name__ == '__main__':
 	
@@ -215,5 +215,6 @@ if __name__ == '__main__':
 	prob.set_val('m4_empennage_weight.VerticalTail|area', 2.54027104848)
 
 	prob.run_model()
-	print(prob['m4_empennage_weight.Weight|structure|empennage'])
+	tf_structure = 0.8
+	print(tf_structure * prob['m4_empennage_weight.Weight|structure|empennage'])
 

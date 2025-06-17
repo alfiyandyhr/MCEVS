@@ -109,10 +109,10 @@ class BoomWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		v_cruise = inputs['v_cruise']
 		coeffs = [ 3.33883108e+00, 5.40016118e+00, -9.17180256e-02, 1.28646937e-04, -6.25697773e-03, -1.17008833e+01 ]
 
-		partials['Weight|structure|booms', 'S_wing'] = tf * coeffs[0]
-		partials['Weight|structure|booms', 'AR_wing'] = tf * coeffs[1]
-		partials['Weight|structure|booms', 'l_fuse'] = tf * coeffs[2]
-		partials['Weight|structure|booms', 'W_batt'] = tf * coeffs[3]
+		partials['Weight|structure|booms', 'Wing|area'] = tf * coeffs[0]
+		partials['Weight|structure|booms', 'Wing|aspect_ratio'] = tf * coeffs[1]
+		partials['Weight|structure|booms', 'Fuselage|length'] = tf * coeffs[2]
+		partials['Weight|structure|booms', 'Weight|battery'] = tf * coeffs[3]
 		partials['Weight|structure|booms', 'v_cruise'] = tf * coeffs[4]
 		
 if __name__ == '__main__':
@@ -126,8 +126,9 @@ if __name__ == '__main__':
 	prob.set_val('m4_boom_weight.Wing|area', 19.53547845)
 	prob.set_val('m4_boom_weight.Wing|aspect_ratio', 12.12761)
 	prob.set_val('m4_boom_weight.Fuselage|length', 9.144)
-	prob.set_val('m4_boom_weight.Weight|battery', 819.95084106)
+	prob.set_val('m4_boom_weight.Weight|battery', 748.46990544)
 	prob.set_val('m4_boom_weight.v_cruise', 67.056)
 
 	prob.run_model()
-	print(prob['m4_boom_weight.Weight|structure|booms'])
+	tf_structure = 0.8
+	print(tf_structure * prob['m4_boom_weight.Weight|structure|booms'])

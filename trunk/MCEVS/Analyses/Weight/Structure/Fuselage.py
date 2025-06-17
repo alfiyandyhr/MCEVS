@@ -124,10 +124,10 @@ class FuselageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		v_cruise = inputs['v_cruise']
 		coeffs = [ 1.01472161e+00, -4.06758251e-01, 4.25974124e+01, 3.10575276e-02, 6.87345416e-02, -1.16727769e+02 ]
 
-		partials['Weight|structure|fuselage', 'S_wing'] = tf * coeffs[0]
-		partials['Weight|structure|fuselage', 'AR_wing'] = tf * coeffs[1]
-		partials['Weight|structure|fuselage', 'l_fuse'] = tf * coeffs[2]
-		partials['Weight|structure|fuselage', 'W_batt'] = tf * coeffs[3]
+		partials['Weight|structure|fuselage', 'Wing|area'] = tf * coeffs[0]
+		partials['Weight|structure|fuselage', 'Wing|aspect_ratio'] = tf * coeffs[1]
+		partials['Weight|structure|fuselage', 'Fuselage|length'] = tf * coeffs[2]
+		partials['Weight|structure|fuselage', 'Weight|battery'] = tf * coeffs[3]
 		partials['Weight|structure|fuselage', 'v_cruise'] = tf * coeffs[4]
 		
 if __name__ == '__main__':
@@ -141,8 +141,9 @@ if __name__ == '__main__':
 	prob.set_val('m4_fuse_weight.Wing|area', 19.53547845)
 	prob.set_val('m4_fuse_weight.Wing|aspect_ratio', 12.12761)
 	prob.set_val('m4_fuse_weight.Fuselage|length', 9.144)
-	prob.set_val('m4_fuse_weight.Weight|battery', 819.95084106)
+	prob.set_val('m4_fuse_weight.Weight|battery', 748.46990544)
 	prob.set_val('m4_fuse_weight.v_cruise', 67.056)
 
 	prob.run_model()
-	print(prob['m4_fuse_weight.Weight|structure|fuselage'])		
+	tf_structure = 0.8
+	print(tf_structure * prob['m4_fuse_weight.Weight|structure|fuselage'])		

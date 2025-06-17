@@ -83,15 +83,15 @@ class WingWeightM4ModelsForNASALPC(om.ExplicitComponent):
 	"""
 	Computes wing weight using M4 structural weight regression models for NACA LPC
 	Parameters:
-		tf 					: technology factor (default=1.0)
+		tf 						: technology factor (default=1.0)
 	Inputs:
-		Wing|area 			: wing area [m**2]
-		Wing|aspect_ratio 	: wing aspect ratio
-		Fuselage|length 	: fuselage length [m]
-		Weight|battery 		: battery weight [kg]
-		v_cruise	 		: cruise speed [m/s]
+		Wing|area 				: wing area [m**2]
+		Wing|aspect_ratio 		: wing aspect ratio
+		Fuselage|length 		: fuselage length [m]
+		Weight|battery 			: battery weight [kg]
+		v_cruise	 			: cruise speed [m/s]
 	Outputs:
-		Weight|structure|wing 		: wing weight [kg]
+		Weight|structure|wing 	: wing weight [kg]
 	Notes:
 		> Physics-based structural sizing models for a wide variety of design parameters
 		> Then, the optimized weight results serve as empirical weight data from which new regression models
@@ -141,10 +141,10 @@ class WingWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		v_cruise = inputs['v_cruise']
 		coeffs = [ 1.11379136e+01,  3.14761829e+01,  7.89132288e-01, -2.14257921e-02, 2.40041303e-01, -3.20236992e+02 ]
 
-		partials['Weight|structure|wing', 'S_wing'] = tf * coeffs[0]
-		partials['Weight|structure|wing', 'AR_wing'] = tf * coeffs[1]
-		partials['Weight|structure|wing', 'l_fuse'] = tf * coeffs[2]
-		partials['Weight|structure|wing', 'W_batt'] = tf * coeffs[3]
+		partials['Weight|structure|wing', 'Wing|area'] = tf * coeffs[0]
+		partials['Weight|structure|wing', 'Wing|aspect_ratio'] = tf * coeffs[1]
+		partials['Weight|structure|wing', 'Fuselage|length'] = tf * coeffs[2]
+		partials['Weight|structure|wing', 'Weight|battery'] = tf * coeffs[3]
 		partials['Weight|structure|wing', 'v_cruise'] = tf * coeffs[4]
 		
 if __name__ == '__main__':
@@ -158,8 +158,9 @@ if __name__ == '__main__':
 	prob.set_val('m4_wing_weight.Wing|area', 19.53547845)
 	prob.set_val('m4_wing_weight.Wing|aspect_ratio', 12.12761)
 	prob.set_val('m4_wing_weight.Fuselage|length', 9.144)
-	prob.set_val('m4_wing_weight.Weight|battery', 819.95084106)
+	prob.set_val('m4_wing_weight.Weight|battery', 748.46990544)
 	prob.set_val('m4_wing_weight.v_cruise', 67.056)
 
 	prob.run_model()
-	print(prob['m4_wing_weight.Weight|structure|wing'])
+	tf_structure = 0.8
+	print(tf_structure * prob['m4_wing_weight.Weight|structure|wing'])

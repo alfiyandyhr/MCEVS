@@ -70,6 +70,35 @@ class StructureWeight(om.Group):
 									promotes_inputs=['Weight|takeoff', 'VerticalTail|area', 'VerticalTail|aspect_ratio', 'VerticalTail|max_root_thickness', 'VerticalTail|sweep_angle'],
 									promotes_outputs=['Weight|structure|vertical_tail'])
 
+		elif fidelity['weight_model']['structure'] == 'M4Regression':
+
+			# Fuselage weight
+			self.add_subsystem('fuselage_weight',
+								FuselageWeightM4ModelsForNASALPC(tf=tf_structure),
+								promotes_inputs=['Wing|area', 'Wing|aspect_ratio', 'Fuselage|length', 'Weight|battery', 'v_cruise'],
+								promotes_outputs=['Weight|structure|fuselage'])
+
+			# Boom weight
+			self.add_subsystem('boom_weight',
+								BoomWeightM4ModelsForNASALPC(tf=tf_structure),
+								promotes_inputs=['Wing|area', 'Wing|aspect_ratio', 'Fuselage|length', 'Weight|battery', 'v_cruise'],
+								promotes_outputs=['Weight|structure|booms'])
+
+			# Wing weight
+			# wing is possessed by lift+cruise, tiltrotor, and tiltiwing configurations
+			if vehicle.configuration == 'LiftPlusCruise':
+				self.add_subsystem('wing_weight',
+									WingWeightM4ModelsForNASALPC(tf=tf_structure),
+									promotes_inputs=['Wing|area', 'Wing|aspect_ratio', 'Fuselage|length', 'Weight|battery', 'v_cruise'],
+									promotes_outputs=['Weight|structure|wing'])
+
+			# Empennage weight
+			if vehicle.configuration == 'LiftPlusCruise':
+				self.add_subsystem('empennage_weight',
+									EmpennageWeightM4ModelsForNASALPC(tf=tf_structure),
+									promotes_inputs=['HorizontalTail|area', 'VerticalTail|area'],
+									promotes_outputs=['Weight|structure|empennage'])
+
 		# Landing gear weight
 		self.add_subsystem('landing_gear_weight',
 							LandingGearWeightNDARCFractional(gear_type=gear_type, tf=tf_structure),
@@ -81,8 +110,12 @@ class StructureWeight(om.Group):
 			input_names_list = ['Weight|structure|fuselage', 'Weight|structure|landing_gear', 'Weight|structure|booms']
 			sfs = [1., 1., 1.]
 		elif vehicle.configuration == 'LiftPlusCruise':
-			input_names_list = ['Weight|structure|fuselage', 'Weight|structure|landing_gear', 'Weight|structure|wing', 'Weight|structure|horizontal_tail', 'Weight|structure|vertical_tail', 'Weight|structure|booms']
-			sfs = [1., 1., 1., 1., 1., 1.]
+			if fidelity['weight_model']['structure'] == 'Roskam':
+				input_names_list = ['Weight|structure|fuselage', 'Weight|structure|landing_gear', 'Weight|structure|wing', 'Weight|structure|horizontal_tail', 'Weight|structure|vertical_tail', 'Weight|structure|booms']
+				sfs = [1., 1., 1., 1., 1., 1.]
+			elif fidelity['weight_model']['structure'] == 'M4Regression':
+				input_names_list = ['Weight|structure|fuselage', 'Weight|structure|landing_gear', 'Weight|structure|wing', 'Weight|structure|empennage', 'Weight|structure|booms']
+				sfs = [1., 1., 1., 1., 1.]
 		adder = om.AddSubtractComp()
 		adder.add_equation('Weight|structure',
 							input_names=input_names_list,
