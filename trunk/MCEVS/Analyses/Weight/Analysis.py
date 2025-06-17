@@ -92,20 +92,27 @@ class WeightAnalysis(object):
 		# --- Design parameters --- #
 
 		if self.vehicle.configuration == 'Multirotor':
-			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
-			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
-			mean_c_to_R_lift_rotor 	= self.vehicle.lift_rotor.mean_c_to_R
-			global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  # deg
+			r_lift_rotor 				= self.vehicle.lift_rotor.radius 					# m
+			r_hub_lift_rotor 			= self.vehicle.lift_rotor.hub_radius 				# m
+			mean_c_to_R_lift_rotor 		= self.vehicle.lift_rotor.mean_c_to_R
+			global_twist_lift_rotor 	= self.vehicle.lift_rotor.global_twist  			# deg
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
-			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
-			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
-			mean_c_to_R_lift_rotor 	= self.vehicle.lift_rotor.mean_c_to_R
-			global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  # deg
-			r_propeller 			= self.vehicle.propeller.radius 		# m
-			mean_c_to_R_propeller 	= self.vehicle.propeller.mean_c_to_R
-			wing_area 				= self.vehicle.wing.area 				# m**2
-			wing_aspect_ratio 		= self.vehicle.wing.aspect_ratio
+			r_lift_rotor 				= self.vehicle.lift_rotor.radius 					# m
+			r_hub_lift_rotor 			= self.vehicle.lift_rotor.hub_radius 				# m
+			mean_c_to_R_lift_rotor 		= self.vehicle.lift_rotor.mean_c_to_R
+			global_twist_lift_rotor 	= self.vehicle.lift_rotor.global_twist  			# deg
+			r_propeller 				= self.vehicle.propeller.radius 					# m
+			mean_c_to_R_propeller 		= self.vehicle.propeller.mean_c_to_R
+			wing_area 					= self.vehicle.wing.area 							# m**2
+			wing_aspect_ratio 			= self.vehicle.wing.aspect_ratio
+			htail_area					= self.vehicle.horizontal_tail.area 				# m**2
+			htail_aspect_ratio 			= self.vehicle.horizontal_tail.aspect_ratio
+			htail_max_root_thickness 	= self.vehicle.horizontal_tail.max_root_thickness 	# m
+			vtail_area					= self.vehicle.vertical_tail.area 					# m**2
+			vtail_aspect_ratio 			= self.vehicle.vertical_tail.aspect_ratio
+			vtail_max_root_thickness 	= self.vehicle.vertical_tail.max_root_thickness 	# m
+			vtail_sweep_angle 			= self.vehicle.vertical_tail.sweep_angle 			# deg
 
 		# --- OpenMDAO probolem --- #
 		prob = om.Problem(reports=False)
@@ -148,9 +155,16 @@ class WeightAnalysis(object):
 			indeps.add_output('Propeller|mean_c_to_R', mean_c_to_R_propeller, units=None)
 			indeps.add_output('Wing|area', wing_area, units='m**2')
 			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
+			indeps.add_output('HorizontalTail|area', htail_area, units='m**2')
+			indeps.add_output('HorizontalTail|aspect_ratio', htail_aspect_ratio)
+			indeps.add_output('HorizontalTail|max_root_thickness', htail_max_root_thickness, units='m')
+			indeps.add_output('VerticalTail|area', vtail_area, units='m**2')
+			indeps.add_output('VerticalTail|aspect_ratio', vtail_aspect_ratio)
+			indeps.add_output('VerticalTail|max_root_thickness', vtail_max_root_thickness, units='m')
+			indeps.add_output('VerticalTail|sweep_angle', vtail_sweep_angle, units='deg')
 
 		# Variables needed for BEMT
-		if self.fidelity['hover_climb'] == 2:
+		if self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
 			n_sections = self.vehicle.lift_rotor.n_section
 			r_to_R_list = self.vehicle.lift_rotor.r_to_R_list
 			c_to_R_list = self.vehicle.lift_rotor.c_to_R_list
@@ -218,13 +232,13 @@ class WeightAnalysis(object):
 					weight_guess = 1500.0 if weight_guess is None else weight_guess
 					indeps.add_output('Weight|takeoff', weight_guess, units='kg') # mtow initial guess
 
-					if self.fidelity['hover_climb'] in [0,1]:
+					if self.fidelity['power_model']['hover_climb'] in ['MomentumTheory','ModifiedMomentumTheory']:
 						prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000, units='kg')
 						prob.model.add_objective('Weight|residual', units='kg')
 						prob.setup(check=False)
 						prob.run_driver()
 
-					elif self.fidelity['hover_climb'] == 2:
+					elif self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
 						prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
 						prob.model.add_design_var('Weight|takeoff', lower=600.0, upper=10000.0, units='kg')
 						prob.model.add_design_var('LiftRotor|global_twist', lower=0.0, upper=100.0, units='deg')
@@ -235,11 +249,11 @@ class WeightAnalysis(object):
 
 				elif self.solved_by == 'nonlinear_solver':
 
-					if self.fidelity['hover_climb'] == 0:
+					if self.fidelity['power_model']['hover_climb'] == 'MomentumTheory':
 						prob.setup(check=False)
 						prob.run_model()
 
-					elif self.fidelity['hover_climb'] == 2:
+					elif self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
 						prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
 						prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
 						prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square', units=None)
@@ -287,13 +301,13 @@ class WeightAnalysis(object):
 					prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
 					indeps.add_output('Weight|takeoff', self.vehicle.weight.max_takeoff if weight_guess is None else weight_guess, units='kg') # gtow initial guess
 
-					if self.fidelity['hover_climb'] in [0,1]:
+					if self.fidelity['power_model']['hover_climb'] in ['MomentumTheory','ModifiedMomentumTheory']:
 						prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000, units='kg')
 						prob.model.add_objective('Weight|residual', units='kg')
 						prob.setup(check=False)
 						prob.run_driver()
 
-					elif self.fidelity['hover_climb'] == 2:
+					elif self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
 						prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
 						prob.model.add_design_var('Weight|takeoff', lower=600.0, upper=10000.0, units='kg')
 						prob.model.add_design_var('LiftRotor|global_twist', lower=0.0, upper=100.0, units='deg')
@@ -304,11 +318,11 @@ class WeightAnalysis(object):
 
 				elif self.solved_by == 'nonlinear_solver':
 
-					if self.fidelity['hover_climb'] == 0:
+					if self.fidelity['power_model']['hover_climb'] == 'MomentumTheory':
 						prob.setup(check=False)
 						prob.run_model()
 
-					elif self.fidelity['hover_climb'] == 2:
+					elif self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
 						prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
 						prob.model.add_design_var('LiftRotor|HoverClimb|RPM', lower=10.0, upper=5000.0, units='rpm')
 						prob.model.add_objective('LiftRotor|HoverClimb|thrust_residual_square', units=None)
@@ -426,10 +440,13 @@ class MTOWEstimation(om.Group):
 
 		# 3. Structure weight
 		# includes fuselage, landing gear, wing, and tails
-		if vehicle.configuration == 'Multirotor': input_list_struct = ['Weight|takeoff']
-		elif vehicle.configuration == 'LiftPlusCruise': input_list_struct = ['Weight|takeoff', 'Wing|area', 'Wing|aspect_ratio']
+		if fidelity['weight_model']['structure'] == 'Roskam':
+			if vehicle.configuration == 'Multirotor':
+				input_list_struct = ['Weight|takeoff']
+			elif vehicle.configuration == 'LiftPlusCruise':
+				input_list_struct = ['Weight|takeoff', 'Wing|*', 'HorizontalTail|*', 'VerticalTail|*']
 		self.add_subsystem('structure_weight',
-							StructureWeight(vehicle=vehicle, tf_structure=vehicle.tf_structure),
+							StructureWeight(vehicle=vehicle, fidelity=fidelity, tf_structure=vehicle.tf_structure),
 							promotes_inputs=input_list_struct,
 							promotes_outputs=['Weight|*'])
 		# includes mission segment power for takeoff for sizing booms
