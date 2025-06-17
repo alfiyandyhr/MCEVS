@@ -2,7 +2,7 @@ import numpy as np
 import openmdao.api as om
 
 from MCEVS.Analyses.Power.Hover.Stay import PowerHoverStay
-from MCEVS.Analyses.Power.HoverClimb.Constant_Speed import PowerHoverClimbConstantSpeedFidelityZero, PowerHoverClimbConstantSpeedFidelityOne, PowerHoverClimbConstantSpeedFidelityTwo
+from MCEVS.Analyses.Power.HoverClimb.Constant_Speed import PowerHoverClimbConstantSpeedMT, PowerHoverClimbConstantSpeedMMT, PowerHoverClimbConstantSpeedBEMT
 from MCEVS.Analyses.Power.HoverDescent.Constant_Speed import PowerHoverDescentConstantSpeed
 from MCEVS.Analyses.Power.Climb.Constant_Vy_Constant_Vx import PowerClimbConstantVyConstantVxWithWing, PowerClimbConstantVyConstantVxEdgewise
 from MCEVS.Analyses.Power.Descent.Constant_Vy_Constant_Vx import PowerDescentConstantVyConstantVxWithWing, PowerDescentConstantVyConstantVxEdgewise
@@ -95,7 +95,7 @@ class PowerAnalysis(object):
 			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
 
 		# Variables needed for BEMT
-		if self.fidelity['hover_climb'] == 2:
+		if self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
 			n_sections = self.vehicle.lift_rotor.n_section
 			r_to_R_list = self.vehicle.lift_rotor.r_to_R_list
 			c_to_R_list = self.vehicle.lift_rotor.c_to_R_list
@@ -229,25 +229,25 @@ class PowerRequirement(om.Group):
 													  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}')])
 
 			if segment.kind == 'HoverClimbConstantSpeed':
-				if fidelity['hover_climb'] == 0:
+				if fidelity['power_model']['hover_climb'] == 'MomentumTheory':
 					self.add_subsystem(f'segment_{segment.id}_power',
-										PowerHoverClimbConstantSpeedFidelityZero(N_rotor=N_lift_rotor, hover_FM=hover_FM_lift_rotor, rho_air=rho_air, g=g),
+										PowerHoverClimbConstantSpeedMT(N_rotor=N_lift_rotor, hover_FM=hover_FM_lift_rotor, rho_air=rho_air, g=g),
 										promotes_inputs=['Weight|takeoff', ('Mission|hover_climb_speed',f'Mission|segment_{segment.id}|speed'), 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
 														  ('FM','LiftRotor|HoverClimb|FM'), ('LiftRotor|T_to_P', 'LiftRotor|HoverClimb|T_to_P')])
 
-				elif fidelity['hover_climb'] == 1:
+				elif fidelity['power_model']['hover_climb'] == 'ModifiedMomentumTheory':
 					self.add_subsystem(f'segment_{segment.id}_power',
-										PowerHoverClimbConstantSpeedFidelityOne(N_rotor=N_lift_rotor, hover_FM=hover_FM_lift_rotor, n_blade=n_blade_lift_rotor, Cd0=Cd0_lift_rotor, rho_air=rho_air, g=g),
+										PowerHoverClimbConstantSpeedMMT(N_rotor=N_lift_rotor, hover_FM=hover_FM_lift_rotor, n_blade=n_blade_lift_rotor, Cd0=Cd0_lift_rotor, rho_air=rho_air, g=g),
 										promotes_inputs=['Weight|takeoff', ('Mission|hover_climb_speed',f'Mission|segment_{segment.id}|speed'), 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 														  ('LiftRotor|HoverClimb|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),
 														  'LiftRotor|HoverClimb|FM','LiftRotor|HoverClimb|thrust_coefficient'])
 
-				elif fidelity['hover_climb'] == 2:
+				elif fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
 					self.add_subsystem(f'segment_{segment.id}_power',
-										PowerHoverClimbConstantSpeedFidelityTwo(vehicle=vehicle, rho_air=rho_air, g=g),
+										PowerHoverClimbConstantSpeedBEMT(vehicle=vehicle, rho_air=rho_air, g=g),
 										promotes_inputs=['Weight|takeoff', ('Mission|hover_climb_speed',f'Mission|segment_{segment.id}|speed'), 'LiftRotor|*'],
 										promotes_outputs=[('Power|HoverClimbConstantSpeed',f'Power|LiftRotor|segment_{segment.id}'),
 														  ('LiftRotor|thrust',f'LiftRotor|thrust_each|segment_{segment.id}'),

@@ -6,9 +6,9 @@ from MCEVS.Analyses.Power.Rotor import RotorProfilePower, PowerForwardComp, Indu
 from MCEVS.Analyses.Aerodynamics.BEMT.Solver import BEMTSolverOMGroup
 from MCEVS.Analyses.Aerodynamics.BEMT.SectionOM import SectionLocalPitch, SectionLocalRadiusChordWidth
 
-class PowerHoverClimbConstantSpeedFidelityZero(om.ExplicitComponent):
+class PowerHoverClimbConstantSpeedMT(om.ExplicitComponent):
 	"""
-	Computes the power required for hover climb with constant speed
+	Computes the power required for hover climb with constant speed using Momentum Theory
 	Parameters:
 		N_rotor		 : number or lift rotors
 		hover_FM	 : hover figure of merit
@@ -89,9 +89,9 @@ class PowerHoverClimbConstantSpeedFidelityZero(om.ExplicitComponent):
 		partials['FM', 'LiftRotor|radius'] = 0.0
 		partials['FM', 'Mission|hover_climb_speed'] = 0.0
 
-class PowerHoverClimbConstantSpeedFidelityOne(om.Group):
+class PowerHoverClimbConstantSpeedMMT(om.Group):
 	"""
-	Computes the power required for hover climb with constant speed
+	Computes the power required for hover climb with constant speed using Modified Momentum Theory
 	Parameters:
 		N_rotor		 	: number or lift rotors
 		hover_FM	 	: hover figure of merit
@@ -211,7 +211,7 @@ class PowerHoverClimbConstantSpeedFidelityOne(om.Group):
 											  'Weight|takeoff', 'LiftRotor|radius', 'Mission|hover_climb_speed'],
 							promotes_outputs=[('FM','LiftRotor|HoverClimb|FM')])
 
-class PowerHoverClimbConstantSpeedFidelityTwo(om.Group):
+class PowerHoverClimbConstantSpeedBEMT(om.Group):
 	"""
 	Computes the power required for hover climb with constant speed using BEMT
 	Parameters:
