@@ -3,7 +3,7 @@ import openmdao.api as om
 
 class BoomWeightRoskam(om.ExplicitComponent):
 	"""
-	Computes boom weight using empirical equation for nacelles
+	Computes booms weight using empirical equation for nacelles
 	Parameters:
 		tf 				: technology factor (a reduction due to the use of composites, e.g., 0.8)
 	Inputs:
@@ -22,8 +22,8 @@ class BoomWeightRoskam(om.ExplicitComponent):
 
 	def setup(self):
 		self.add_input('total_req_takeoff_power', units='W', desc='Total required takeoff power')
-		self.add_output('Weight|boom', units='kg', desc='Boom weight')
-		self.declare_partials('Weight|boom', 'total_req_takeoff_power')
+		self.add_output('Weight|booms', units='kg', desc='Total booms weight')
+		self.declare_partials('Weight|booms', 'total_req_takeoff_power')
 
 	def compute(self, inputs, outputs):
 		tf = self.options['tf']
@@ -33,9 +33,9 @@ class BoomWeightRoskam(om.ExplicitComponent):
 		W_to_hp = 1/745.7
 		lb_to_kg = 0.453592
 		
-		W_boom = 0.14 * total_req_takeoff_power * W_to_hp * lb_to_kg
+		W_booms = 0.14 * total_req_takeoff_power * W_to_hp * lb_to_kg
 
-		outputs['Weight|boom'] = tf * W_boom # in [kg]
+		outputs['Weight|booms'] = tf * W_booms # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
@@ -43,9 +43,9 @@ class BoomWeightRoskam(om.ExplicitComponent):
 
 		W_to_hp = 1/745.7
 		lb_to_kg = 0.453592
-		dWboom_dPtakeoff = 0.14 * W_to_hp * lb_to_kg
+		dWbooms_dPtakeoff = 0.14 * W_to_hp * lb_to_kg
 
-		partials['Weight|boom', 'total_req_takeoff_power'] = tf * dWboom_dPtakeoff
+		partials['Weight|booms', 'total_req_takeoff_power'] = tf * dWbooms_dPtakeoff
 
 class BoomWeightM4ModelsForNASALPC(om.ExplicitComponent):
 	"""
