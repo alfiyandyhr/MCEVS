@@ -200,7 +200,7 @@ if __name__ == '__main__':
 	model = om.Group()
 	model.add_subsystem('m4_empennage_weight', EmpennageWeightM4ModelsForNASALPC())
 
-	prob = om.Problem(model)
+	prob = om.Problem(model, reports=False)
 	prob.setup()
 
 	prob.set_val('m4_empennage_weight.HTail|area', 3.6707105940480003)

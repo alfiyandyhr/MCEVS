@@ -135,7 +135,7 @@ if __name__ == '__main__':
 	model = om.Group()
 	model.add_subsystem('m4_fuse_weight', FuselageWeightM4ModelsForNASALPC())
 
-	prob = om.Problem(model)
+	prob = om.Problem(model, reports=False)
 	prob.setup()
 
 	prob.set_val('m4_fuse_weight.Wing|area', 19.53547845)
