@@ -43,7 +43,7 @@ vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, tfs, n_pax=6, p
 # vehicle.print_info()
 
 # Solver fidelity
-fidelity = {'aerodynamics': {'cruise': 'DragBuildUp'},
+fidelity = {'aerodynamics': {'cruise': 'ComponentBuildUp'},
 			'power_model': {'hover_climb': 'MomentumTheory'},
 			# 'weight_model': {'structure':'Roskam'}}
 			'weight_model': {'structure':'M4Regression'}}

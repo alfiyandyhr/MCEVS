@@ -4,9 +4,9 @@ import openvsp as vsp
 from MCEVS.Analyses.Aerodynamics.Empirical import RotorHubParasiteDragFidelityZero
 from MCEVS.Applications.OpenVSP.Utils import calc_wetted_area
 
-class ParasiteDragViaDragBuildUpApproach(om.Group):
+class ParasiteDragViaComponentBuildUpApproach(om.Group):
 	"""
-	Computes the parasite drag coefficient via a component build-up approach (fidelity one) and empirical rotor hub drag
+	Computes the parasite drag coefficient via a component build-up approach and empirical rotor hub drag
 	"""
 	def initialize(self):
 		self.options.declare('vehicle', types=object, desc='Vehicle object')

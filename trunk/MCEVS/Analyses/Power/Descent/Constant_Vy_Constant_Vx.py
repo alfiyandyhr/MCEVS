@@ -2,7 +2,7 @@ import numpy as np
 import openmdao.api as om
 from MCEVS.Analyses.Stability.Trim import WingedConstantDescentTrimOfLift, WingedConstantDescentTrimOfThrust
 from MCEVS.Analyses.Stability.Trim import MultirotorConstantDescentTrim
-from MCEVS.Analyses.Aerodynamics.Parasite import ParasiteDragViaDragBuildUpApproach
+from MCEVS.Analyses.Aerodynamics.Parasite import ParasiteDragViaComponentBuildUpApproach
 from MCEVS.Analyses.Aerodynamics.Empirical import WingedParasiteDragViaWeightBasedRegression, MultirotorParasiteDragViaWeightBasedRegression
 from MCEVS.Analyses.Aerodynamics.Parabolic import WingedAeroDragViaParabolicDragPolar
 from MCEVS.Analyses.Aerodynamics.Rotor import ThrustOfEachRotor, ThrustCoefficient, RotorAdvanceRatio

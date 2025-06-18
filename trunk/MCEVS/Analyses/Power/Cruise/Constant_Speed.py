@@ -1,7 +1,7 @@
 import numpy as np
 import openmdao.api as om
 
-from MCEVS.Analyses.Aerodynamics.Parasite import ParasiteDragViaDragBuildUpApproach
+from MCEVS.Analyses.Aerodynamics.Parasite import ParasiteDragViaComponentBuildUpApproach
 from MCEVS.Analyses.Aerodynamics.Empirical import MultirotorParasiteDragViaWeightBasedRegression
 from MCEVS.Analyses.Aerodynamics.Empirical import WingedParasiteDragViaWeightBasedRegression
 from MCEVS.Analyses.Aerodynamics.Parabolic import WingedAeroDragViaParabolicDragPolar
@@ -67,9 +67,9 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 								MultirotorParasiteDragViaWeightBasedRegression(N_rotor=N_rotor, rho_air=rho_air),
 								promotes_inputs=['Weight|takeoff', ('Aero|speed','Mission|cruise_speed'), ('Rotor|radius', 'LiftRotor|radius')],
 								promotes_outputs=[('Aero|total_drag','Aero|Cruise|total_drag'), ('Aero|Cd0','Aero|Cruise|Cd0')])
-		elif fidelity['aerodynamics']['cruise'] == 'DragBuildUp':
+		elif fidelity['aerodynamics']['cruise'] == 'ComponentBuildUp':
 			self.add_subsystem('parasite_drag',
-								ParasiteDragViaDragBuildUpApproach(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
+								ParasiteDragViaComponentBuildUpApproach(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
 								promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed')],
 								promotes_outputs=[('Aero|f_total','Aero|Cruise|f_total'), ('Aero|parasite_drag','Aero|Cruise|total_drag')])
 
@@ -218,9 +218,9 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 								promotes_inputs=['Weight|takeoff', 'Wing|area', ('Aero|speed', 'Mission|cruise_speed')],
 								promotes_outputs=[('Aero|Cd0','Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|parasite_drag')])
 
-		elif fidelity['aerodynamics']['cruise'] == 'DragBuildUp':
+		elif fidelity['aerodynamics']['cruise'] == 'ComponentBuildUp':
 			self.add_subsystem('parasite_drag',
-								ParasiteDragViaDragBuildUpApproach(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
+								ParasiteDragViaComponentBuildUpApproach(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='cruise'),
 								promotes_inputs=['Weight|takeoff', ('Aero|speed', 'Mission|cruise_speed'),'Wing|area'],
 								promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag','Aero|Cruise|parasite_drag')])
 
