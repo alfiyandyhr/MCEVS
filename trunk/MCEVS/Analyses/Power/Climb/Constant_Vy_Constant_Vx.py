@@ -64,14 +64,14 @@ class PowerClimbConstantVyConstantVxEdgewise(om.Group):
 		indep.add_output('climb_airspeed', val=climb_airspeed, units='m/s')
 		indep.add_output('gamma', val=gamma, units='rad')
 
-		if fidelity['aero'] == 0:
+		if fidelity['aerodynamics']['parasite'] == 'WeightBasedRegression':
 			self.add_subsystem('parasite_drag',
-								MultirotorParasiteDrag(N_rotor=N_rotor, rho_air=rho_air),
+								MultirotorParasiteDragViaWeightBasedRegression(N_rotor=N_rotor, rho_air=rho_air),
 								promotes_inputs=['Weight|takeoff', ('Aero|speed','climb.climb_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
 								promotes_outputs=[('Aero|total_drag','Aero|Climb|total_drag'), ('Aero|Cd0','Aero|Climb|Cd0')])
-		elif fidelity['aero'] == 1:
+		elif fidelity['aerodynamics']['parasite'] == 'ComponentBuildUp':
 			self.add_subsystem('parasite_drag',
-					ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='climb'),
+					ParasiteDragViaComponentBuildUpApproach(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='climb'),
 					promotes_inputs=['Weight|takeoff', ('Aero|speed', 'climb.climb_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
 					promotes_outputs=[('Aero|Cd0', 'Aero|Climb|Cd0'), ('Aero|parasite_drag','Aero|Climb|total_drag')])
 
@@ -219,15 +219,15 @@ class PowerClimbConstantVyConstantVxWithWing(om.Group):
 		indep = self.add_subsystem('climb', om.IndepVarComp())
 		indep.add_output('climb_airspeed', val=climb_airspeed, units='m/s')
 
-		if fidelity['aero'] == 0:
+		if fidelity['aerodynamics']['parasite'] == 'WeightBasedRegression':
 			self.add_subsystem('parasite_drag',
-								WingedParasiteDrag(rho_air=rho_air),
+								WingedParasiteDragViaWeightBasedRegression(rho_air=rho_air),
 								promotes_inputs=['Weight|takeoff', 'Wing|area', ('Aero|speed', 'climb.climb_airspeed')],
 								promotes_outputs=[('Aero|Cd0','Aero|Climb|Cd0'), ('Aero|parasite_drag','Aero|Climb|parasite_drag')])
 
-		elif fidelity['aero'] == 1:
+		elif fidelity['aerodynamics']['parasite'] == 'ComponentBuildUp':
 			self.add_subsystem('parasite_drag',
-								ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='climb'),
+								ParasiteDragViaComponentBuildUpApproach(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='climb'),
 								promotes_inputs=['Weight|takeoff', ('Aero|speed', 'climb.climb_airspeed'),'Wing|area'],
 								promotes_outputs=[('Aero|Cd0', 'Aero|Climb|Cd0'), ('Aero|parasite_drag','Aero|Climb|parasite_drag')])
 

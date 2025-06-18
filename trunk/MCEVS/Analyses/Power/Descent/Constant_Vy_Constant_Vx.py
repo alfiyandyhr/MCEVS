@@ -63,14 +63,14 @@ class PowerDescentConstantVyConstantVxEdgewise(om.Group):
 		indep.add_output('descent_airspeed', val=descent_airspeed, units='m/s')
 		indep.add_output('gamma', val=gamma, units='rad')
 
-		if fidelity['aero'] == 0:
+		if fidelity['aerodynamics']['parasite'] == 'WeightBasedRegression':
 			self.add_subsystem('parasite_drag',
 								MultirotorParasiteDrag(N_rotor=N_rotor, rho_air=rho_air),
 								promotes_inputs=['Weight|takeoff', ('Aero|speed','descent.descent_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
 								promotes_outputs=[('Aero|total_drag','Aero|Descent|total_drag'), ('Aero|Cd0','Aero|Descent|Cd0')])
-		elif fidelity['aero'] == 1:
+		elif fidelity['aerodynamics']['parasite'] == 'ComponentBuildUp':
 			self.add_subsystem('parasite_drag',
-					ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='descent'),
+					ParasiteDragViaComponentBuildUpApproach(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='descent'),
 					promotes_inputs=['Weight|takeoff', ('Aero|speed', 'descent.descent_airspeed'), ('Rotor|radius', 'LiftRotor|radius')],
 					promotes_outputs=[('Aero|Cd0', 'Aero|Descent|Cd0'), ('Aero|parasite_drag','Aero|Descent|total_drag')])
 		
@@ -213,22 +213,23 @@ class PowerDescentConstantVyConstantVxWithWing(om.Group):
 		indep = self.add_subsystem('descent', om.IndepVarComp())
 		indep.add_output('descent_airspeed', val=descent_airspeed, units='m/s')
 
-		if fidelity['aero'] == 0:
+		if fidelity['aerodynamics']['parasite'] == 'WeightBasedRegression':
 			self.add_subsystem('parasite_drag',
-								WingedParasiteDrag(rho_air=rho_air),
+								WingedParasiteDragViaWeightBasedRegression(rho_air=rho_air),
 								promotes_inputs=['Weight|takeoff', 'Wing|area', ('Aero|speed', 'descent.descent_airspeed')],
 								promotes_outputs=[('Aero|Cd0','Aero|Descent|Cd0'), ('Aero|parasite_drag','Aero|Descent|parasite_drag')])
 
-		elif fidelity['aero'] == 1:
+		elif fidelity['aerodynamics']['parasite'] == 'ComponentBuildUp':
 			self.add_subsystem('parasite_drag',
-								ParasiteDragFidelityOne(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='descent'),
+								ParasiteDragViaComponentBuildUpApproach(vehicle=vehicle, rho_air=rho_air, mu_air=mu_air, segment_name='descent'),
 								promotes_inputs=['Weight|takeoff', ('Aero|speed', 'descent.descent_airspeed'),'Wing|area'],
 								promotes_outputs=[('Aero|Cd0', 'Aero|Descent|Cd0'), ('Aero|parasite_drag','Aero|Descent|parasite_drag')])
 
-		self.add_subsystem('total_drag',
-							WingedAeroDrag(rho_air=rho_air),
-							promotes_inputs=[('Aero|Cd0','Aero|Descent|Cd0'), ('Aero|lift','Aero|Descent|lift'), ('Aero|speed', 'descent.descent_airspeed'), 'Wing|*'],
-							promotes_outputs=[('Aero|total_drag','Aero|Descent|total_drag'), ('Aero|CL','Aero|Descent|CL')])
+		if fidelity['aerodynamics']['induced'] == 'ParabolicDragPolar':
+			self.add_subsystem('total_drag',
+								WingedAeroDragViaParabolicDragPolar(rho_air=rho_air),
+								promotes_inputs=[('Aero|Cd0','Aero|Descent|Cd0'), ('Aero|lift','Aero|Descent|lift'), ('Aero|speed', 'descent.descent_airspeed'), 'Wing|*'],
+								promotes_outputs=[('Aero|total_drag','Aero|Descent|total_drag'), ('Aero|CL','Aero|Descent|CL')])
 
 		# Step 3: Calculate thrust required by each propeller after trimming
 		self.add_subsystem('trim_thrust',
