@@ -46,6 +46,7 @@ folders.append('trunk/MCEVS/Optimization/Surrogate_Based/__pycache__')
 folders.append('trunk/MCEVS/Utils/__pycache__')
 folders.append('trunk/MCEVS/Vehicles/__pycache__')
 folders.append('trunk/MCEVS/Vehicles/Components/__pycache__')
+folders.append('examples/7_future_aware_optimization_considering_different_scenarios/without_fixed_empty_weight/without_operation_var/__pycache__')
 
 folders.append('examples/0_analyses_of_ref_vehicle/2_power_estimation/reports/')
 folders.append('examples/0_analyses_of_ref_vehicle/2_power_estimation/power_vs_speed/multirotor/reports/')
