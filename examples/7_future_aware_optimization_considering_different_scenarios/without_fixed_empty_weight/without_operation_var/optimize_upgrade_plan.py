@@ -9,6 +9,7 @@ from pymoo.operators.mutation.pm import PM
 from pymoo.operators.repair.rounding import RoundingRepair
 from pymoo.operators.sampling.rnd import IntegerRandomSampling
 from pymoo.optimize import minimize
+from curlyBrace import curlyBrace
 
 base_plan_years = [2030, 2040, 2050, 2060, 2070] # uniform spacing
 
@@ -163,21 +164,41 @@ if plot_upgrade_plan:
 		axes[i].set_xlabel('Sizing year')
 		if i==0: axes[i].set_ylabel(r'Energy consumption $[kWh]$')
 
+	for i, scenario in enumerate(scenario_list):
+		if i == 0:
+			k_r = [0.11, 0.090, 0.070, 0.055]
+			for j in range(len(optimal_plan_years[scenario])-1):
+				p1 = [optimal_plan_years[scenario][j], 92]
+				p2 = [optimal_plan_years[scenario][j+1]-0.1, 92]
+				p3 = [base_plan_years[j], 85]
+				p4 = [base_plan_years[j+1]-0.1, 85]
+				curlyBrace(fig, axes[i], p2, p1, k_r[j], bool_auto=True, color='b', lw=1, int_line_num=1)
+				curlyBrace(fig, axes[i], p4, p3, 0.08, bool_auto=True, color='r', lw=1, int_line_num=1)
+				axes[i].text(0.5*(p1[0]+p2[0]), 88, f'{int(p2[0]-p1[0]+0.1)}', fontsize=10, color='b', ha='center', va='center')
+				axes[i].text(0.5*(p3[0]+p4[0]), 81, f'{int(p4[0]-p3[0]+0.1)}', fontsize=10, color='r', ha='center', va='center')
+		if i==1:
+			k_r = [0.11, 0.090, 0.070, 0.055]
+			for j in range(len(optimal_plan_years[scenario])-1):
+				p1 = [optimal_plan_years[scenario][j+1]-0.1, 99]
+				p2 = [optimal_plan_years[scenario][j], 99]
+				p3 = [base_plan_years[j+1]-0.1, 106]
+				p4 = [base_plan_years[j], 106]
+				curlyBrace(fig, axes[i], p2, p1, k_r[j], bool_auto=True, color='b', lw=1, int_line_num=1)
+				curlyBrace(fig, axes[i], p4, p3, 0.08, bool_auto=True, color='r', lw=1, int_line_num=1)
+				axes[i].text(0.5*(p1[0]+p2[0]), 102, f'{int(p1[0]-p2[0]+0.1)}', fontsize=10, color='b', ha='center', va='center')
+				axes[i].text(0.5*(p3[0]+p4[0]), 109, f'{int(p3[0]-p4[0]+0.1)}', fontsize=10, color='r', ha='center', va='center')
+		if i==2:
+			k_r = [0.11, 0.090, 0.070, 0.055]
+			for j in range(len(optimal_plan_years[scenario])-1):
+				p1 = [optimal_plan_years[scenario][j+1]-0.1, 91]
+				p2 = [optimal_plan_years[scenario][j], 91]
+				p3 = [base_plan_years[j+1]-0.1, 98]
+				p4 = [base_plan_years[j], 98]
+				curlyBrace(fig, axes[i], p2, p1, k_r[j], bool_auto=True, color='b', lw=1, int_line_num=1)
+				curlyBrace(fig, axes[i], p4, p3, 0.08, bool_auto=True, color='r', lw=1, int_line_num=1)
+				axes[i].text(0.5*(p1[0]+p2[0]), 94, f'{int(p1[0]-p2[0]+0.1)}', fontsize=10, color='b', ha='center', va='center')
+				axes[i].text(0.5*(p3[0]+p4[0]), 101, f'{int(p3[0]-p4[0]+0.1)}', fontsize=10, color='r', ha='center', va='center')
+		
 	plt.subplots_adjust(bottom=0.2, top=0.86, wspace=0.08)
 	fig.suptitle(f'Optimal upgrade timing plan under different battery projection scenarios', size=14)
 	plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
