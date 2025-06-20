@@ -4,6 +4,57 @@ import openvsp as vsp
 from MCEVS.Analyses.Aerodynamics.Empirical import RotorHubParasiteDragFidelityZero
 from MCEVS.Applications.OpenVSP.Utils import calc_wetted_area
 
+class BacchiniExperimentalFixedValueForLPC(om.ExplicitComponent):
+	"""
+	Computes parasite drag using a fixed Cd0 value from Bacchini experiment of LPC
+	Parameters:
+		rho_air				: air density [kg/m**3]
+	Inputs:
+		Aero|speed 			: air speed of the eVTOL [m/s]
+		Wing|area 			: wing area [m**2]
+	Outputs:
+		Aero|Cd0			: parasite drag coefficient
+		Aero|parasite_drag	: parasite drag [N]
+	Source:
+		1. Bacchini, A., Cestino, E., Van Magill, B., and Verstraete, D., “Impact of Lift Propeller Drag on the Performance of EVTOL Lift+cruise Aircraft,”
+		   Aerospace Science and Technology, Vol. 109, 2021, p. 106429. https://doi.org/10.1016/j.ast.2020.106429
+		2. Kaneko, S., and Martins, J. R. R. A., “Simultaneous Optimization of Design and Takeoff Trajectory for an EVTOL Aircraft,”
+		   Aerospace Science and Technology, Vol. 155, 2024, p. 109617. https://doi.org/10.1016/j.ast.2024.109617
+	"""
+	def initialize(self):
+		self.options.declare('rho_air', types=float, desc='Air density')
+
+	def setup(self):
+		self.add_input('Aero|speed', units='m/s', desc='Air speed')
+		self.add_input('Wing|area', units='m**2', desc='Wing area')
+		self.add_output('Aero|Cd0', units=None, desc='Parasite drag coefficient')
+		self.add_output('Aero|parasite_drag', units='N', desc='Parasite drag')
+		self.declare_partials('*', '*')
+
+	def compute(self, inputs, outputs):
+		rho_air = self.options['rho_air'] 	# kg/m**3
+		v = inputs['Aero|speed'] 			# m/s
+		S_ref = inputs['Wing|area'] 		# m**2
+
+		# Fixed minimum value
+		Cd0 = 0.0397
+
+		outputs['Aero|Cd0'] = Cd0
+		outputs['Aero|parasite_drag'] = 0.5 * rho_air * v**2 * Cd0 * S_ref
+
+	def compute_partials(self, inputs, partials):
+		rho_air = self.options['rho_air'] 	# kg/m**3
+		v = inputs['Aero|speed'] 			# m/s
+		S_ref = inputs['Wing|area'] 		# m**2
+
+		# Fixed minimum value
+		Cd0 = 0.0397
+
+		partials['Aero|Cd0', 'Aero|speed'] = 0.0
+		partials['Aero|Cd0', 'Wing|area'] = 0.0
+		partials['Aero|parasite_drag', 'Aero|speed'] = rho_air * v * Cd0 * S_ref
+		partials['Aero|parasite_drag', 'Wing|area'] = 0.5 * rho_air * v**2 * Cd0
+
 class ParasiteDragViaComponentBuildUpApproach(om.Group):
 	"""
 	Computes the parasite drag coefficient via a component build-up approach and empirical rotor hub drag
