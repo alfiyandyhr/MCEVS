@@ -111,6 +111,8 @@ class WeightAnalysis(object):
 			mean_c_to_R_propeller 		= self.vehicle.propeller.mean_c_to_R
 			wing_area 					= self.vehicle.wing.area 							# m**2
 			wing_aspect_ratio 			= self.vehicle.wing.aspect_ratio
+			wing_airfoil_CL_alpha 		= self.vehicle.wing.airfoil.CL_alpha 				# 1/rad
+			wing_airfoil_CL_0 			= self.vehicle.wing.airfoil.CL_0
 			htail_area					= self.vehicle.horizontal_tail.area 				# m**2
 			htail_aspect_ratio 			= self.vehicle.horizontal_tail.aspect_ratio
 			htail_max_root_thickness 	= self.vehicle.horizontal_tail.max_root_thickness 	# m
@@ -161,6 +163,8 @@ class WeightAnalysis(object):
 			indeps.add_output('Propeller|mean_c_to_R', mean_c_to_R_propeller, units=None)
 			indeps.add_output('Wing|area', wing_area, units='m**2')
 			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
+			indeps.add_output('Wing|airfoil|CL_alpha', wing_airfoil_CL_alpha, units='1/rad')
+			indeps.add_output('Wing|airfoil|CL_0', wing_airfoil_CL_0)
 			indeps.add_output('HorizontalTail|area', htail_area, units='m**2')
 			indeps.add_output('HorizontalTail|aspect_ratio', htail_aspect_ratio)
 			indeps.add_output('HorizontalTail|max_root_thickness', htail_max_root_thickness, units='m')

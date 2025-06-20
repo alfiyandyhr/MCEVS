@@ -31,20 +31,30 @@ class PowerAnalysis(object):
 		# --- Design parameters --- #
 
 		if self.vehicle.configuration == 'Multirotor':
-			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
-			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
-			mean_c_to_R_lift_rotor 	= self.vehicle.lift_rotor.mean_c_to_R
-			global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  # deg
+			r_lift_rotor 				= self.vehicle.lift_rotor.radius 					# m
+			r_hub_lift_rotor 			= self.vehicle.lift_rotor.hub_radius 				# m
+			mean_c_to_R_lift_rotor 		= self.vehicle.lift_rotor.mean_c_to_R
+			global_twist_lift_rotor 	= self.vehicle.lift_rotor.global_twist  			# deg
 
 		elif self.vehicle.configuration == 'LiftPlusCruise':
-			r_lift_rotor 			= self.vehicle.lift_rotor.radius 		# m
-			r_hub_lift_rotor 		= self.vehicle.lift_rotor.hub_radius 	# m
-			mean_c_to_R_lift_rotor 	= self.vehicle.lift_rotor.mean_c_to_R
-			global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  # deg
-			r_propeller 			= self.vehicle.propeller.radius 		# m
-			mean_c_to_R_propeller 	= self.vehicle.propeller.mean_c_to_R
-			wing_area 				= self.vehicle.wing.area 				# m**2
-			wing_aspect_ratio 		= self.vehicle.wing.aspect_ratio
+			r_lift_rotor 				= self.vehicle.lift_rotor.radius 					# m
+			r_hub_lift_rotor 			= self.vehicle.lift_rotor.hub_radius 				# m
+			mean_c_to_R_lift_rotor 		= self.vehicle.lift_rotor.mean_c_to_R
+			global_twist_lift_rotor 	= self.vehicle.lift_rotor.global_twist  			# deg
+			r_propeller 				= self.vehicle.propeller.radius 					# m
+			mean_c_to_R_propeller 		= self.vehicle.propeller.mean_c_to_R
+			wing_area 					= self.vehicle.wing.area 							# m**2
+			wing_aspect_ratio 			= self.vehicle.wing.aspect_ratio
+			wing_airfoil_CL_alpha 		= self.vehicle.wing.airfoil.CL_alpha 				# 1/rad
+			wing_airfoil_CL_0 			= self.vehicle.wing.airfoil.CL_0
+			htail_area					= self.vehicle.horizontal_tail.area 				# m**2
+			htail_aspect_ratio 			= self.vehicle.horizontal_tail.aspect_ratio
+			htail_max_root_thickness 	= self.vehicle.horizontal_tail.max_root_thickness 	# m
+			vtail_area					= self.vehicle.vertical_tail.area 					# m**2
+			vtail_aspect_ratio 			= self.vehicle.vertical_tail.aspect_ratio
+			vtail_max_root_thickness 	= self.vehicle.vertical_tail.max_root_thickness 	# m
+			vtail_sweep_angle 			= self.vehicle.vertical_tail.sweep_angle 			# deg
+			l_fuse 						= self.vehicle.fuselage.length 						# m
 
 		# --- OpenMDAO probolem --- #
 		prob = om.Problem()
@@ -97,6 +107,16 @@ class PowerAnalysis(object):
 			indeps.add_output('Propeller|mean_c_to_R', mean_c_to_R_propeller, units=None)
 			indeps.add_output('Wing|area', wing_area, units='m**2')
 			indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
+			indeps.add_output('Wing|airfoil|CL_alpha', wing_airfoil_CL_alpha, units='1/rad')
+			indeps.add_output('Wing|airfoil|CL_0', wing_airfoil_CL_0)
+			indeps.add_output('HorizontalTail|area', htail_area, units='m**2')
+			indeps.add_output('HorizontalTail|aspect_ratio', htail_aspect_ratio)
+			indeps.add_output('HorizontalTail|max_root_thickness', htail_max_root_thickness, units='m')
+			indeps.add_output('VerticalTail|area', vtail_area, units='m**2')
+			indeps.add_output('VerticalTail|aspect_ratio', vtail_aspect_ratio)
+			indeps.add_output('VerticalTail|max_root_thickness', vtail_max_root_thickness, units='m')
+			indeps.add_output('VerticalTail|sweep_angle', vtail_sweep_angle, units='deg')
+			indeps.add_output('Fuselage|length', l_fuse, units='m')
 
 		# Variables needed for BEMT
 		if self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
@@ -206,10 +226,11 @@ class PowerRequirement(om.Group):
 
 			# Unpacking constants for each segment that needs them
 			if segment.kind not in ['ConstantPower','NoCreditClimb','NoCreditDescent','ReserveCruise']:
-				ids_for_max_p.append(segment.id) 	# segment id for calculating maximum power
-				rho_air = segment.constants['rho'] 	# air density
-				mu_air 	= segment.constants['mu'] 	# air dynamic viscosity
-				g 		= segment.constants['g']	# gravitational acceleration
+				ids_for_max_p.append(segment.id) 		# segment id for calculating maximum power
+				rho_air = segment.constants['rho'] 		# air density
+				mu_air 	= segment.constants['mu'] 		# air dynamic viscosity
+				v_sound = segment.constants['v_sound']	# sound speed
+				g 		= segment.constants['g']		# gravitational acceleration
 
 			# LiftPlusCruise's propellers do not work during hover, hoverclimb, or hoverdescent
 			# and its lift rotor does not work during cruise, climb, descent, or constant power segment
@@ -313,11 +334,11 @@ class PowerRequirement(om.Group):
 
 				elif vehicle.configuration == 'LiftPlusCruise':
 					self.add_subsystem(f'segment_{segment.id}_power',
-										PowerCruiseConstantSpeedWithWing(vehicle=vehicle, N_propeller=N_propeller, n_blade=n_blade_propeller, rho_air=rho_air, mu_air=mu_air, Cd0=Cd0_propeller, hover_FM=hover_FM_propeller, g=g, AoA=AoA, fidelity=fidelity),
+										PowerCruiseConstantSpeedWithWing(vehicle=vehicle, N_propeller=N_propeller, n_blade=n_blade_propeller, rho_air=rho_air, mu_air=mu_air, v_sound=v_sound, Cd0=Cd0_propeller, hover_FM=hover_FM_propeller, g=g, AoA=AoA, fidelity=fidelity),
 										promotes_inputs=['Weight|*', ('Mission|cruise_speed',f'Mission|segment_{segment.id}|speed'), 'Wing|*', 'Propeller|*'],
 										promotes_outputs=[('Power|CruiseConstantSpeed', f'Power|Propeller|segment_{segment.id}'), 'Propeller|Cruise|T_to_P', ('Power|profile_power', f'Power|segment_{segment.id}|profile_power'),
 														  ('Power|induced_power', f'Power|segment_{segment.id}|induced_power'), ('Power|propulsive_power', f'Power|segment_{segment.id}|propulsive_power'),
-														   'Aero|Cruise|CL', 'Propeller|Cruise|thrust_coefficient', 'Propeller|Cruise|J',
+														   'Aero|Cruise|CL', 'Aero|Cruise|CD', 'Aero|Cruise|AoA', 'Propeller|Cruise|thrust_coefficient', 'Propeller|Cruise|J',
 														  ('Propeller|Cruise|thrust',f'Propeller|thrust_each|segment_{segment.id}'),
 														  'Aero|Cruise|total_drag','Aero|Cruise|f_total'])
 			if segment.kind == 'ConstantPower':

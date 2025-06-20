@@ -6,7 +6,7 @@ from MCEVS.Analyses.Aerodynamics.Empirical import MultirotorParasiteDragViaWeigh
 from MCEVS.Analyses.Aerodynamics.Empirical import WingedParasiteDragViaWeightBasedRegression
 from MCEVS.Analyses.Aerodynamics.Parabolic import WingedAeroDragViaParabolicDragPolar
 
-from MCEVS.Analyses.Stability.Trim import MultirotorConstantCruiseTrim
+from MCEVS.Analyses.Stability.Trim import MultirotorConstantCruiseTrim, WingedTrimOfAoA
 
 from MCEVS.Analyses.Aerodynamics.Rotor import ThrustOfEachRotor
 from MCEVS.Analyses.Aerodynamics.Rotor import RotorRevolutionFromAdvanceRatio
@@ -186,6 +186,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 		self.options.declare('Cd0', types=float, desc='Rotor parasite_drag coefficient')
 		self.options.declare('rho_air', types=float, desc='Air density')
 		self.options.declare('mu_air', types=float, desc='Air dynamic viscosity')
+		self.options.declare('v_sound', types=float, desc='Sound speed')
 		self.options.declare('g', types=float, desc='Gravitational acceleration')
 		self.options.declare('AoA', desc='Aircraft angle of attack')
 		self.options.declare('fidelity', types=dict, desc='Fidelity of the analysis')
@@ -198,6 +199,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 		hover_FM = self.options['hover_FM']
 		rho_air = self.options['rho_air']
 		mu_air = self.options['mu_air']
+		v_sound = self.options['v_sound']
 		g = self.options['g']
 		AoA = self.options['AoA']
 		fidelity = self.options['fidelity']
@@ -211,7 +213,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 							promotes_inputs=[('weight', 'Weight|takeoff'), ('g', 'cruise.g')],
 							promotes_outputs=[('lift', 'Aero|Cruise|lift')])
 
-		# Step 2: Calculate drag in cruise using simple polar equations
+		# Step 2: Calculate drag at cruise using simple polar equations
 		if fidelity['aerodynamics']['parasite'] == 'WeightBasedRegression':
 			self.add_subsystem('parasite_drag',
 								WingedParasiteDragViaWeightBasedRegression(rho_air=rho_air),
@@ -234,15 +236,35 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 			self.add_subsystem('total_drag',
 								WingedAeroDragViaParabolicDragPolar(rho_air=rho_air),
 								promotes_inputs=[('Aero|Cd0','Aero|Cruise|Cd0'), ('Aero|lift','Aero|Cruise|lift'), 'Wing|*', ('Aero|speed', 'Mission|cruise_speed')],
-								promotes_outputs=[('Aero|total_drag','Aero|Cruise|total_drag'), ('Aero|CL','Aero|Cruise|CL'), ('Aero|f_total', 'Aero|Cruise|f_total')])
+								promotes_outputs=[('Aero|total_drag','Aero|Cruise|total_drag'), ('Aero|CL','Aero|Cruise|CL'), ('Aero|CD','Aero|Cruise|CD'), ('Aero|f_total', 'Aero|Cruise|f_total')])
 
-		# Step 3: Calculate thrust required by each propeller (thrust = drag)
+		# Step 3: Stability: trimmed AoA at cruise
+		if fidelity['stability']['AoA_trim']['cruise'] == 'ManualFixedValue':
+			indep.add_output('AoA', val=AoA, units='deg')
+			self.add_subsystem('fixed_AoA',
+								om.ExecComp('AoA = fixed_AoA_val', AoA={'units':'deg'}, fixed_AoA_val={'units':'deg'}),
+								promotes_inputs=[('fixed_AoA_val', 'cruise.AoA')],
+								promotes_outputs=[('AoA', 'Aero|Cruise|AoA')])
+
+		elif fidelity['stability']['AoA_trim']['cruise'] == 'Automatic':
+			self.add_subsystem('trimmed_AoA',
+								WingedTrimOfAoA(v_sound=v_sound),
+								promotes_inputs=['Wing|airfoil|CL_alpha', 'Wing|aspect_ratio', ('Aero|speed', 'Mission|cruise_speed'), ('CL', 'Aero|Cruise|CL'), ('CL0', 'Wing|airfoil|CL_0')],
+								promotes_outputs=[('AoA', 'Aero|Cruise|AoA')])
+
+		# Calculate rotor tilt angle alpha from AoA
+		self.add_subsystem(f'rotor_alpha_calc',
+					 om.ExecComp('alpha = 90.0 - AoA', AoA={'units':'deg'}, alpha={'units':'deg'}),
+					 promotes_inputs=[('AoA', 'Aero|Cruise|AoA')],
+					 promotes_outputs=[('alpha', 'Propeller|Cruise|alpha')])
+
+		# Step 4: Calculate thrust required by each propeller (thrust = drag)
 		self.add_subsystem('thrust_each',
 							ThrustOfEachRotor(N_rotor=N_propeller),
 							promotes_inputs=[('Thrust_all', 'Aero|Cruise|total_drag')],
 							promotes_outputs=[('Rotor|thrust','Propeller|Cruise|thrust')])
 
-		# Step 4: Calculate rotor omega from RPM and propeller advance ratio
+		# Step 5: Calculate rotor omega from RPM and propeller advance ratio
 		self.add_subsystem('rpm2omega',
 							om.ExecComp('omega = rpm * 2*pi/60.0', omega={'units':'rad/s'}, rpm={'units':'rpm'}),
 							promotes_inputs=[('rpm','Propeller|Cruise|RPM')],
@@ -253,7 +275,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 							promotes_inputs=[('v_inf', 'Mission|cruise_speed'), 'Propeller|radius', ('Propeller|omega', 'Propeller|Cruise|omega')],
 							promotes_outputs=[('Propeller|advance_ratio', 'Propeller|Cruise|J')])
 
-		# Step 5: Calculate rotor advance ratio mu and thrust coefficient Ct
+		# Step 6: Calculate rotor advance ratio mu and thrust coefficient Ct
 		# Treating propeller as a rotor
 		self.add_subsystem('mu',
 							RotorAdvanceRatio(),
@@ -269,7 +291,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 											 ('Rotor|omega',  				'Propeller|Cruise|omega')],
 							promotes_outputs=[('Rotor|thrust_coefficient',  'Propeller|Cruise|thrust_coefficient')])
 
-		# Step 6: Calculate profile power of a rotor
+		# Step 7: Calculate profile power of a rotor
 		self.add_subsystem('profile_power',
 							RotorProfilePower(rho_air=rho_air, n_blade=n_blade, Cd0=Cd0),
 							promotes_inputs=[('Rotor|radius',			'Propeller|radius'),
@@ -278,16 +300,13 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 											 ('Rotor|omega',  			'Propeller|Cruise|omega')],
 							promotes_outputs=[('Rotor|profile_power', 	'Propeller|Cruise|profile_power')])
 
-		# Step 7: Calculate induced power
+		# Step 8: Calculate induced power
 		self.add_subsystem('rotor_inflow',
 							RotorInflow(),
 							promotes_inputs=[('Rotor|mu',   			  'Propeller|Cruise|mu'),
 											 ('Rotor|alpha',			  'Propeller|Cruise|alpha'),
 											 ('Rotor|thrust_coefficient', 'Propeller|Cruise|thrust_coefficient')],
 							promotes_outputs=[('Rotor|lambda',			  'Propeller|Cruise|lambda')])
-
-		# Assume the rotor tilt angle is 85, or AoA = 5
-		self.set_input_defaults('Propeller|Cruise|alpha', val=90.0-AoA, units='deg')
 
 		self.add_subsystem('v_induced',
 							InducedVelocity(),
@@ -304,7 +323,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 											 ('Rotor|radius',			'Propeller|radius'),],
 							promotes_outputs=[('Rotor|kappa','Propeller|Cruise|kappa')])
 
-		# Step 8: Calculate total power required for winged forward flight
+		# Step 9: Calculate total power required for winged forward flight
 		self.add_subsystem('power_req',
 							PowerForwardComp(N_rotor=N_propeller, g=g),
 							promotes_inputs=[('Rotor|thrust', 'Propeller|Cruise|thrust'),

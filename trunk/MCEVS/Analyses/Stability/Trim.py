@@ -1,5 +1,6 @@
 import numpy as np
 import openmdao.api as om
+from MCEVS.Analyses.Aerodynamics.LiftingLineTheory import FiniteWingLiftCoefficientCurveSlope
 
 class MultirotorConstantClimbTrim(om.ExplicitComponent):
 	"""
@@ -140,6 +141,27 @@ class MultirotorConstantCruiseTrim(om.ExplicitComponent):
 		partials['Thrust', 'Aero|total_drag'] = D / thrust
 		partials['Body|sin_beta', 'Weight|takeoff'] = g/thrust - (W_takeoff**2 * g**3)/(thrust**3)
 		partials['Body|sin_beta', 'Aero|total_drag'] = - (W_takeoff*g*D) / (thrust**3)
+
+class WingedTrimOfAoA(om.Group):
+	"""
+	Computes the AoA using Prandtl lifting line theory for finite wing
+	"""
+	def initialize(self):
+		self.options.declare('v_sound', types=float, desc='Sound speed')
+
+	def setup(self):
+
+		v_sound = self.options['v_sound']
+
+		self.add_subsystem('finite_wing_CL_alpha',
+							FiniteWingLiftCoefficientCurveSlope(v_sound=v_sound),
+							promotes_inputs=['Wing|airfoil|CL_alpha', 'Wing|aspect_ratio', 'Aero|speed'],
+							promotes_outputs=['Wing|CL_alpha'])
+
+		self.add_subsystem(f'AoA_calc',
+							 om.ExecComp('AoA = (CL - CL0)/CL_alpha * 180.0/pi', AoA={'units':'deg'}, CL={'units':None}, CL0={'units':None}, CL_alpha={'units':'1/rad'}),
+							 promotes_inputs=['CL','CL0', ('CL_alpha', 'Wing|CL_alpha')],
+							 promotes_outputs=['AoA'])
 
 class WingedConstantClimbTrimOfLift(om.ExplicitComponent):
 	"""
@@ -287,17 +309,3 @@ class WingedConstantDescentTrimOfThrust(om.ExplicitComponent):
 		partials['Thrust_all', 'Weight|takeoff'] = - g * np.sin(gamma)
 		partials['Thrust_all', 'Aero|total_drag'] = 1.0
 		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
