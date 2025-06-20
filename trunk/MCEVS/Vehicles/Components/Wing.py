@@ -1,3 +1,5 @@
+from MCEVS.Vehicles.Components.Airfoil import Airfoil
+
 class Wing(object):
 	"""
 	docstring for Wing
@@ -6,6 +8,9 @@ class Wing(object):
 		super(Wing, self).__init__()
 		self.name = 'wing'
 		self.kwargs = kwargs
+
+		# Airfoil
+		self.airfoil = None
 
 		# Geometric information
 		self.area = None
@@ -32,7 +37,9 @@ class Wing(object):
 
 	def _initialize(self):
 		for item in list(self.kwargs):
-			if item == 'area':
+			if item == 'airfoil':
+				self.airfoil = Airfoil(self.kwargs[item])
+			elif item == 'area':
 				self.area = float(self.kwargs[item])
 			elif item == 'aspect_ratio':
 				self.aspect_ratio = float(self.kwargs[item])
