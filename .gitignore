@@ -1,0 +1,9 @@
+# Ignore Mac system files
+.DS_Store
+
+# Ignore Python bytecode
+__pycache__/
+
+# Ignore OpenVSP caches
+Unnamed_CompGeom.txt
+.vsptime
