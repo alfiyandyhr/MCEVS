@@ -1,6 +1,7 @@
 import numpy as np
 import openmdao.api as om
 
+
 class LiftRotorClearanceConstraint(om.ExplicitComponent):
 	"""
 	Computes the spanwise spacing constraint of lift rotors
@@ -34,22 +35,19 @@ class LiftRotorClearanceConstraint(om.ExplicitComponent):
 		r_lift_rotor = inputs['LiftRotor|radius']
 		S_wing = inputs['Wing|area']
 		AR_wing = inputs['Wing|aspect_ratio']
-		b = np.sqrt(S_wing * AR_wing) # in [m]
+		b = np.sqrt(S_wing * AR_wing)  # in [m]
 
-		outputs['clearance_constraint'] = (N_rotor/2 - 1) * 2*r_lift_rotor + max_d_fuse - percent_max_span/100 * b
+		outputs['clearance_constraint'] = (N_rotor / 2 - 1) * 2 * r_lift_rotor + max_d_fuse - percent_max_span / 100 * b
 
 	def compute_partials(self, inputs, partials):
 		N_rotor = self.options['N_rotor']
-		max_d_fuse = self.options['max_d_fuse']
 		percent_max_span = self.options['percent_max_span']
-		r_lift_rotor = inputs['LiftRotor|radius']
 		S_wing = inputs['Wing|area']
 		AR_wing = inputs['Wing|aspect_ratio']
-		b = np.sqrt(S_wing * AR_wing) # in [m]
 
 		db_dS = 0.5 * (S_wing * AR_wing)**(-0.5) * AR_wing
 		db_dAR = 0.5 * (S_wing * AR_wing)**(-0.5) * S_wing
 
-		partials['clearance_constraint', 'LiftRotor|radius'] = (N_rotor/2 - 1) * 2
-		partials['clearance_constraint', 'Wing|area'] = - percent_max_span/100 * db_dS
-		partials['clearance_constraint', 'Wing|aspect_ratio'] = - percent_max_span/100 * db_dAR
+		partials['clearance_constraint', 'LiftRotor|radius'] = (N_rotor / 2 - 1) * 2
+		partials['clearance_constraint', 'Wing|area'] = - percent_max_span / 100 * db_dS
+		partials['clearance_constraint', 'Wing|aspect_ratio'] = - percent_max_span / 100 * db_dAR
