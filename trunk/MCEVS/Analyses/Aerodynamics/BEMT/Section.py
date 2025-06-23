@@ -11,7 +11,7 @@ class Section(object):
 	"""
 	def __init__(self, airfoil, width, radius, chord, pitch, solidity):
 		super(Section, self).__init__()
-		
+
 		self.airfoil = airfoil
 		self.width = width
 		self.radius = radius
@@ -110,7 +110,7 @@ def initialize_sections(sectionDict, rotorDict):
 	section_list = []
 
 	for i in range(sectionDict['n_sections']):
-		
+
 		airfoil = load_airfoil(sectionDict['airfoil_list'][i])
 
 		if i == 0:
@@ -134,7 +134,7 @@ def initialize_sections(sectionDict, rotorDict):
 						  solidity=solidity)
 
 		section_list.append(section)
-	
+
 	return section_list
 
 

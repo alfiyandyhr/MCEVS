@@ -88,7 +88,7 @@ class RotorAdvanceRatio(om.ExplicitComponent):
 		omega = inputs['Rotor|omega']
 
 		partials['Rotor|mu', 'v_inf'] = np.cos(a) / (omega * r)
-		partials['Rotor|mu', 'Rotor|alpha'] = - v_inf * np.sin(a) / (omega * r) 
+		partials['Rotor|mu', 'Rotor|alpha'] = - v_inf * np.sin(a) / (omega * r)
 		partials['Rotor|mu', 'Rotor|omega'] = - v_inf * np.cos(a) / (omega**2 * r)
 		partials['Rotor|mu', 'Rotor|radius'] = - v_inf * np.cos(a) / (omega * r**2)
 
@@ -144,7 +144,7 @@ class InducedVelocity(om.ExplicitComponent):
 		Rotor|lambda	: rotor inflow ratio, positive down through disk
 		v_inf			: freestream velocity [m/s]
 	Outputs:
-		v_induced		: induced velocity of a rotor [m/s] 
+		v_induced		: induced velocity of a rotor [m/s]
 	Source:
 		Johnson, W., “Rotorcraft Aeromechanics,” Cambridge University Press, 2013.
 	"""
@@ -255,7 +255,7 @@ class RotorRevolutionFromAdvanceRatio(om.ExplicitComponent):
 		mu = inputs['Rotor|mu']
 
 		partials['Rotor|omega', 'v_inf'] = np.cos(a) / (mu * r)
-		partials['Rotor|omega', 'Rotor|alpha'] = - v_inf * np.sin(a) / (mu * r) 
+		partials['Rotor|omega', 'Rotor|alpha'] = - v_inf * np.sin(a) / (mu * r)
 		partials['Rotor|omega', 'Rotor|mu'] = - v_inf * np.cos(a) / (mu**2 * r)
 		partials['Rotor|omega', 'Rotor|radius'] = - v_inf * np.cos(a) / (mu * r**2)
 

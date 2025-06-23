@@ -22,7 +22,7 @@ class CylindricalBodyDrag(om.ExplicitComponent):
 	"""
 	def initialize(self):
 		self.options.declare('rho_air', types=float, default=1.225, desc='Air density')
-		
+
 	def setup(self):
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
 		self.add_input('Aero|speed', units='m/s', desc='Air speed')
@@ -82,7 +82,7 @@ class MultirotorParasiteDragViaWeightBasedRegression(om.ExplicitComponent):
 	def initialize(self):
 		self.options.declare('N_rotor', types=int, desc='Number of rotors')
 		self.options.declare('rho_air', types=float, desc='Air density')
-		
+
 	def setup(self):
 		self.add_input('Rotor|radius', units='m', desc='Rotor radius')
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
@@ -156,7 +156,7 @@ class WingedParasiteDragViaWeightBasedRegression(om.ExplicitComponent):
 	"""
 	def initialize(self):
 		self.options.declare('rho_air', types=float, default=1.225, desc='Air density')
-		
+
 	def setup(self):
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
 		self.add_input('Aero|speed', units='m/s', desc='Air speed')
@@ -230,7 +230,7 @@ class RotorHubParasiteDragFidelityZero(om.ExplicitComponent):
 	def initialize(self):
 		self.options.declare('vehicle', types=object, desc='Vehicle object')
 		self.options.declare('rho_air', types=float, desc='Air density')
-		
+
 	def setup(self):
 		self.add_input('Weight|takeoff', units='kg', desc='Total take-off weight')
 		self.add_input('Aero|speed', units='m/s', desc='Air speed')

@@ -11,7 +11,7 @@ class SectionSolverOM(om.Group):
 	def initialize(self):
 		self.options.declare('airfoil', types=str, desc='Airfoil name')
 		self.options.declare('nblades', types=int, desc='Number of blades per rotor')
-	
+
 	def setup(self):
 		airfoil = self.options['airfoil']
 		nblades = self.options['nblades']
@@ -154,7 +154,7 @@ class SectionForces(om.ExplicitComponent):
 		dU_dap = 0.5 / np.sqrt(v**2 + vp**2) * (2 * vp) * (-omega * radius)
 		dU_domega = 0.5 / np.sqrt(v**2 + vp**2) * (2 * vp) * (1.0 - ap) * radius
 		dU_dradius = 0.5 / np.sqrt(v**2 + vp**2) * (2 * vp) * (1.0 - ap) * omega
-		
+
 		partials['dT', 'a'] = 0.5 * nblades * chord * rho * CT * width * (2 * U) * dU_da
 		partials['dT', 'ap'] = 0.5 * nblades * chord * rho * CT * width * (2 * U) * dU_dap
 		partials['dT', 'CT'] = 0.5 * nblades * chord * rho * U**2 * width
@@ -199,7 +199,7 @@ class SectionLocalRadiusChordWidth(om.ExplicitComponent):
 		outputs['local_radius'] = r_to_R * rotor_radius
 		outputs['local_chord'] = c_to_R * rotor_radius
 		outputs['local_width'] = w_to_R * rotor_radius
-		
+
 	def compute_partials(self, inputs, partials):
 		r_to_R = inputs['r_to_R']
 		c_to_R = inputs['c_to_R']
@@ -237,7 +237,7 @@ class SectionLocalPitch(om.ExplicitComponent):
 
 		# local pitch is zero at r / R = 0.75
 		outputs['local_pitch'] = m * r_to_R + (-m * 0.75)
-		
+
 	def compute_partials(self, inputs, partials):
 		m = inputs['gradient']
 		r_to_R = inputs['r_to_R']
@@ -265,7 +265,7 @@ class InductionFactors(om.ExplicitComponent):
 
 		outputs['a'] = 1.0 / (kappa - 1.0)
 		outputs['ap'] = 1.0 / (kappap + 1.0)
-		
+
 	def compute_partials(self, inputs, partials):
 		kappa = inputs['kappa']
 		kappap = inputs['kappap']
@@ -390,7 +390,7 @@ class TipAndHubLossFactor(om.Group):
 						   promotes_inputs=[('dr', 'dr_hub'), 'radius', 'phi'],
 						   promotes_outputs=[('F', 'Fhub')])
 
-		# F total 
+		# F total
 		self.add_subsystem('tip_and_hub_loss_factor',
 							om.ExecComp('F = Ftip * Fhub', F={'units': None}),
 							promotes_inputs=['Ftip', 'Fhub'],

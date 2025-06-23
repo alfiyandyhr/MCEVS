@@ -10,7 +10,7 @@ class Rotor(object):
 	"""
 	def __init__(self, rotorDict: dict):
 		super(Rotor, self).__init__()
-		
+
 		# Unpacking
 		self.diameter = rotorDict['diameter']
 		self.nblades = rotorDict['nblades']
@@ -92,14 +92,14 @@ class RotorPerformanceCoeffs(om.ExplicitComponent):
 		J = v_inf / (2 * n * blade_radius)
 
 		ideal_P = T * (v_inf / 2 + np.sqrt((v_inf / 2)**2 + T / (2 * rho * np.pi * blade_radius**2)))
-		
+
 		outputs['CT'] = T / (16 * rho * n**2 * blade_radius**4)
 		outputs['CQ'] = Q / (32 * rho * n**2 * blade_radius**5)
 		outputs['CP'] = 2 * np.pi * Q / (32 * rho * n**2 * blade_radius**5)
 		outputs['eta'] = T * blade_radius * J / (np.pi * Q)
 		outputs['FM'] = ideal_P / P
 		outputs['J'] = J
-		
+
 	def compute_partials(self, inputs, partials):
 		rho = self.options['rho']
 		T = inputs['T']
@@ -122,7 +122,7 @@ class RotorPerformanceCoeffs(om.ExplicitComponent):
 		dIP_dT = v_inf / 2 + v_ind + dvind_dT
 		dIP_dvinf = T / 2 + T * dvind_dvinf
 		dIP_dr = T * dvind_dr
-		
+
 		partials['CT', 'T'] = 1.0 / (16 * rho * n**2 * blade_radius**4)
 		partials['CT', 'Q'] = 0.0
 		partials['CT', 'P'] = 0.0

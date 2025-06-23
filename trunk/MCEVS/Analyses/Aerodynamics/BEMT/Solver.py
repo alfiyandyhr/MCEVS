@@ -146,12 +146,12 @@ class BEMTSolverOM(object):
 		indeps.add_output('blade_radius', self.rotorDict['diameter'] / 2, units='m')
 		indeps.add_output('hub_radius', self.rotorDict['hub_radius'], units='m')
 		indeps.add_output('global_twist', self.rotorDict['global_twist'], units='deg')
-		
+
 		for i in range(len(self.sectionDict['airfoil_list'])):
 			if i == 0:
 				width = self.sectionDict['radius_list'][i] - self.rotorDict['hub_radius']
 			else:
-				width = self.sectionDict['radius_list'][i] - self.sectionDict['radius_list'][i - 1]	
+				width = self.sectionDict['radius_list'][i] - self.sectionDict['radius_list'][i - 1]
 			indeps.add_output(f'Section{i+1}|radius', self.sectionDict['radius_list'][i], units='m')
 			indeps.add_output(f'Section{i+1}|chord', self.sectionDict['chord_list'][i], units='m')
 			indeps.add_output(f'Section{i+1}|pitch', self.sectionDict['pitch_list'][i], units='deg')
@@ -164,7 +164,7 @@ class BEMTSolverOM(object):
 								  				    trim_rpm=False),
 								  promotes_inputs=['*'],
 								  promotes_outputs=['*'])
-	
+
 		prob.setup(check=False)
 		prob.run_model()
 		# prob.check_partials(compact_print=True)
@@ -202,17 +202,17 @@ class BEMTSolverOM(object):
 		indeps.add_output('blade_radius', self.rotorDict['diameter'] / 2, units='m')
 		indeps.add_output('hub_radius', self.rotorDict['hub_radius'], units='m')
 		indeps.add_output('global_twist', self.rotorDict['global_twist'], units='deg')
-		
+
 		for i in range(len(self.sectionDict['airfoil_list'])):
 			if i == 0:
 				width = self.sectionDict['radius_list'][i] - self.rotorDict['hub_radius']
 			else:
-				width = self.sectionDict['radius_list'][i] - self.sectionDict['radius_list'][i - 1]	
+				width = self.sectionDict['radius_list'][i] - self.sectionDict['radius_list'][i - 1]
 			indeps.add_output(f'Section{i+1}|radius', self.sectionDict['radius_list'][i], units='m')
 			indeps.add_output(f'Section{i+1}|chord', self.sectionDict['chord_list'][i], units='m')
 			indeps.add_output(f'Section{i+1}|pitch', self.sectionDict['pitch_list'][i], units='deg')
 			indeps.add_output(f'Section{i+1}|width', width, units='m')
-		
+
 		prob.model.add_subsystem('BEMT_Solver',
 								  BEMTSolverOMGroup(nblades=self.rotorDict['nblades'],
 								  				    airfoil_list=self.sectionDict['airfoil_list'],
@@ -225,7 +225,7 @@ class BEMTSolverOM(object):
 		prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=False)
 		prob.model.add_design_var('rpm', lower=rpm_bounds[0], upper=rpm_bounds[1])
 		prob.model.add_objective('thrust_residual_square')
-	
+
 		prob.setup(check=False)
 		prob.run_driver()
 		# prob.check_partials(compact_print=True)

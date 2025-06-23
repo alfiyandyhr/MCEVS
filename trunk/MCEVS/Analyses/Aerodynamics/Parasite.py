@@ -109,7 +109,7 @@ class ParasiteDragNonHubFidelityOne(om.ExplicitComponent):
 		mu_air 				: air dynamic viscosity [Ns/m**2]
 	Inputs:
 		Aero|speed 			: air speed of the eVTOL [m/s]
-		Rotor|radius		: rotor radius [m] 
+		Rotor|radius		: rotor radius [m]
 		Wing|area 			: wing area [m**2]
 	Outputs:
 		Aero|Cd0			: parasite drag coefficient
@@ -156,7 +156,7 @@ class ParasiteDragNonHubFidelityOne(om.ExplicitComponent):
 				f_booms = vehicle.boom.flat_plate_area[segment_name]
 				# f_landing_gears = vehicle.landing_gear.flat_plate_area[segment_name]
 				f_total = vehicle.f_total_non_hub[segment_name]
-				
+
 		elif vehicle.configuration == 'LiftPlusCruise':
 			if vehicle.f_total_non_hub_non_wing[segment_name] is None:
 				flat_plate_areas = calc_flat_plate_area(vehicle, rho_air, mu_air, v)
@@ -176,7 +176,7 @@ class ParasiteDragNonHubFidelityOne(om.ExplicitComponent):
 				vehicle.landing_gear.flat_plate_area[segment_name] = f_LGs
 				vehicle.f_total_non_hub_non_wing[segment_name] = f_total_non_hub_non_wing
 				f_total = f_total_non_hub_non_wing + Cd0_wing * S_ref
-			else: 
+			else:
 				# f_fuselage = vehicle.fuselage.flat_plate_area[segment_name]
 				Cd0_wing = vehicle.wing.Cd0[segment_name]
 				f_htail = vehicle.horizontal_tail.flat_plate_area[segment_name]
@@ -349,7 +349,7 @@ def calc_flat_plate_area(vehicle: object, rho_air: float, mu_air: float, v_inf: 
 
 		# Flat plate drag
 		f = S_wetted * Q * Cf * FF
-		
+
 		# Parasite drag of landing gear (strut and wheel)
 		CD_pi = np.array([0.13, 0.13, 0.13, 0.13, 0.13, 0.13])
 		S_front = np.array([0.0333752, 0.0333752, 0.0333752, 0.101213, 0.101213, 0.101213])
