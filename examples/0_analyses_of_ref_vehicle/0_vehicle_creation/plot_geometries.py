@@ -1,6 +1,6 @@
 from MCEVS.Vehicles.Standard import StandardMultirotorEVTOL
 from MCEVS.Vehicles.Standard import StandardLiftPlusCruiseEVTOL
-from MCEVS.Applications.OpenVSP.Standard_Vehicles import create_NASA_QuadRotor_vsp3, create_NASA_LiftPlusCruise_vsp3
+from MCEVS.Wrappers.OpenVSP.Standard_Vehicles import create_NASA_QuadRotor_vsp3, create_NASA_LiftPlusCruise_vsp3
 from MCEVS.Utils.Plots import plot_geometries
 
 # Design and operation variables for multirotor
