@@ -43,23 +43,13 @@ vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, tfs, n_pax=6, p
 # vehicle.print_info()
 
 # Solver fidelity
-fidelity = {'aerodynamics': {'cruise': 'ComponentBuildUp'},
+fidelity = {'aerodynamics': {'parasite': 'BacchiniExperimentalFixedValueForLPC', 'induced':'ParabolicDragPolar'},
 			'power_model': {'hover_climb': 'MomentumTheory'},
-			# 'weight_model': {'structure':'Roskam'}}
-			'weight_model': {'structure':'M4Regression'}}
+			'weight_model': {'structure':'M4Regression'},
+			'stability': {'AoA_trim': {'cruise':'Automatic'}}}
 
 if fidelity['power_model']['hover_climb'] == 'MomentumTheory':
 	vehicle.lift_rotor.RPM['hover_climb'] = 400.0
-elif fidelity['power_model']['hover_climb'] == 'ModifiefMomentumTheory':
-	vehicle.lift_rotor.RPM['hover_climb'] = 700.0
-elif fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
-	vehicle.lift_rotor.RPM['hover_climb'] = 500.0
-	vehicle.lift_rotor.motor_power_margin = 0.0
-	vehicle.propeller.motor_power_margin = 0.0
-
-# For skipping parasitic drag calculation
-vehicle.f_total_non_hub_non_wing['cruise'] = 0.2729121403446563
-vehicle.wing.Cd0['cruise'] = 0.009153409031417752
 
 # Analysis
 analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity, weight_type='maximum', sizing_mode=True, solved_by='optimization')
@@ -67,9 +57,13 @@ results = analysis.evaluate(record=True, weight_guess=2500.0)
 
 # plot_performance_by_segments(mission=mission, vehicle=vehicle)
 
-print('--- Sanity Check: Aero Drag Coeff ---')
-print('f_total_non_hub_non_wing =', [vehicle.f_total_non_hub_non_wing['cruise']])
-print('Cd0 wing only =', [vehicle.wing.Cd0['cruise']])
+print('--- Sanity Check: Aerodynamics at cruise ---')
+print(f'Airfoil used: {vehicle.wing.airfoil}')
+print('Lift coefficient CL= ', results.get_val('Aero|Cruise|CL'))
+print('Drag coefficient CD= ', results.get_val('Aero|Cruise|CD'))
+print('Cruise efficiency L/D= ', results.get_val('Aero|Cruise|CL')/results.get_val('Aero|Cruise|CD'))
+print('Trimmed AoA= ', results.get_val('Aero|Cruise|AoA'))
+print('Total drag at cruise= ', results.get_val('Aero|Cruise|total_drag', 'N'))
 print('\n--- Sanity Check: Segment Powers ---')
 print('Power segment_1 = ', results.get_val('Power|segment_1', 'kW'))
 print('Power segment_2 = ', results.get_val('Power|segment_2', 'kW'))
