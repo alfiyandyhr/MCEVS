@@ -1,10 +1,13 @@
 class Airfoil(object):
 	"""
-	Represents an airfoil with basic aerodynamic properties.
+	Represents an airfoil with basic aerodynamic properties at Re= 4E6, Mach= 0.2
+	Data are derived from XFOIL analysis,
+	see "MCEVS/examples/0_analyses_of_ref_vehicle/1_aerodynamic_analysis/liftcruise/airfoil"
 	"""
 	_airfoil_data = {
-		'NACA2412': {'CL_alpha': 4.0923, 'CL_0': 0.415},
-		'NACA0012': {'CL_alpha': 5.4225, 'CL_0': 0.0},
+		'NACA2412': {'CL_alpha': 6.512296194147039, 'CL_0': 0.23977560975609744},
+		'NACA0012': {'CL_alpha': 6.5644003948073575, 'CL_0': 0.0},
+		'LS417': 	{'CL_alpha': 6.8183155478056205, 'CL_0': 0.5050512195121949}
 	}
 
 	def __init__(self, name):
