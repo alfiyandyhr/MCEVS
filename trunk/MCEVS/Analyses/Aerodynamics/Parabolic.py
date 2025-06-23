@@ -1,6 +1,7 @@
 import numpy as np
 import openmdao.api as om
 
+
 class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
 	"""
 	Computes the drag of a winged configuration in flight (cruise, climb, descent).
@@ -50,12 +51,12 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
 		# Raymer's formula for non-swept wing (Oswald efficiency)
 		wing_e = 1.78 * (1 - 0.045 * AR_wing**0.68) - 0.64
 
-		q = 0.5 * rho_air * v**2 	 					# dynamic pressure
-		CL = L/(q * S_wing)								# lift coefficient
-		CD = CD0 + CL**2 / (np.pi * wing_e * AR_wing)	# drag coefficient
-		f_total = CD*S_wing 							# total equivalent flat plate area
+		q = 0.5 * rho_air * v**2 	 				   # dynamic pressure
+		CL = L / (q * S_wing)						   # lift coefficient
+		CD = CD0 + CL**2 / (np.pi * wing_e * AR_wing)  # drag coefficient
+		f_total = CD * S_wing 						   # total equivalent flat plate area
 		
-		outputs['Aero|total_drag'] = q * S_wing * CD	# drag
+		outputs['Aero|total_drag'] = q * S_wing * CD  # drag
 		outputs['Aero|CL'] = CL
 		outputs['Aero|CD'] = CD
 		outputs['Aero|f_total'] = f_total
@@ -73,19 +74,19 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
 
 		de_dAR = - 1.78 * 0.045 * 0.68 * AR_wing**(-0.32)
 
-		q = 0.5 * rho_air * v**2 	 					# dynamic pressure
-		CL = L/(q * S_wing)								# lift coefficient
+		q = 0.5 * rho_air * v**2  # dynamic pressure
+		CL = L / (q * S_wing)  # lift coefficient
 		dq_dv = rho_air * v
-		dCL_dL = 1/(q * S_wing)
-		dCL_dq = -L/(S_wing * q**2)
-		dCL_dS = -L/(q * S_wing**2)
+		dCL_dL = 1 / (q * S_wing)
+		dCL_dq = -L / (S_wing * q**2)
+		dCL_dS = -L / (q * S_wing**2)
 		
-		CD = CD0 + CL**2 / (np.pi * wing_e * AR_wing)	# drag coefficient
+		CD = CD0 + CL**2 / (np.pi * wing_e * AR_wing)  # drag coefficient
 		dCD_dCD0 = 1
-		dCD_dCL = 2*CL / (np.pi * wing_e * AR_wing)
+		dCD_dCL = 2 * CL / (np.pi * wing_e * AR_wing)
 		dCD_dL = dCD_dCL * dCL_dL
 		dCD_dS = dCD_dCL * dCL_dS
-		dCD_dAR = CL**2 / np.pi * ( - 1/(wing_e**2 * AR_wing)*de_dAR  - 1/(wing_e * AR_wing**2) )
+		dCD_dAR = CL**2 / np.pi * (- 1 / (wing_e**2 * AR_wing) * de_dAR - 1 / (wing_e * AR_wing**2))
 
 		dD_dq = S_wing * CD
 		dD_dS = q * CD
@@ -95,7 +96,7 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
 		partials['Aero|total_drag', 'Aero|lift'] = dD_dCD * dCD_dCL * dCL_dL
 		partials['Aero|total_drag', 'Wing|area'] = dD_dS + dD_dCD * dCD_dCL * dCL_dS
 		partials['Aero|total_drag', 'Wing|aspect_ratio'] = q * S_wing * CL**2 / np.pi * -(wing_e * AR_wing)**(-2) * (de_dAR * AR_wing + wing_e) 
-		partials['Aero|total_drag', 'Aero|speed'] = (dD_dCD*dCD_dCL*dCL_dq + dD_dq) * dq_dv
+		partials['Aero|total_drag', 'Aero|speed'] = (dD_dCD * dCD_dCL * dCL_dq + dD_dq) * dq_dv
 		partials['Aero|CL', 'Aero|Cd0'] = 0
 		partials['Aero|CL', 'Aero|lift'] = dCL_dL
 		partials['Aero|CL', 'Wing|area'] = dCL_dS
@@ -106,13 +107,8 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
 		partials['Aero|CD', 'Wing|area'] = dCD_dS
 		partials['Aero|CD', 'Wing|aspect_ratio'] = dCD_dAR
 		partials['Aero|CD', 'Aero|speed'] = dCD_dCL * dCL_dq * dq_dv
-		partials['Aero|f_total', 'Aero|Cd0'] = dCD_dCD0*S_wing
-		partials['Aero|f_total', 'Aero|lift'] = dCD_dL*S_wing
-		partials['Aero|f_total', 'Wing|area'] = dCD_dS*S_wing + CD
-		partials['Aero|f_total', 'Wing|aspect_ratio'] = dCD_dAR*S_wing
+		partials['Aero|f_total', 'Aero|Cd0'] = dCD_dCD0 * S_wing
+		partials['Aero|f_total', 'Aero|lift'] = dCD_dL * S_wing
+		partials['Aero|f_total', 'Wing|area'] = dCD_dS * S_wing + CD
+		partials['Aero|f_total', 'Wing|aspect_ratio'] = dCD_dAR * S_wing
 		partials['Aero|f_total', 'Aero|speed'] = dCD_dCL * dCL_dq * dq_dv * S_wing
-		
-		
-
-
-

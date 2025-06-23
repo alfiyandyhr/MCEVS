@@ -1,6 +1,7 @@
 import numpy as np
 import openmdao.api as om
 
+
 class CylindricalBodyDrag(om.ExplicitComponent):
 	"""
 	Computes the drag of a cylindrical body
@@ -55,6 +56,7 @@ class CylindricalBodyDrag(om.ExplicitComponent):
 		partials['Aero|total_drag', 'Aero|speed'] = rho_air * v * S_body * CD_body
 		partials['Aero|total_drag', 'Body|sin_beta'] = 0.5 * rho_air * v * v * S_body * dCD_dsinB
 
+
 class MultirotorParasiteDragViaWeightBasedRegression(om.ExplicitComponent):
 	"""
 	Computes the drag of a multirotor body
@@ -92,19 +94,19 @@ class MultirotorParasiteDragViaWeightBasedRegression(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		rho_air = self.options['rho_air']
 		N_rotor = self.options['N_rotor']
-		r = inputs['Rotor|radius']				# in [m]
-		W_takeoff = inputs['Weight|takeoff']	# in [kg]
+		r = inputs['Rotor|radius']			  # in [m]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
 		v = inputs['Aero|speed']		# in [m/s**2]
 
 		# Equivalent flat plate area "f"
 		kg_to_lb = 2.20462**0.8903
-		ft2_to_m2 = 0.3048*0.3048
+		ft2_to_m2 = 0.3048 * 0.3048
 
 		f = 0.0327 * W_takeoff**0.8903 * kg_to_lb * ft2_to_m2
 
 		# Parasite drag coefficient
-		S_ref = N_rotor * np.pi * r**2 # total rotor area
-		CD0 = f/S_ref
+		S_ref = N_rotor * np.pi * r**2  # total rotor area
+		CD0 = f / S_ref
 
 		outputs['Aero|Cd0'] = CD0
 		outputs['Aero|total_drag'] = 0.5 * rho_air * v * v * S_ref * CD0
@@ -112,23 +114,24 @@ class MultirotorParasiteDragViaWeightBasedRegression(om.ExplicitComponent):
 	def compute_partials(self, inputs, partials):
 		rho_air = self.options['rho_air']
 		N_rotor = self.options['N_rotor']
-		r = inputs['Rotor|radius']				# in [m]
-		W_takeoff = inputs['Weight|takeoff']	# in [kg]
+		r = inputs['Rotor|radius']			  # in [m]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
 		v = inputs['Aero|speed']		# in [m/s**2]
 
 		# Equivalent flat plate area "f"
 		kg_to_lb = 2.20462**0.8903
-		ft2_to_m2 = 0.3048*0.3048
+		ft2_to_m2 = 0.3048 * 0.3048
 
 		f = 0.0327 * W_takeoff**0.8903 * kg_to_lb * ft2_to_m2
 		df_dW = 0.0327 * 0.8903 * W_takeoff**(-0.1097) * kg_to_lb * ft2_to_m2
 
-		partials['Aero|Cd0', 'Rotor|radius'] = f/(N_rotor * np.pi) * (-2/r**3)
-		partials['Aero|Cd0', 'Weight|takeoff'] = 1/(N_rotor * np.pi * r**2) * df_dW
+		partials['Aero|Cd0', 'Rotor|radius'] = f / (N_rotor * np.pi) * (-2 / r**3)
+		partials['Aero|Cd0', 'Weight|takeoff'] = 1 / (N_rotor * np.pi * r**2) * df_dW
 		partials['Aero|Cd0', 'Aero|speed'] = 0
 		partials['Aero|total_drag', 'Rotor|radius'] = 0.0
 		partials['Aero|total_drag', 'Weight|takeoff'] = 0.5 * rho_air * v**2 * df_dW
 		partials['Aero|total_drag', 'Aero|speed'] = rho_air * v * f
+
 
 class WingedParasiteDragViaWeightBasedRegression(om.ExplicitComponent):
 	"""
@@ -164,44 +167,44 @@ class WingedParasiteDragViaWeightBasedRegression(om.ExplicitComponent):
 
 	def compute(self, inputs, outputs):
 		rho_air = self.options['rho_air']
-		W_takeoff = inputs['Weight|takeoff']	# in [kg]
-		v = inputs['Aero|speed']		# in [m/s**2]
-		S_wing = inputs['Wing|area']			# in [m**2]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
+		v = inputs['Aero|speed']			  # in [m/s**2]
+		S_wing = inputs['Wing|area']		  # in [m**2]
 
 		# Equivalent flat plate area "f"
-		kg_to_lb = 2.20462**(2/3)
-		ft2_to_m2 = 0.3048*0.3048
+		kg_to_lb = 2.20462**(2 / 3)
+		ft2_to_m2 = 0.3048 * 0.3048
 
-		f = 1.6 * (W_takeoff/1000)**(2/3) * kg_to_lb * ft2_to_m2
+		f = 1.6 * (W_takeoff / 1000)**(2 / 3) * kg_to_lb * ft2_to_m2
 
 		# Parasite drag coefficient
 		S_ref = S_wing 	# ref area is the wing area
-		CD0 = f/S_ref
+		CD0 = f / S_ref
 
 		outputs['Aero|Cd0'] = CD0
 		outputs['Aero|parasite_drag'] = 0.5 * rho_air * v * v * S_ref * CD0
 
 	def compute_partials(self, inputs, partials):
 		rho_air = self.options['rho_air']
-		W_takeoff = inputs['Weight|takeoff']	# in [kg]
-		v = inputs['Aero|speed']		# in [m/s**2]
-		S_wing = inputs['Wing|area']			# in [m**2]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
+		v = inputs['Aero|speed']			  # in [m/s**2]
+		S_wing = inputs['Wing|area']		  # in [m**2]
 
 		# Equivalent flat plate area "f"
-		kg_to_lb = 2.20462**(2/3)
-		ft2_to_m2 = 0.3048*0.3048
+		kg_to_lb = 2.20462**(2 / 3)
+		ft2_to_m2 = 0.3048 * 0.3048
 
-		f = 1.6 * (W_takeoff/1000)**(2/3) * kg_to_lb * ft2_to_m2
-		df_dW = 1.6 * (2/3) * W_takeoff**(-1/3) * (1/1000)**(2/3) * kg_to_lb * ft2_to_m2
+		f = 1.6 * (W_takeoff / 1000)**(2 / 3) * kg_to_lb * ft2_to_m2
+		df_dW = 1.6 * (2 / 3) * W_takeoff**(-1 / 3) * (1 / 1000)**(2 / 3) * kg_to_lb * ft2_to_m2
 		S_ref = S_wing
-		CD0 = f/S_ref
 
-		partials['Aero|Cd0', 'Weight|takeoff'] = 1/S_ref * df_dW
+		partials['Aero|Cd0', 'Weight|takeoff'] = 1 / S_ref * df_dW
 		partials['Aero|Cd0', 'Aero|speed'] = 0
-		partials['Aero|Cd0', 'Wing|area'] = -f/(S_ref**2)
+		partials['Aero|Cd0', 'Wing|area'] = -f / (S_ref**2)
 		partials['Aero|parasite_drag', 'Weight|takeoff'] = 0.5 * rho_air * v**2 * df_dW
 		partials['Aero|parasite_drag', 'Aero|speed'] = rho_air * v * f
 		partials['Aero|parasite_drag', 'Wing|area'] = 0
+
 
 class RotorHubParasiteDragFidelityZero(om.ExplicitComponent):
 	"""
@@ -238,19 +241,19 @@ class RotorHubParasiteDragFidelityZero(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		vehicle = self.options['vehicle']
 		rho_air = self.options['rho_air']
-		W_takeoff = inputs['Weight|takeoff']	# in [kg]
-		v = inputs['Aero|speed']				# in [m/s**2]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
+		v = inputs['Aero|speed']			  # in [m/s**2]
 
 		# Equivalent flat plate area "f"
-		kg_to_lb = 2.20462**(2/3)
-		ft2_to_m2 = 0.3048*0.3048
+		kg_to_lb = 2.20462**(2 / 3)
+		ft2_to_m2 = 0.3048 * 0.3048
 
 		if vehicle.configuration in ['Multirotor']:
 			N_rotor = vehicle.lift_rotor.n_rotor
-			f = N_rotor * 0.85 * ((W_takeoff/N_rotor)/1000)**(2/3) * kg_to_lb * ft2_to_m2
+			f = N_rotor * 0.85 * ((W_takeoff / N_rotor) / 1000)**(2 / 3) * kg_to_lb * ft2_to_m2
 		elif vehicle.configuration in ['LiftPlusCruise']:
 			N_rotor = vehicle.lift_rotor.n_rotor + vehicle.propeller.n_propeller
-			f = N_rotor * 0.40 * ((W_takeoff/N_rotor)/1000)**(2/3) * kg_to_lb * ft2_to_m2
+			f = N_rotor * 0.40 * ((W_takeoff / N_rotor) / 1000)**(2 / 3) * kg_to_lb * ft2_to_m2
 
 		outputs['Aero|f_rotor_hub'] = f
 		outputs['Aero|parasite_drag_rotor_hub'] = 0.5 * rho_air * v * v * f
@@ -258,21 +261,21 @@ class RotorHubParasiteDragFidelityZero(om.ExplicitComponent):
 	def compute_partials(self, inputs, partials):
 		vehicle = self.options['vehicle']
 		rho_air = self.options['rho_air']
-		W_takeoff = inputs['Weight|takeoff']	# in [kg]
-		v = inputs['Aero|speed']				# in [m/s**2]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
+		v = inputs['Aero|speed']			  # in [m/s**2]
 
 		# Equivalent flat plate area "f"
-		kg_to_lb = 2.20462**(2/3)
-		ft2_to_m2 = 0.3048*0.3048
+		kg_to_lb = 2.20462**(2 / 3)
+		ft2_to_m2 = 0.3048 * 0.3048
 
 		if vehicle.configuration in ['Multirotor']:
 			N_rotor = vehicle.lift_rotor.n_rotor
-			f = N_rotor * 0.85 * ((W_takeoff/N_rotor)/1000)**(2/3) * kg_to_lb * ft2_to_m2
-			df_dW = N_rotor * 0.85 * (2/3) * W_takeoff**(-1/3) * (1/N_rotor/1000)**(2/3) * kg_to_lb * ft2_to_m2
+			f = N_rotor * 0.85 * ((W_takeoff / N_rotor) / 1000)**(2 / 3) * kg_to_lb * ft2_to_m2
+			df_dW = N_rotor * 0.85 * (2 / 3) * W_takeoff**(-1 / 3) * (1 / N_rotor / 1000)**(2 / 3) * kg_to_lb * ft2_to_m2
 		elif vehicle.configuration in ['LiftPlusCruise']:
 			N_rotor = vehicle.lift_rotor.n_rotor + vehicle.propeller.n_propeller
-			f = N_rotor * 0.40 * ((W_takeoff/N_rotor)/1000)**(2/3) * kg_to_lb * ft2_to_m2
-			df_dW = N_rotor * 0.40 * (2/3) * W_takeoff**(-1/3) * (1/N_rotor/1000)**(2/3) * kg_to_lb * ft2_to_m2
+			f = N_rotor * 0.40 * ((W_takeoff / N_rotor) / 1000)**(2 / 3) * kg_to_lb * ft2_to_m2
+			df_dW = N_rotor * 0.40 * (2 / 3) * W_takeoff**(-1 / 3) * (1 / N_rotor / 1000)**(2 / 3) * kg_to_lb * ft2_to_m2
 
 		partials['Aero|f_rotor_hub', 'Weight|takeoff'] = df_dW
 		partials['Aero|f_rotor_hub', 'Aero|speed'] = 0

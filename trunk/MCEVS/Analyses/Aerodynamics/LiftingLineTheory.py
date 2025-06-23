@@ -1,6 +1,7 @@
 import numpy as np
 import openmdao.api as om
 
+
 class FiniteWingLiftCoefficientCurveSlope(om.ExplicitComponent):
 	"""
 	Computes the finite wing lift coefficient curve slope from infinite 2D airfoil curve slope corrected for compressibility
@@ -42,10 +43,10 @@ class FiniteWingLiftCoefficientCurveSlope(om.ExplicitComponent):
 		wing_e = 1.78 * (1 - 0.045 * AR_wing**0.68) - 0.64
 
 		# Compressibility correction
-		Mach = v/v_sound
+		Mach = v / v_sound
 		compressibility = np.sqrt(1 - Mach**2)
 
-		outputs['Wing|CL_alpha'] = airfoil_CL_alpha / (compressibility + airfoil_CL_alpha/(np.pi * wing_e * AR_wing))
+		outputs['Wing|CL_alpha'] = airfoil_CL_alpha / (compressibility + airfoil_CL_alpha / (np.pi * wing_e * AR_wing))
 
 	def compute_partials(self, inputs, partials):
 		v_sound = self.options['v_sound']
@@ -58,13 +59,12 @@ class FiniteWingLiftCoefficientCurveSlope(om.ExplicitComponent):
 		de_dAR = - 0.68 * 1.78 * 0.045 * AR_wing**(-0.32)
 
 		# Compressibility correction
-		cp = np.sqrt(1 - (v/v_sound)**2)
-		dcp_dv = 0.5*(1- (v/v_sound)**2)**(-0.5) * (-2*v/v_sound**2)
+		cp = np.sqrt(1 - (v / v_sound)**2)
+		dcp_dv = 0.5 * (1 - (v / v_sound)**2)**(-0.5) * (-2 * v / v_sound**2)
 
 		x = np.pi * wing_e * AR_wing
 		dx_dAR = np.pi * de_dAR * AR_wing + np.pi * wing_e
 
-		partials['Wing|CL_alpha', 'Wing|airfoil|CL_alpha'] = 1 / (cp + airfoil_CL_alpha/x) - airfoil_CL_alpha/(cp + airfoil_CL_alpha/x)**2 * (1/x)
-		partials['Wing|CL_alpha', 'Wing|aspect_ratio'] = - airfoil_CL_alpha/(cp + airfoil_CL_alpha/x)**2 * (- airfoil_CL_alpha/x**2)
-		partials['Wing|CL_alpha', 'Aero|speed'] = - airfoil_CL_alpha / (cp + airfoil_CL_alpha/x)**2 * dcp_dv
-		
+		partials['Wing|CL_alpha', 'Wing|airfoil|CL_alpha'] = 1 / (cp + airfoil_CL_alpha / x) - airfoil_CL_alpha / (cp + airfoil_CL_alpha / x)**2 * (1 / x)
+		partials['Wing|CL_alpha', 'Wing|aspect_ratio'] = - airfoil_CL_alpha / (cp + airfoil_CL_alpha / x)**2 * (- airfoil_CL_alpha / x**2) * dx_dAR
+		partials['Wing|CL_alpha', 'Aero|speed'] = - airfoil_CL_alpha / (cp + airfoil_CL_alpha / x)**2 * dcp_dv
