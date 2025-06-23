@@ -1,5 +1,5 @@
-import numpy as np
 import openmdao.api as om
+
 
 class WingWeightRoskam(om.ExplicitComponent):
 	"""
@@ -50,12 +50,12 @@ class WingWeightRoskam(om.ExplicitComponent):
 
 		# Calculating W_wing
 		kg_to_lb = 2.20462**0.397
-		m2_to_ft2 = (3.28084*3.28084)**0.360
+		m2_to_ft2 = (3.28084 * 3.28084)**0.360
 		lb_to_kg = 0.453592
 
 		W_wing = 0.04674 * W_takeoff**0.397 * S_wing**0.360 * n_ult**0.397 * AR_wing**1.712 * kg_to_lb * m2_to_ft2 * lb_to_kg
 
-		outputs['Weight|structure|wing'] = tf * W_wing # in [kg]
+		outputs['Weight|structure|wing'] = tf * W_wing  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		n_ult = self.options['n_ult']
@@ -66,7 +66,7 @@ class WingWeightRoskam(om.ExplicitComponent):
 
 		# Calculating W_wing
 		kg_to_lb = 2.20462**0.397
-		m2_to_ft2 = (3.28084*3.28084)**0.360
+		m2_to_ft2 = (3.28084 * 3.28084)**0.360
 		lb_to_kg = 0.453592
 
 		dWwing_dWtakeoff = 0.04674 * 0.397 * W_takeoff**(-0.603) * S_wing**0.360 * n_ult**0.397 * AR_wing**1.712 * kg_to_lb * m2_to_ft2 * lb_to_kg
@@ -78,6 +78,7 @@ class WingWeightRoskam(om.ExplicitComponent):
 		partials['Weight|structure|wing', 'Weight|takeoff'] = tf * dWwing_dWtakeoff
 		partials['Weight|structure|wing', 'Wing|area'] = tf * dWwing_dSwing
 		partials['Weight|structure|wing', 'Wing|aspect_ratio'] = tf * dWwing_dARwing
+
 
 class WingWeightM4ModelsForNASALPC(om.ExplicitComponent):
 	"""
@@ -126,20 +127,15 @@ class WingWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		l_fuse = inputs['Fuselage|length']
 		W_batt = inputs['Weight|battery']
 		v_cruise = inputs['v_cruise']
-		coeffs = [ 1.11379136e+01,  3.14761829e+01,  7.89132288e-01, -2.14257921e-02, 2.40041303e-01, -3.20236992e+02 ]
+		coeffs = [1.11379136e+01, 3.14761829e+01, 7.89132288e-01, -2.14257921e-02, 2.40041303e-01, -3.20236992e+02]
 
-		W_wing = coeffs[0]*S_wing + coeffs[1]*AR_wing + coeffs[2]*l_fuse + coeffs[3]*W_batt + coeffs[4]*v_cruise + coeffs[5]
+		W_wing = coeffs[0] * S_wing + coeffs[1] * AR_wing + coeffs[2] * l_fuse + coeffs[3] * W_batt + coeffs[4] * v_cruise + coeffs[5]
 
 		outputs['Weight|structure|wing'] = tf * W_wing
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		S_wing = inputs['Wing|area']
-		AR_wing = inputs['Wing|aspect_ratio']
-		l_fuse = inputs['Fuselage|length']
-		W_batt = inputs['Weight|battery']
-		v_cruise = inputs['v_cruise']
-		coeffs = [ 1.11379136e+01,  3.14761829e+01,  7.89132288e-01, -2.14257921e-02, 2.40041303e-01, -3.20236992e+02 ]
+		coeffs = [1.11379136e+01, 3.14761829e+01, 7.89132288e-01, -2.14257921e-02, 2.40041303e-01, -3.20236992e+02]
 
 		partials['Weight|structure|wing', 'Wing|area'] = tf * coeffs[0]
 		partials['Weight|structure|wing', 'Wing|aspect_ratio'] = tf * coeffs[1]
@@ -147,6 +143,7 @@ class WingWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		partials['Weight|structure|wing', 'Weight|battery'] = tf * coeffs[3]
 		partials['Weight|structure|wing', 'v_cruise'] = tf * coeffs[4]
 		
+
 if __name__ == '__main__':
 	
 	model = om.Group()

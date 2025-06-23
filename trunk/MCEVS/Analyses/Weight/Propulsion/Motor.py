@@ -1,5 +1,5 @@
-import numpy as np
 import openmdao.api as om
+
 
 class MotorWeight(om.ExplicitComponent):
 	"""
@@ -31,17 +31,18 @@ class MotorWeight(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		N_motor = self.options['N_motor']
 		tf = self.options['tf']
-		p_max = (1 + self.options['PM']/100) * inputs['max_power']/1000.0 # in [kW]
+		p_max = (1 + self.options['PM'] / 100) * inputs['max_power'] / 1000.0  # in [kW]
 
 		# Calculating W_motors
-		W_motor = 0.2138 * p_max/N_motor
+		W_motor = 0.2138 * p_max / N_motor
 		W_motors = N_motor * W_motor
 
-		outputs['Weight|propulsion|motors'] = tf * W_motors # in [kg]
+		outputs['Weight|propulsion|motors'] = tf * W_motors  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		partials['Weight|propulsion|motors', 'max_power'] = tf * 0.2138/1000.0 * (1 + self.options['PM']/100)
+		partials['Weight|propulsion|motors', 'max_power'] = tf * 0.2138 / 1000.0 * (1 + self.options['PM'] / 100)
+
 
 class MotorWeightV1(om.ExplicitComponent):
 	"""
@@ -68,16 +69,17 @@ class MotorWeightV1(om.ExplicitComponent):
 
 	def compute(self, inputs, outputs):
 		N_motor = self.options['N_motor']
-		p_max = inputs['max_power']/1000.0 # in [kW]
+		p_max = inputs['max_power'] / 1000.0  # in [kW]
 
 		# Calculating W_motors
-		W_motor = (0.188 * p_max + 5.836)/N_motor
+		W_motor = (0.188 * p_max + 5.836) / N_motor
 		W_motors = N_motor * W_motor
 
-		outputs['Weight|propulsion|motors'] = W_motors # in [kg]
+		outputs['Weight|propulsion|motors'] = W_motors  # in [kg]
 
 	def compute_partials(self, inputs, partials):
-		partials['Weight|propulsion|motors', 'max_power'] = 0.188/1000.0
+		partials['Weight|propulsion|motors', 'max_power'] = 0.188 / 1000.0
+
 
 class MotorWeightV2(om.ExplicitComponent):
 	"""
@@ -105,18 +107,13 @@ class MotorWeightV2(om.ExplicitComponent):
 
 	def compute(self, inputs, outputs):
 		N_motor = self.options['N_motor']
-		tau_max = inputs['max_torque'] # in [N*m]
+		tau_max = inputs['max_torque']  # in [N*m]
 
 		# Calculating W_motors
-		W_motor = 58/990 * (tau_max - 10.0) + 2.0
+		W_motor = 58 / 990 * (tau_max - 10.0) + 2.0
 		W_motors = N_motor * W_motor
 
-		outputs['Weight|propulsion|motors'] = W_motors # in [kg]
+		outputs['Weight|propulsion|motors'] = W_motors  # in [kg]
 
 	def compute_partials(self, inputs, partials):
-		partials['Weight|propulsion|motors', 'max_torque'] = 58/990
-
-
-
-
-
+		partials['Weight|propulsion|motors', 'max_torque'] = 58 / 990

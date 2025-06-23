@@ -1,5 +1,5 @@
-import numpy as np
 import openmdao.api as om
+
 
 class FuselageWeightRoskam(om.ExplicitComponent):
 	"""
@@ -37,30 +37,31 @@ class FuselageWeightRoskam(om.ExplicitComponent):
 		l_fuse = self.options['l_fuse']		# in [m]
 		p_max = self.options['p_max']		# in [m]
 		tf = self.options['tf']
-		W_takeoff = inputs['Weight|takeoff']	# in [kg]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
 
 		# Calculating W_fuselage
 		kg_to_lb = 2.20462**0.144
 		m_to_ft = 3.28084**0.383
 		lb_to_kg = 0.453592
 		
-		W_fuselage = 14.86 * W_takeoff**0.144 * (l_fuse/p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
+		W_fuselage = 14.86 * W_takeoff**0.144 * (l_fuse / p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
 
-		outputs['Weight|structure|fuselage'] = tf * W_fuselage # in [kg]
+		outputs['Weight|structure|fuselage'] = tf * W_fuselage  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		n_pax = self.options['n_pax']
 		l_fuse = self.options['l_fuse'] 	# in [m]
 		p_max = self.options['p_max'] 		# in [m]
 		tf = self.options['tf']
-		W_takeoff = inputs['Weight|takeoff']	# in [kg]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
 
 		kg_to_lb = 2.20462**0.144
 		m_to_ft = 3.28084**0.383
 		lb_to_kg = 0.453592
-		dWfuse_dWtakeoff = 14.86 * 0.144 * W_takeoff**(-0.856) * (l_fuse/p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
+		dWfuse_dWtakeoff = 14.86 * 0.144 * W_takeoff**(-0.856) * (l_fuse / p_max)**0.778 * l_fuse**0.383 * n_pax**0.455 * kg_to_lb * m_to_ft * lb_to_kg
 
 		partials['Weight|structure|fuselage', 'Weight|takeoff'] = tf * dWfuse_dWtakeoff
+
 
 class FuselageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 	"""
@@ -109,20 +110,15 @@ class FuselageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		l_fuse = inputs['Fuselage|length']
 		W_batt = inputs['Weight|battery']
 		v_cruise = inputs['v_cruise']
-		coeffs = [ 1.01472161e+00, -4.06758251e-01, 4.25974124e+01, 3.10575276e-02, 6.87345416e-02, -1.16727769e+02 ]
+		coeffs = [1.01472161e+00, -4.06758251e-01, 4.25974124e+01, 3.10575276e-02, 6.87345416e-02, -1.16727769e+02]
 
-		W_fuse = coeffs[0]*S_wing + coeffs[1]*AR_wing + coeffs[2]*l_fuse + coeffs[3]*W_batt + coeffs[4]*v_cruise + coeffs[5]
+		W_fuse = coeffs[0] * S_wing + coeffs[1] * AR_wing + coeffs[2] * l_fuse + coeffs[3] * W_batt + coeffs[4] * v_cruise + coeffs[5]
 
 		outputs['Weight|structure|fuselage'] = tf * W_fuse
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		S_wing = inputs['Wing|area']
-		AR_wing = inputs['Wing|aspect_ratio']
-		l_fuse = inputs['Fuselage|length']
-		W_batt = inputs['Weight|battery']
-		v_cruise = inputs['v_cruise']
-		coeffs = [ 1.01472161e+00, -4.06758251e-01, 4.25974124e+01, 3.10575276e-02, 6.87345416e-02, -1.16727769e+02 ]
+		coeffs = [1.01472161e+00, -4.06758251e-01, 4.25974124e+01, 3.10575276e-02, 6.87345416e-02, -1.16727769e+02]
 
 		partials['Weight|structure|fuselage', 'Wing|area'] = tf * coeffs[0]
 		partials['Weight|structure|fuselage', 'Wing|aspect_ratio'] = tf * coeffs[1]
@@ -130,6 +126,7 @@ class FuselageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		partials['Weight|structure|fuselage', 'Weight|battery'] = tf * coeffs[3]
 		partials['Weight|structure|fuselage', 'v_cruise'] = tf * coeffs[4]
 		
+
 if __name__ == '__main__':
 	
 	model = om.Group()

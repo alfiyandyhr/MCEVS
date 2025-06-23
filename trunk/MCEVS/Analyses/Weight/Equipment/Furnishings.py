@@ -1,5 +1,5 @@
-import numpy as np
 import openmdao.api as om
+
 
 class FurnishingWeight(om.ExplicitComponent):
 	"""
@@ -28,31 +28,31 @@ class FurnishingWeight(om.ExplicitComponent):
 
 	def compute(self, inputs, outputs):
 		tf = self.options['tf']
-		W_takeoff = inputs['Weight|takeoff'] # in [kg]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
 
 		# Calculating W_furnishings
 		kg_to_lb = 2.20462**1.3
 		lb_to_kg = 0.453592
 
-		K_low = 6.0
+		# K_low = 6.0
 		K_avg = 13.0
-		K_high = 23.0
+		# K_high = 23.0
 
-		W_furnishings = K_avg * (W_takeoff/1000.0)**1.3 * kg_to_lb * lb_to_kg
+		W_furnishings = K_avg * (W_takeoff / 1000.0)**1.3 * kg_to_lb * lb_to_kg
 
-		outputs['Weight|equipment|furnishings'] = tf * W_furnishings # in [kg]
+		outputs['Weight|equipment|furnishings'] = tf * W_furnishings  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		W_takeoff = inputs['Weight|takeoff'] # in [kg]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
 
 		# Calculating dWfurn_dWtakeoff
 		kg_to_lb = 2.20462**1.3
 		lb_to_kg = 0.453592
 
-		K_low = 6.0
+		# K_low = 6.0
 		K_avg = 13.0
-		K_high = 23.0
+		# K_high = 23.0
 
-		dWfurn_dWtakeoff = K_avg * 1.3 * W_takeoff**0.3 * (1/1000.0)**1.3 * kg_to_lb * lb_to_kg
+		dWfurn_dWtakeoff = K_avg * 1.3 * W_takeoff**0.3 * (1 / 1000.0)**1.3 * kg_to_lb * lb_to_kg
 		partials['Weight|equipment|furnishings', 'Weight|takeoff'] = tf * dWfurn_dWtakeoff

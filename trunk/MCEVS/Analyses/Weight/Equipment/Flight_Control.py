@@ -1,5 +1,5 @@
-import numpy as np
 import openmdao.api as om
+
 
 class FlightControlWeight(om.ExplicitComponent):
 	"""
@@ -25,26 +25,24 @@ class FlightControlWeight(om.ExplicitComponent):
 
 	def compute(self, inputs, outputs):
 		tf = self.options['tf']
-		W_takeoff = inputs['Weight|takeoff'] # in [kg]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
 
 		# Calculating W_flight_control
 		kg_to_lb = 2.20462**0.4
 		lb_to_kg = 0.453592
 
-		W_flight_control = 11.5 * (W_takeoff/1000.0)**0.4 * kg_to_lb * lb_to_kg
+		W_flight_control = 11.5 * (W_takeoff / 1000.0)**0.4 * kg_to_lb * lb_to_kg
 
-		outputs['Weight|equipment|flight_control'] = tf * W_flight_control # in [kg]
+		outputs['Weight|equipment|flight_control'] = tf * W_flight_control  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		W_takeoff = inputs['Weight|takeoff'] # in [kg]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
 
 		# Calculating dWfc_dWtakeoff
 		kg_to_lb = 2.20462**0.4
 		lb_to_kg = 0.453592
 
-		dWfc_dWtakeoff = 11.5 * 0.4 * W_takeoff**(-0.6) * (1/1000.0)**0.4 * kg_to_lb * lb_to_kg
+		dWfc_dWtakeoff = 11.5 * 0.4 * W_takeoff**(-0.6) * (1 / 1000.0)**0.4 * kg_to_lb * lb_to_kg
 
 		partials['Weight|equipment|flight_control', 'Weight|takeoff'] = tf * dWfc_dWtakeoff
-
-

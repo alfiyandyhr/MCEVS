@@ -7,6 +7,7 @@ from MCEVS.Analyses.Weight.Structure.Wing import WingWeightRoskam, WingWeightM4M
 from MCEVS.Analyses.Weight.Structure.Tail import HorizontalTailWeightRoskam, VerticalTailWeightRoskam, EmpennageWeightM4ModelsForNASALPC
 from MCEVS.Analyses.Weight.Structure.Boom import BoomWeightRoskam, BoomWeightM4ModelsForNASALPC
 
+
 class StructureWeight(om.Group):
 	"""
 	Calculates structure weight
@@ -30,8 +31,8 @@ class StructureWeight(om.Group):
 		
 		# Landing gear parameter
 		gear_type 	= vehicle.landing_gear.gear_type
-		l_sm 		= vehicle.landing_gear.strut_length
-		n_ult_lg 	= vehicle.landing_gear.ultimate_load_factor
+		# l_sm 		= vehicle.landing_gear.strut_length
+		# n_ult_lg 	= vehicle.landing_gear.ultimate_load_factor
 
 		# Wing parameter
 		if vehicle.configuration == 'LiftPlusCruise':
@@ -41,7 +42,7 @@ class StructureWeight(om.Group):
 
 			# Fuselage weight
 			self.add_subsystem('fuselage_weight',
-								FuselageWeightRoskam(n_pax=n_pax,l_fuse=l_fuse,p_max=np.pi*d_max, tf=tf_structure),
+								FuselageWeightRoskam(n_pax=n_pax, l_fuse=l_fuse, p_max=np.pi * d_max, tf=tf_structure),
 								promotes_inputs=['Weight|takeoff'],
 								promotes_outputs=['Weight|structure|fuselage'])
 

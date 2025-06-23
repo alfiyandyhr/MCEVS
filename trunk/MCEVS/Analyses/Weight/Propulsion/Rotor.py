@@ -2,6 +2,7 @@ import numpy as np
 import openmdao.api as om
 import warnings
 
+
 class RotorAndHubWeight(om.ExplicitComponent):
 	"""
 	Computes rotors and hubs weight
@@ -31,9 +32,9 @@ class RotorAndHubWeight(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		N_rotor = self.options['N_rotor']
 		tf = self.options['tf']
-		T_max = inputs['max_thrust']	# in [N]
+		T_max = inputs['max_thrust']  # in [N]
 		
-		W_rotor_and_hub = 0.0095 * T_max - 1.9275 # in [kg]
+		W_rotor_and_hub = 0.0095 * T_max - 1.9275  # in [kg]
 		W_rotors_and_hubs = N_rotor * W_rotor_and_hub
 
 		outputs['Weight|propulsion|rotors_and_hubs'] = tf * W_rotors_and_hubs
@@ -41,9 +42,9 @@ class RotorAndHubWeight(om.ExplicitComponent):
 	def compute_partials(self, inputs, partials):
 		N_rotor = self.options['N_rotor']
 		tf = self.options['tf']
-		T_max = inputs['max_thrust']	# in [N]
 
-		partials['Weight|propulsion|rotors_and_hubs','max_thrust'] = tf * N_rotor * 0.0095
+		partials['Weight|propulsion|rotors_and_hubs', 'max_thrust'] = tf * N_rotor * 0.0095
+
 
 class ExtraHubWeight(om.ExplicitComponent):
 	"""
@@ -94,11 +95,9 @@ class ExtraHubWeight(om.ExplicitComponent):
 		m_to_ft3 = 3.28084
 		kg_to_lb = 2.20462
 		lb_to_kg = 0.453592
-		rpm_to_radps = 2*np.pi/60
+		rpm_to_radps = 2 * np.pi / 60
 
 		v_tip = rpm * r * rpm_to_radps
-		dv_drpm = r * rpm_to_radps
-		dv_dr = rpm * rpm_to_radps
 
 		# Polar moment of inertia of rotor's disk
 		W_rotor = W_rotors / N_rotor
@@ -131,33 +130,30 @@ class ExtraHubWeight(om.ExplicitComponent):
 		m_to_ft3 = 3.28084
 		kg_to_lb = 2.20462
 		lb_to_kg = 0.453592
-		rpm_to_radps = 2*np.pi/60
-
-		v_tip = rpm * r * rpm_to_radps
+		rpm_to_radps = 2 * np.pi / 60
 
 		# Divided into three terms
 		W1 = 0.0037 * N_bl**0.28 * r**1.93 * rpm**0.43 * rpm_to_radps**0.43 * m_to_ft1
 		W2 = 0.01742 * N_bl**0.66 * c * r**1.97 * rpm**0.67 * rpm_to_radps**0.67 * m_to_ft2
 		W3 = 0.5 * W_rotors / N_rotor * g * m_to_ft3 * kg_to_lb
 
-		dW1_dr = 0.0037 * N_bl**0.28 * 1.93*r**0.93 * rpm**0.43 * rpm_to_radps**0.43 * m_to_ft1
-		dW1_drpm = 0.0037 * N_bl**0.28 * r**1.93 * 0.43*rpm**(-0.57) * rpm_to_radps**0.43 * m_to_ft1
+		dW1_dr = 0.0037 * N_bl**0.28 * 1.93 * r**0.93 * rpm**0.43 * rpm_to_radps**0.43 * m_to_ft1
+		dW1_drpm = 0.0037 * N_bl**0.28 * r**1.93 * 0.43 * rpm**(-0.57) * rpm_to_radps**0.43 * m_to_ft1
 		dW2_dc = 0.01742 * N_bl**0.66 * r**1.97 * rpm**0.67 * rpm_to_radps**0.67 * m_to_ft2
-		dW2_dr = 0.01742 * N_bl**0.66 * c * 1.97*r**0.97 * rpm**0.67 * rpm_to_radps**0.67 * m_to_ft2
-		dW2_drpm = 0.01742 * N_bl**0.66 * c * r**1.97 * 0.67*rpm**(-0.33) * rpm_to_radps**0.67 * m_to_ft2
+		dW2_dr = 0.01742 * N_bl**0.66 * c * 1.97 * r**0.97 * rpm**0.67 * rpm_to_radps**0.67 * m_to_ft2
+		dW2_drpm = 0.01742 * N_bl**0.66 * c * r**1.97 * 0.67 * rpm**(-0.33) * rpm_to_radps**0.67 * m_to_ft2
 		dW3_dWr = 0.5 / N_rotor * g * m_to_ft3 * kg_to_lb
 
-		W = W1 * (W2 + W3)**0.55 * lb_to_kg
+		dW_dWr = W1 * 0.55 * (W2 + W3)**(-0.45) * dW3_dWr * lb_to_kg
+		dW_dr = (dW1_dr * (W2 + W3)**0.55 + W1 * 0.55 * (W2 + W3)**(-0.45) * dW2_dr) * lb_to_kg
+		dW_dc = W1 * 0.55 * (W2 + W3)**(-0.45) * dW2_dc * lb_to_kg
+		dW_drpm = (dW1_drpm * (W2 + W3)**0.55 + W1 * 0.55 * (W2 + W3)**(-0.45) * dW2_drpm) * lb_to_kg
 
-		dW_dWr = W1 * 0.55*(W2 + W3)**(-0.45) * dW3_dWr * lb_to_kg
-		dW_dr = (dW1_dr * (W2 + W3)**0.55 + W1 * 0.55*(W2 + W3)**(-0.45) * dW2_dr) * lb_to_kg
-		dW_dc = W1 * 0.55*(W2 + W3)**(-0.45) * dW2_dc * lb_to_kg
-		dW_drpm = (dW1_drpm * (W2 + W3)**0.55 + W1 * 0.55*(W2 + W3)**(-0.45) * dW2_drpm) * lb_to_kg
+		partials['Weight|propulsion|extra_hubs', 'Weight|propulsion|rotors'] = tf * N_rotor * dW_dWr
+		partials['Weight|propulsion|extra_hubs', 'Rotor|radius'] = tf * N_rotor * dW_dr
+		partials['Weight|propulsion|extra_hubs', 'Rotor|chord'] = tf * N_rotor * dW_dc
+		partials['Weight|propulsion|extra_hubs', 'Rotor|rpm'] = tf * N_rotor * dW_drpm
 
-		partials['Weight|propulsion|extra_hubs','Weight|propulsion|rotors'] = tf * N_rotor * dW_dWr
-		partials['Weight|propulsion|extra_hubs','Rotor|radius'] = tf * N_rotor * dW_dr
-		partials['Weight|propulsion|extra_hubs','Rotor|chord'] = tf * N_rotor * dW_dc
-		partials['Weight|propulsion|extra_hubs','Rotor|rpm'] = tf * N_rotor * dW_drpm
 
 class ExtraHubWeightWithFixedVtip(om.ExplicitComponent):
 	"""
@@ -247,20 +243,19 @@ class ExtraHubWeightWithFixedVtip(om.ExplicitComponent):
 		W2 = 0.01742 * N_bl**0.66 * c * r**1.3 * v_tip**0.67 * m_to_ft2
 		W3 = 0.5 * W_rotors / N_rotor * g * m_to_ft3 * kg_to_lb
 
-		dW1_dr = 0.0037 * N_bl**0.28 * 1.5*r**0.5 * v_tip**0.43 * m_to_ft1
+		dW1_dr = 0.0037 * N_bl**0.28 * 1.5 * r**0.5 * v_tip**0.43 * m_to_ft1
 		dW2_dc = 0.01742 * N_bl**0.66 * r**1.3 * v_tip**0.67 * m_to_ft2
-		dW2_dr = 0.01742 * N_bl**0.66 * c * 1.3*r**0.3 * v_tip**0.67 * m_to_ft2
+		dW2_dr = 0.01742 * N_bl**0.66 * c * 1.3 * r**0.3 * v_tip**0.67 * m_to_ft2
 		dW3_dWr = 0.5 / N_rotor * g * m_to_ft3 * kg_to_lb
 
-		W = W1 * (W2 + W3)**0.55 * lb_to_kg
+		dW_dWr = W1 * 0.55 * (W2 + W3)**(-0.45) * dW3_dWr * lb_to_kg
+		dW_dr = (dW1_dr * (W2 + W3)**0.55 + W1 * 0.55 * (W2 + W3)**(-0.45) * dW2_dr) * lb_to_kg
+		dW_dc = W1 * 0.55 * (W2 + W3)**(-0.45) * dW2_dc * lb_to_kg
 
-		dW_dWr = W1 * 0.55*(W2 + W3)**(-0.45) * dW3_dWr * lb_to_kg
-		dW_dr = (dW1_dr * (W2 + W3)**0.55 + W1 * 0.55*(W2 + W3)**(-0.45) * dW2_dr) * lb_to_kg
-		dW_dc = W1 * 0.55*(W2 + W3)**(-0.45) * dW2_dc * lb_to_kg
+		partials['Weight|propulsion|extra_hubs', 'Weight|propulsion|rotors'] = tf * N_rotor * dW_dWr
+		partials['Weight|propulsion|extra_hubs', 'Rotor|radius'] = tf * N_rotor * dW_dr
+		partials['Weight|propulsion|extra_hubs', 'Rotor|chord'] = tf * N_rotor * dW_dc
 
-		partials['Weight|propulsion|extra_hubs','Weight|propulsion|rotors'] = tf * N_rotor * dW_dWr
-		partials['Weight|propulsion|extra_hubs','Rotor|radius'] = tf * N_rotor * dW_dr
-		partials['Weight|propulsion|extra_hubs','Rotor|chord'] = tf * N_rotor * dW_dc
 
 class RotorWeightRoskam(om.ExplicitComponent):
 	"""
@@ -297,38 +292,38 @@ class RotorWeightRoskam(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		N_rotor = self.options['N_rotor']
 		N_bl = self.options['N_bl']
-		r = inputs['Rotor|radius']	# in [m]
-		p_max = inputs['max_power']	# in [W]
+		r = inputs['Rotor|radius']   # in [m]
+		p_max = inputs['max_power']  # in [W]
 		tf = self.options['tf']
 
-		k_prop = 0.144 # for piston engines; 0.108 for turboprops
+		k_prop = 0.144  # for piston engines; 0.108 for turboprops
 
 		# Calculating W_rotors
 		m_to_ft = 3.28084**0.782
 		W_to_hp = 0.00134102**0.782
 		lb_to_kg = 0.453592
 		
-		W_rotor = k_prop * (2*r * (p_max/N_rotor) * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
+		W_rotor = k_prop * (2 * r * (p_max / N_rotor) * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 		W_rotors = N_rotor * W_rotor
 
-		outputs['Weight|propulsion|rotors'] = tf * W_rotors # in [kg]
+		outputs['Weight|propulsion|rotors'] = tf * W_rotors  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		N_rotor = self.options['N_rotor']
 		N_bl = self.options['N_bl']
-		r = inputs['Rotor|radius']	# in [m]
-		p_max = inputs['max_power']	# in [W]
+		r = inputs['Rotor|radius'] 	 # in [m]
+		p_max = inputs['max_power']  # in [W]
 		tf = self.options['tf']
 
-		k_prop = 0.144 # for piston engines; 0.108 for turboprops
+		k_prop = 0.144  # for piston engines; 0.108 for turboprops
 
 		# Calculating dWrotors_dr and dWrotors_dp
 		m_to_ft = 3.28084**0.782
 		W_to_hp = 0.00134102**0.782
 		lb_to_kg = 0.453592
 
-		dWrotors_dr = N_rotor * k_prop * 0.782 * r**(-0.218) * (2 * (p_max/N_rotor) * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
-		dWrotors_dp = N_rotor * k_prop * 0.782 * p_max**(-0.218) * (2*r / N_rotor * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
+		dWrotors_dr = N_rotor * k_prop * 0.782 * r**(-0.218) * (2 * (p_max / N_rotor) * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
+		dWrotors_dp = N_rotor * k_prop * 0.782 * p_max**(-0.218) * (2 * r / N_rotor * N_bl**0.5)**0.782 * m_to_ft * W_to_hp * lb_to_kg
 
 		partials['Weight|propulsion|rotors', 'Rotor|radius'] = tf * dWrotors_dr
 		partials['Weight|propulsion|rotors', 'max_power'] = tf * dWrotors_dp

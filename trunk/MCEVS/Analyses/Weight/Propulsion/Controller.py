@@ -1,5 +1,5 @@
-import numpy as np
 import openmdao.api as om
+
 
 class MotorControllerWeight(om.ExplicitComponent):
 	"""
@@ -30,20 +30,14 @@ class MotorControllerWeight(om.ExplicitComponent):
 	def compute(self, inputs, outputs):
 		N_motor = self.options['N_motor']
 		tf = self.options['tf']
-		p_max = (1 + self.options['PM']/100) * inputs['max_power']/1000.0 # in [kW]
+		p_max = (1 + self.options['PM'] / 100) * inputs['max_power'] / 1000.0  # in [kW]
 
 		# Calculating W_controllers
-		W_controller = 0.1149 * (p_max/N_motor)
+		W_controller = 0.1149 * (p_max / N_motor)
 		W_controllers = N_motor * W_controller
 
-		outputs['Weight|propulsion|controllers'] = tf * W_controllers # in [kg]
+		outputs['Weight|propulsion|controllers'] = tf * W_controllers  # in [kg]
 
 	def compute_partials(self, inputs, partials):
-		N_motor = self.options['N_motor']
 		tf = self.options['tf']
-		partials['Weight|propulsion|controllers', 'max_power'] = tf * 0.1149/1000 * (1 + self.options['PM']/100)
-
-
-
-
-
+		partials['Weight|propulsion|controllers', 'max_power'] = tf * 0.1149 / 1000 * (1 + self.options['PM'] / 100)

@@ -1,5 +1,5 @@
-import numpy as np
 import openmdao.api as om
+
 
 class AntiIcingSystemWeight(om.ExplicitComponent):
 	"""
@@ -25,15 +25,13 @@ class AntiIcingSystemWeight(om.ExplicitComponent):
 
 	def compute(self, inputs, outputs):
 		tf = self.options['tf']
-		W_takeoff = inputs['Weight|takeoff'] # in [kg]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
 
 		# Calculating W_anti_icing
-		W_anti_icing = 8.0 * (W_takeoff/1000.0)
+		W_anti_icing = 8.0 * (W_takeoff / 1000.0)
 
-		outputs['Weight|equipment|anti_icing'] = tf * W_anti_icing # in [kg]
+		outputs['Weight|equipment|anti_icing'] = tf * W_anti_icing  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
 		partials['Weight|equipment|anti_icing', 'Weight|takeoff'] = tf * 0.008
-
-

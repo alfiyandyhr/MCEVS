@@ -1,5 +1,5 @@
-import numpy as np
 import openmdao.api as om
+
 
 class AvionicsWeight(om.ExplicitComponent):
 	"""
@@ -27,15 +27,13 @@ class AvionicsWeight(om.ExplicitComponent):
 
 	def compute(self, inputs, outputs):
 		tf = self.options['tf']
-		W_takeoff = inputs['Weight|takeoff'] # in [kg]
+		W_takeoff = inputs['Weight|takeoff']  # in [kg]
 
 		# Calculating W_avionics
 		W_avionics = 0.0268 * W_takeoff
 
-		outputs['Weight|equipment|avionics'] = tf * W_avionics # in [kg]
+		outputs['Weight|equipment|avionics'] = tf * W_avionics  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
 		partials['Weight|equipment|avionics', 'Weight|takeoff'] = tf * 0.0268
-
-

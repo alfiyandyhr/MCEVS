@@ -1,6 +1,7 @@
 import numpy as np
 import openmdao.api as om
 
+
 class HorizontalTailWeightRoskam(om.ExplicitComponent):
 	"""
 	Computes horizontal tail weight
@@ -33,44 +34,45 @@ class HorizontalTailWeightRoskam(om.ExplicitComponent):
 		self.declare_partials('*', '*')
 
 	def compute(self, inputs, outputs):
-		W_takeoff = inputs['Weight|takeoff']				# in [kg]
-		S_htail = inputs['HorizontalTail|area']				# in [m**2]
-		t_rh = inputs['HorizontalTail|max_root_thickness']	# in [m]
+		W_takeoff = inputs['Weight|takeoff']				 # in [kg]
+		S_htail = inputs['HorizontalTail|area']				 # in [m**2]
+		t_rh = inputs['HorizontalTail|max_root_thickness']	 # in [m]
 		AR_htail = inputs['HorizontalTail|aspect_ratio']
 		tf = self.options['tf']
 
 		# Calculating W_htail
 		kg_to_lb = 2.20462**0.887
 		m_to_ft = 3.28084**0.223
-		m2_to_ft2 = (3.28084*3.28084)**0.101
+		m2_to_ft2 = (3.28084 * 3.28084)**0.101
 		lb_to_kg = 0.453592
 		
-		W_htail = (3.184 * W_takeoff**0.887 * S_htail**0.101 * AR_htail**0.138)/(174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
+		W_htail = (3.184 * W_takeoff**0.887 * S_htail**0.101 * AR_htail**0.138) / (174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
-		outputs['Weight|structure|horizontal_tail'] = tf * W_htail # in [kg]
+		outputs['Weight|structure|horizontal_tail'] = tf * W_htail  # in [kg]
 
 	def compute_partials(self, inputs, partials):
-		W_takeoff = inputs['Weight|takeoff']				# in [kg]
-		S_htail = inputs['HorizontalTail|area']				# in [m**2]
-		t_rh = inputs['HorizontalTail|max_root_thickness']	# in [m]
+		W_takeoff = inputs['Weight|takeoff']				 # in [kg]
+		S_htail = inputs['HorizontalTail|area']				 # in [m**2]
+		t_rh = inputs['HorizontalTail|max_root_thickness']   # in [m]
 		AR_htail = inputs['HorizontalTail|aspect_ratio']
 		tf = self.options['tf']
 
 		# Calculating dWhtail_dWtakeoff and dWhtail_dShtail
 		kg_to_lb = 2.20462**0.887
 		m_to_ft = 3.28084**0.223
-		m2_to_ft2 = (3.28084*3.28084)**0.101
+		m2_to_ft2 = (3.28084 * 3.28084)**0.101
 		lb_to_kg = 0.453592
 		
-		dWhtail_dWtakeoff = (3.184 * 0.887 * W_takeoff**(-0.113) * S_htail**0.101 * AR_htail**0.138)/(174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
-		dWhtail_dShtail = (3.184 * W_takeoff**0.887 * 0.101 * S_htail**(-0.899) * AR_htail**0.138)/(174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
-		dWhtail_dARhtail = (3.184 * W_takeoff**0.887 * S_htail**0.101 * 0.138 * AR_htail**(-0.862))/(174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
-		dWhtail_dtrh = (3.184 * W_takeoff**0.887 * S_htail**0.101 * AR_htail**0.138)/174.04 * (-0.233) * t_rh**(-1.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
+		dWhtail_dWtakeoff = (3.184 * 0.887 * W_takeoff**(-0.113) * S_htail**0.101 * AR_htail**0.138) / (174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
+		dWhtail_dShtail = (3.184 * W_takeoff**0.887 * 0.101 * S_htail**(-0.899) * AR_htail**0.138) / (174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
+		dWhtail_dARhtail = (3.184 * W_takeoff**0.887 * S_htail**0.101 * 0.138 * AR_htail**(-0.862)) / (174.04 * t_rh**0.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
+		dWhtail_dtrh = (3.184 * W_takeoff**0.887 * S_htail**0.101 * AR_htail**0.138) / 174.04 * (-0.233) * t_rh**(-1.223) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
 		partials['Weight|structure|horizontal_tail', 'Weight|takeoff'] = tf * dWhtail_dWtakeoff
 		partials['Weight|structure|horizontal_tail', 'HorizontalTail|area'] = tf * dWhtail_dShtail
 		partials['Weight|structure|horizontal_tail', 'HorizontalTail|aspect_ratio'] = tf * dWhtail_dARhtail
 		partials['Weight|structure|horizontal_tail', 'HorizontalTail|max_root_thickness'] = tf * dWhtail_dtrh
+
 
 class VerticalTailWeightRoskam(om.ExplicitComponent):
 	"""
@@ -109,47 +111,47 @@ class VerticalTailWeightRoskam(om.ExplicitComponent):
 		S_vtail = inputs['VerticalTail|area']				# in [m**2]
 		AR_vtail = inputs['VerticalTail|aspect_ratio']
 		vtail_sweep = inputs['VerticalTail|sweep_angle'] 	# in [deg]
-		vtail_sweep *= np.pi/180 							# in [rad]
+		vtail_sweep *= np.pi / 180 							# in [rad]
 		t_rv = inputs['VerticalTail|max_root_thickness'] 	# in [m]
 		tf = self.options['tf']
 
 		# Calculating W_vtail
 		kg_to_lb = 2.20462**0.567
 		m_to_ft = 3.28084**0.747
-		m2_to_ft2 = (3.28084*3.28084)**1.249
+		m2_to_ft2 = (3.28084 * 3.28084)**1.249
 		lb_to_kg = 0.453592
 		
-		W_vtail = (1.68 * W_takeoff**0.567 * S_vtail**1.249 * AR_vtail**0.482)/(639.95 * t_rv**0.747 * (np.cos(vtail_sweep))**0.882 ) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
+		W_vtail = (1.68 * W_takeoff**0.567 * S_vtail**1.249 * AR_vtail**0.482) / (639.95 * t_rv**0.747 * (np.cos(vtail_sweep))**0.882) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
-		outputs['Weight|structure|vertical_tail'] = tf * W_vtail # in [kg]
+		outputs['Weight|structure|vertical_tail'] = tf * W_vtail  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		W_takeoff = inputs['Weight|takeoff']				# in [kg]
 		S_vtail = inputs['VerticalTail|area']				# in [m**2]
 		AR_vtail = inputs['VerticalTail|aspect_ratio']
 		vtail_sweep = inputs['VerticalTail|sweep_angle'] 	# in [deg]
-		vtail_sweep *= np.pi/180 							# in [rad] 
+		vtail_sweep *= np.pi / 180 							# in [rad] 
 		t_rv = inputs['VerticalTail|max_root_thickness'] 	# in [m]
 		tf = self.options['tf']
 
 		# Calculating W_vtail
 		kg_to_lb = 2.20462**0.567
 		m_to_ft = 3.28084**0.747
-		m2_to_ft2 = (3.28084*3.28084)**1.249
+		m2_to_ft2 = (3.28084 * 3.28084)**1.249
 		lb_to_kg = 0.453592
 		
-		dWvtail_dWtakeoff = (1.68 * 0.567 * W_takeoff**(-0.433) * S_vtail**1.249 * AR_vtail**0.482)/(639.95 * t_rv**0.747 * (np.cos(vtail_sweep))**0.882 ) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
-		dWvtail_dSvtail = (1.68 * W_takeoff**0.567 * 1.249 * S_vtail**0.249 * AR_vtail**0.482)/(639.95 * t_rv**0.747 * (np.cos(vtail_sweep))**0.882 ) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
-		dWvtail_dARvtail = (1.68 * W_takeoff**0.567 * S_vtail**1.249 * 0.482*AR_vtail**(-0.518))/(639.95 * t_rv**0.747 * (np.cos(vtail_sweep))**0.882 ) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
-		dWvtail_dSweep = (1.68 * W_takeoff**0.567 * S_vtail**1.249 * AR_vtail**0.482) / 639.95 * t_rv**(-0.747) * (-0.882)*(np.cos(vtail_sweep))**(-1.882) * (-np.sin(vtail_sweep)) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
-		dWvtail_dtrv = (1.68 * W_takeoff**0.567 * S_vtail**1.249 * AR_vtail**0.482) / 639.95 * (-0.747)*t_rv**(-1.747) * (np.cos(vtail_sweep))**(-0.882)  * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
-
+		dWvtail_dWtakeoff = (1.68 * 0.567 * W_takeoff**(-0.433) * S_vtail**1.249 * AR_vtail**0.482) / (639.95 * t_rv**0.747 * (np.cos(vtail_sweep))**0.882) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
+		dWvtail_dSvtail = (1.68 * W_takeoff**0.567 * 1.249 * S_vtail**0.249 * AR_vtail**0.482) / (639.95 * t_rv**0.747 * (np.cos(vtail_sweep))**0.882) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
+		dWvtail_dARvtail = (1.68 * W_takeoff**0.567 * S_vtail**1.249 * 0.482 * AR_vtail**(-0.518)) / (639.95 * t_rv**0.747 * (np.cos(vtail_sweep))**0.882) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
+		dWvtail_dSweep = (1.68 * W_takeoff**0.567 * S_vtail**1.249 * AR_vtail**0.482) / 639.95 * t_rv**(-0.747) * (-0.882) * (np.cos(vtail_sweep))**(-1.882) * (-np.sin(vtail_sweep)) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
+		dWvtail_dtrv = (1.68 * W_takeoff**0.567 * S_vtail**1.249 * AR_vtail**0.482) / 639.95 * (-0.747) * t_rv**(-1.747) * (np.cos(vtail_sweep))**(-0.882) * kg_to_lb * m2_to_ft2 / m_to_ft * lb_to_kg
 
 		partials['Weight|structure|vertical_tail', 'Weight|takeoff'] = tf * dWvtail_dWtakeoff
 		partials['Weight|structure|vertical_tail', 'VerticalTail|area'] = tf * dWvtail_dSvtail
 		partials['Weight|structure|vertical_tail', 'VerticalTail|aspect_ratio'] = tf * dWvtail_dARvtail
 		partials['Weight|structure|vertical_tail', 'VerticalTail|sweep_angle'] = tf * dWvtail_dSweep
 		partials['Weight|structure|vertical_tail', 'VerticalTail|max_root_thickness'] = tf * dWvtail_dtrv
+
 
 class EmpennageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 	"""
@@ -189,20 +191,19 @@ class EmpennageWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		tf = self.options['tf']
 		S_htail = inputs['HorizontalTail|area']
 		S_vtail = inputs['VerticalTail|area']
-		coeffs = [ 8.43266623, 10.05410839, -0.19944806479469435 ]
-		W_wing = coeffs[0]*S_htail + coeffs[1]*S_vtail + coeffs[2]
+		coeffs = [8.43266623, 10.05410839, -0.19944806479469435]
+		W_wing = coeffs[0] * S_htail + coeffs[1] * S_vtail + coeffs[2]
 
 		outputs['Weight|structure|empennage'] = tf * W_wing
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		S_htail = inputs['HorizontalTail|area']
-		S_vtail = inputs['VerticalTail|area']
-		coeffs = [ 8.43266623, 10.05410839, -0.19944806479469435 ]
+		coeffs = [8.43266623, 10.05410839, -0.19944806479469435]
 
 		partials['Weight|structure|empennage', 'HorizontalTail|area'] = tf * coeffs[0]
 		partials['Weight|structure|empennage', 'VerticalTail|area'] = tf * coeffs[1]
 		
+
 if __name__ == '__main__':
 	
 	model = om.Group()
@@ -217,4 +218,3 @@ if __name__ == '__main__':
 	prob.run_model()
 	tf_structure = 0.8
 	print(tf_structure * prob['m4_empennage_weight.Weight|structure|empennage'])
-

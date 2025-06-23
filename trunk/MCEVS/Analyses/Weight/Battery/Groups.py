@@ -1,5 +1,5 @@
-import numpy as np
 import openmdao.api as om
+
 
 class BatteryWeight(om.ExplicitComponent):
 	"""
@@ -30,12 +30,11 @@ class BatteryWeight(om.ExplicitComponent):
 		battery_max_discharge = self.options['battery_max_discharge']
 		required_energy = inputs['required_energy']
 
-		outputs['Weight|battery'] = required_energy/(battery_rho * battery_eff * battery_max_discharge) # in [kg]
+		outputs['Weight|battery'] = required_energy / (battery_rho * battery_eff * battery_max_discharge)  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		battery_rho = self.options['battery_rho']
 		battery_eff = self.options['battery_eff']
 		battery_max_discharge = self.options['battery_max_discharge']
-		required_energy = inputs['required_energy']
 
-		partials['Weight|battery', 'required_energy'] = 1/(battery_rho * battery_eff * battery_max_discharge) # in [kg]
+		partials['Weight|battery', 'required_energy'] = 1 / (battery_rho * battery_eff * battery_max_discharge)  # in [kg]

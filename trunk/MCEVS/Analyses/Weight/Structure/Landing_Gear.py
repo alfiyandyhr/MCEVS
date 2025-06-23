@@ -1,5 +1,5 @@
-import numpy as np
 import openmdao.api as om
+
 
 class LandingGearWeightNDARCFractional(om.ExplicitComponent):
 	"""
@@ -31,25 +31,31 @@ class LandingGearWeightNDARCFractional(om.ExplicitComponent):
 		W_takeoff = inputs['Weight|takeoff']
 
 		# Calculating W_landing_gear
-		if gear_type == 'wheeled': f_LG = 0.0325
-		elif gear_type == 'skid': f_LG = 0.014
-		else: raise ValueError('Gear type should be either "wheeled" or "skid".')
+		if gear_type == 'wheeled':
+			f_LG = 0.0325
+		elif gear_type == 'skid':
+			f_LG = 0.014
+		else:
+			raise ValueError('Gear type should be either "wheeled" or "skid".')
 
 		W_landing_gear = f_LG * W_takeoff
 
-		outputs['Weight|structure|landing_gear'] = tf * W_landing_gear # in [kg]
+		outputs['Weight|structure|landing_gear'] = tf * W_landing_gear  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		gear_type = self.options['gear_type']
 		tf = self.options['tf']
-		W_takeoff = inputs['Weight|takeoff']
 
 		# Calculating W_landing_gear
-		if gear_type == 'wheeled': f_LG = 0.0325
-		elif gear_type == 'skid': f_LG = 0.014
-		else: raise ValueError('Gear type should be either "wheeled" or "skid".')
+		if gear_type == 'wheeled':
+			f_LG = 0.0325
+		elif gear_type == 'skid':
+			f_LG = 0.014
+		else:
+			raise ValueError('Gear type should be either "wheeled" or "skid".')
 
 		partials['Weight|structure|landing_gear', 'Weight|takeoff'] = tf * f_LG
+
 
 class LandingGearWeightRoskam(om.ExplicitComponent):
 	"""
@@ -92,9 +98,9 @@ class LandingGearWeightRoskam(om.ExplicitComponent):
 		m_to_ft = 3.28084**0.501
 		lb_to_kg = 0.453592
 
-		W_landing_gear = 0.054 * l_sm**0.501 * (W_takeoff*n_ult)**0.684 * kg_to_lb * m_to_ft * lb_to_kg
+		W_landing_gear = 0.054 * l_sm**0.501 * (W_takeoff * n_ult)**0.684 * kg_to_lb * m_to_ft * lb_to_kg
 
-		outputs['Weight|structure|landing_gear'] = tf * W_landing_gear # in [kg]
+		outputs['Weight|structure|landing_gear'] = tf * W_landing_gear  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		l_sm = self.options['l_sm']

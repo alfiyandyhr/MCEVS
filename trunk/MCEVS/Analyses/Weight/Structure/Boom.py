@@ -1,5 +1,5 @@
-import numpy as np
 import openmdao.api as om
+
 
 class BoomWeightRoskam(om.ExplicitComponent):
 	"""
@@ -27,25 +27,25 @@ class BoomWeightRoskam(om.ExplicitComponent):
 
 	def compute(self, inputs, outputs):
 		tf = self.options['tf']
-		total_req_takeoff_power = inputs['total_req_takeoff_power']	# in [W]
+		total_req_takeoff_power = inputs['total_req_takeoff_power']	 # in [W]
 
 		# Calculating W_boom
-		W_to_hp = 1/745.7
+		W_to_hp = 1 / 745.7
 		lb_to_kg = 0.453592
 		
 		W_booms = 0.14 * total_req_takeoff_power * W_to_hp * lb_to_kg
 
-		outputs['Weight|structure|booms'] = tf * W_booms # in [kg]
+		outputs['Weight|structure|booms'] = tf * W_booms  # in [kg]
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		total_req_takeoff_power = inputs['total_req_takeoff_power']	# in [W]
 
-		W_to_hp = 1/745.7
+		W_to_hp = 1 / 745.7
 		lb_to_kg = 0.453592
 		dWbooms_dPtakeoff = 0.14 * W_to_hp * lb_to_kg
 
 		partials['Weight|structure|booms', 'total_req_takeoff_power'] = tf * dWbooms_dPtakeoff
+
 
 class BoomWeightM4ModelsForNASALPC(om.ExplicitComponent):
 	"""
@@ -94,26 +94,22 @@ class BoomWeightM4ModelsForNASALPC(om.ExplicitComponent):
 		l_fuse = inputs['Fuselage|length']
 		W_batt = inputs['Weight|battery']
 		v_cruise = inputs['v_cruise']
-		coeffs = [ 3.33883108e+00, 5.40016118e+00, -9.17180256e-02, 1.28646937e-04, -6.25697773e-03, -1.17008833e+01 ]
+		coeffs = [3.33883108e+00, 5.40016118e+00, -9.17180256e-02, 1.28646937e-04, -6.25697773e-03, -1.17008833e+01]
 
-		W_booms = coeffs[0]*S_wing + coeffs[1]*AR_wing + coeffs[2]*l_fuse + coeffs[3]*W_batt + coeffs[4]*v_cruise + coeffs[5]
+		W_booms = coeffs[0] * S_wing + coeffs[1] * AR_wing + coeffs[2] * l_fuse + coeffs[3] * W_batt + coeffs[4] * v_cruise + coeffs[5]
 
 		outputs['Weight|structure|booms'] = tf * W_booms
 
 	def compute_partials(self, inputs, partials):
 		tf = self.options['tf']
-		S_wing = inputs['Wing|area']
-		AR_wing = inputs['Wing|aspect_ratio']
-		l_fuse = inputs['Fuselage|length']
-		W_batt = inputs['Weight|battery']
-		v_cruise = inputs['v_cruise']
-		coeffs = [ 3.33883108e+00, 5.40016118e+00, -9.17180256e-02, 1.28646937e-04, -6.25697773e-03, -1.17008833e+01 ]
+		coeffs = [3.33883108e+00, 5.40016118e+00, -9.17180256e-02, 1.28646937e-04, -6.25697773e-03, -1.17008833e+01]
 
 		partials['Weight|structure|booms', 'Wing|area'] = tf * coeffs[0]
 		partials['Weight|structure|booms', 'Wing|aspect_ratio'] = tf * coeffs[1]
 		partials['Weight|structure|booms', 'Fuselage|length'] = tf * coeffs[2]
 		partials['Weight|structure|booms', 'Weight|battery'] = tf * coeffs[3]
 		partials['Weight|structure|booms', 'v_cruise'] = tf * coeffs[4]
+
 		
 if __name__ == '__main__':
 	
