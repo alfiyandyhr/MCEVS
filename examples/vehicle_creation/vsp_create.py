@@ -1,9 +1,9 @@
 import openvsp as vsp
-from MCEVS.Applications.OpenVSP.Components.Wing import NASA_LPC_Wing
-from MCEVS.Applications.OpenVSP.Components.Fuselage import NASA_QR_Fuselage, NASA_LPC_Fuselage
-from MCEVS.Applications.OpenVSP.Components.Boom import NASA_QR_Boom, NASA_LPC_Boom
-from MCEVS.Applications.OpenVSP.Components.Rotor import NASA_QR_Lift_Rotor, NASA_LPC_Lift_Rotor, NASA_LPC_Propeller
-from MCEVS.Applications.OpenVSP.Components.Landing_Gear import NASA_QR_Landing_Gear
+from MCEVS.Wrappers.OpenVSP.Components.Wing import NASA_LPC_Wing
+from MCEVS.Wrappers.OpenVSP.Components.Fuselage import NASA_QR_Fuselage, NASA_LPC_Fuselage
+from MCEVS.Wrappers.OpenVSP.Components.Boom import NASA_QR_Boom, NASA_LPC_Boom
+from MCEVS.Wrappers.OpenVSP.Components.Rotor import NASA_QR_Lift_Rotor, NASA_LPC_Lift_Rotor, NASA_LPC_Propeller
+from MCEVS.Wrappers.OpenVSP.Components.Landing_Gear import NASA_QR_Landing_Gear
 
 # n_pax = 4
 

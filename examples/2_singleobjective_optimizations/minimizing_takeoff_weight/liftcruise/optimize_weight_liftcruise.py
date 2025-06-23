@@ -1,7 +1,6 @@
 from MCEVS.Vehicles.Standard import StandardLiftPlusCruiseEVTOL
 from MCEVS.Missions.Standard import StandardMissionProfile
 from MCEVS.Optimization.Standard import RunStandardSingleObjectiveOptimization
-from MCEVS.Applications.OpenVSP.Standard_Vehicles import create_NASA_LiftPlusCruise_vsp3
 import numpy as np
 import pandas as pd
 import sys

@@ -1,11 +1,11 @@
 import openvsp as vsp
-from MCEVS.Applications.OpenVSP.Components.Fuselage import NASA_QR_Fuselage, NASA_LPC_Fuselage
-from MCEVS.Applications.OpenVSP.Components.Wing import NASA_LPC_Wing
-from MCEVS.Applications.OpenVSP.Components.Tail import NASA_LPC_Horizontal_Tail, NASA_LPC_Vertical_Tail
-from MCEVS.Applications.OpenVSP.Components.Landing_Gear import NASA_QR_Landing_Gear, NASA_LPC_Landing_Gear
-from MCEVS.Applications.OpenVSP.Components.Rotor import NASA_QR_Lift_Rotor, NASA_LPC_Lift_Rotor, NASA_LPC_Propeller
-from MCEVS.Applications.OpenVSP.Components.Payload import Human
-from MCEVS.Applications.OpenVSP.Components.Boom import NASA_QR_Boom, NASA_LPC_Boom
+from .Components.Fuselage import NASA_QR_Fuselage, NASA_LPC_Fuselage
+from .Components.Wing import NASA_LPC_Wing
+from .Components.Tail import NASA_LPC_Horizontal_Tail, NASA_LPC_Vertical_Tail
+from .Components.Landing_Gear import NASA_QR_Landing_Gear, NASA_LPC_Landing_Gear
+from .Components.Rotor import NASA_QR_Lift_Rotor, NASA_LPC_Lift_Rotor, NASA_LPC_Propeller
+from .Components.Payload import Human
+from .Components.Boom import NASA_QR_Boom, NASA_LPC_Boom
 
 def create_NASA_QuadRotor_vsp3(fname:str, vehicle:object):
 

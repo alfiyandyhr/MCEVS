@@ -1,4 +1,4 @@
-from MCEVS.Applications.XFOIL import XFOIL
+from MCEVS.Wrappers.XFOIL import XFOIL
 from MCEVS.Methods.Aerodynamics.Polar import calc_CL_characteristics_given_polar_data
 import matplotlib.pyplot as plt
 import numpy as np

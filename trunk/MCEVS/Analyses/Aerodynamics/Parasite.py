@@ -2,7 +2,7 @@ import numpy as np
 import openmdao.api as om
 import openvsp as vsp
 from MCEVS.Analyses.Aerodynamics.Empirical import RotorHubParasiteDragFidelityZero
-from MCEVS.Applications.OpenVSP.Utils import calc_wetted_area
+from MCEVS.Wrappers.OpenVSP.Utils import calc_wetted_area
 
 class BacchiniExperimentalFixedValueForLPC(om.ExplicitComponent):
 	"""

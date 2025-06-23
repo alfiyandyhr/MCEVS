@@ -1,7 +1,7 @@
 from MCEVS.Vehicles.Standard import StandardMultirotorEVTOL
 from MCEVS.Analyses.Aerodynamics.Parasite import calc_flat_plate_area
 from MCEVS.Constants.Container import EarthGravityAndAtmosphere
-from MCEVS.Applications.OpenVSP.Standard_Vehicles import create_NASA_QuadRotor_vsp3
+from MCEVS.Wrappers.OpenVSP.Standard_Vehicles import create_NASA_QuadRotor_vsp3
 import numpy as np
 
 # Constants
