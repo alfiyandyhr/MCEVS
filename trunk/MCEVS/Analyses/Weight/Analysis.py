@@ -15,6 +15,7 @@ from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraint
 from MCEVS.Utils.Performance import record_performance_by_segments
 from MCEVS.Utils.Checks import check_fidelity_dict
 
+
 class VehicleWeight(object):
 	"""
 	docstring for VehicleWeight
@@ -48,7 +49,7 @@ class VehicleWeight(object):
 	"""
 	def __init__(self, mtow=None):
 		super(VehicleWeight, self).__init__()
-		self.max_takeoff = mtow	# defined, or sized
+		self.max_takeoff = mtow	 # defined, or sized
 		self.gross_takeoff = None
 		self.payload = None
 		self.battery = None
@@ -66,11 +67,12 @@ class VehicleWeight(object):
 		print(f'Weight|structure= {self.structure} kg')
 		print(f'Weight|equipment= {self.equipment} kg')
 
+
 class WeightAnalysis(object):
 	"""
 	docstring for WeightAnalysis
 	"""
-	def __init__(self, vehicle:object, mission:object, fidelity:dict, weight_type=None, sizing_mode=True, solved_by='optimization'):
+	def __init__(self, vehicle: object, mission: object, fidelity: dict, weight_type=None, sizing_mode=True, solved_by='optimization'):
 		super(WeightAnalysis, self).__init__()
 		self.vehicle = vehicle
 		self.mission = mission
@@ -81,7 +83,7 @@ class WeightAnalysis(object):
 
 		self.sizing_mode = sizing_mode
 		self.solved_by = solved_by
-		self.weight_type = weight_type # ['maximum', 'gross']
+		self.weight_type = weight_type  # ['maximum', 'gross']
 		if self.solved_by not in ['optimization', 'nonlinear_solver']:
 			raise NotImplementedError('"solved_by" should be either "optimization" or "nonlinear_solver"')
 
@@ -91,8 +93,10 @@ class WeightAnalysis(object):
 			raise ValueError('"weight_type" should be either "maximum" or "gross"')
 
 		if not print: 
-			if os.name =='posix': sys.stdout = open('/dev/null', 'w')  # Redirect stdout to /dev/null
-			if os.name =='nt': sys.stdout = open(os.devnull, 'w')  # Redirect stdout to os.devnull
+			if os.name == 'posix':
+				sys.stdout = open('/dev/null', 'w')  # Redirect stdout to /dev/null
+			if os.name == 'nt':
+				sys.stdout = open(os.devnull, 'w')  # Redirect stdout to os.devnull
 
 		# --- Design parameters --- #
 
@@ -127,7 +131,7 @@ class WeightAnalysis(object):
 		indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
 		for segment in self.mission.segments:
-			if segment.kind not in ['ConstantPower','NoCreditClimb','NoCreditDescent','ReserveCruise']:
+			if segment.kind not in ['ConstantPower', 'NoCreditClimb', 'NoCreditDescent', 'ReserveCruise']:
 				indeps.add_output(f'Mission|segment_{segment.id}|speed', segment.speed, units='m/s')
 				indeps.add_output(f'Mission|segment_{segment.id}|distance', segment.distance, units='m')
 			if segment.kind == 'HoverClimbConstantSpeed':
@@ -181,7 +185,7 @@ class WeightAnalysis(object):
 			c_to_R_list = self.vehicle.lift_rotor.c_to_R_list
 			w_to_R_list = self.vehicle.lift_rotor.w_to_R_list
 			if self.vehicle.lift_rotor.pitch_linear_grad is not None:
-				indeps.add_output(f'LiftRotor|pitch_linear_grad', self.vehicle.lift_rotor.pitch_linear_grad, units='deg')
+				indeps.add_output('LiftRotor|pitch_linear_grad', self.vehicle.lift_rotor.pitch_linear_grad, units='deg')
 			else:
 				pitch_list = np.array(self.vehicle.lift_rotor.pitch_list)
 				for i in range(n_sections):
@@ -225,14 +229,14 @@ class WeightAnalysis(object):
 									  MTOWEstimation(mission=self.mission,
 									  				 vehicle=self.vehicle,
 									  				 fidelity=self.fidelity,
-									  				 sizing_mode=False if self.solved_by=='optimization' else self.sizing_mode,
+									  				 sizing_mode=False if self.solved_by == 'optimization' else self.sizing_mode,
 									  				 rhs_checking=False),
 									  promotes_inputs=['*'],
 									  promotes_outputs=['*'])
 			# Sizing or not sizing
 			if not self.sizing_mode:
 				weight_guess = 1500.0 if weight_guess is None else weight_guess
-				indeps.add_output('Weight|takeoff', weight_guess, units='kg') # mtow initial guess
+				indeps.add_output('Weight|takeoff', weight_guess, units='kg')  # mtow initial guess
 				prob.setup(check=False)
 				# prob.check_partials(compact_print=True, method='fd')
 				prob.run_model()
@@ -241,9 +245,9 @@ class WeightAnalysis(object):
 				if self.solved_by == 'optimization':
 					prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
 					weight_guess = 1500.0 if weight_guess is None else weight_guess
-					indeps.add_output('Weight|takeoff', weight_guess, units='kg') # mtow initial guess
+					indeps.add_output('Weight|takeoff', weight_guess, units='kg')  # mtow initial guess
 
-					if self.fidelity['power_model']['hover_climb'] in ['MomentumTheory','ModifiedMomentumTheory']:
+					if self.fidelity['power_model']['hover_climb'] in ['MomentumTheory', 'ModifiedMomentumTheory']:
 						prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000, units='kg')
 						prob.model.add_objective('Weight|residual', units='kg')
 						prob.setup(check=False)
@@ -295,14 +299,14 @@ class WeightAnalysis(object):
 									  GTOWEstimation(mission=self.mission,
 									  				 vehicle=self.vehicle,
 									  				 fidelity=self.fidelity,
-									  				 sizing_mode=False if self.solved_by=='optimization' else self.sizing_mode,
+									  				 sizing_mode=False if self.solved_by == 'optimization' else self.sizing_mode,
 									  				 rhs_checking=False),
 									  promotes_inputs=['*'],
 									  promotes_outputs=['*'])
 
 			# Sizing or not sizing
 			if not self.sizing_mode:
-				indeps.add_output('Weight|takeoff', self.vehicle.weight.max_takeoff if weight_guess is None else weight_guess, units='kg') # gtow initial guess
+				indeps.add_output('Weight|takeoff', self.vehicle.weight.max_takeoff if weight_guess is None else weight_guess, units='kg')  # gtow initial guess
 				prob.setup(check=False)
 				# prob.check_partials(compact_print=True, method='fd')
 				prob.run_model()
@@ -310,9 +314,9 @@ class WeightAnalysis(object):
 			else:
 				if self.solved_by == 'optimization':
 					prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, disp=True)
-					indeps.add_output('Weight|takeoff', self.vehicle.weight.max_takeoff if weight_guess is None else weight_guess, units='kg') # gtow initial guess
+					indeps.add_output('Weight|takeoff', self.vehicle.weight.max_takeoff if weight_guess is None else weight_guess, units='kg')  # gtow initial guess
 
-					if self.fidelity['power_model']['hover_climb'] in ['MomentumTheory','ModifiedMomentumTheory']:
+					if self.fidelity['power_model']['hover_climb'] in ['MomentumTheory', 'ModifiedMomentumTheory']:
 						prob.model.add_design_var('Weight|takeoff', lower=600, upper=10000, units='kg')
 						prob.model.add_objective('Weight|residual', units='kg')
 						prob.setup(check=False)
@@ -352,6 +356,7 @@ class WeightAnalysis(object):
 		sys.stdout = sys.__stdout__  # Reset stdout back to the default
 
 		return prob
+
 
 class MTOWEstimation(om.Group):
 	"""
@@ -400,11 +405,11 @@ class MTOWEstimation(om.Group):
 	def setup(self):
 		
 		# Unpacking option objects
-		mission 	 = self.options['mission']
-		vehicle 	 = self.options['vehicle']
-		fidelity 	 = self.options['fidelity']
-		sizing_mode  = self.options['sizing_mode']
-		rhs_checking = self.options['rhs_checking']
+		mission 	 	= self.options['mission']
+		vehicle 	 	= self.options['vehicle']
+		fidelity 	 	= self.options['fidelity']
+		sizing_mode 	= self.options['sizing_mode']
+		rhs_checking 	= self.options['rhs_checking']
 
 		# Unpacking battery parameters
 		battery_rho 			= vehicle.battery.density
@@ -459,7 +464,8 @@ class MTOWEstimation(om.Group):
 		elif fidelity['weight_model']['structure'] == 'M4Regression':
 			if vehicle.configuration == 'LiftPlusCruise':
 				for segment in mission.segments:
-					if segment.kind == 'CruiseConstantSpeed': cruise_segment_id = segment.id
+					if segment.kind == 'CruiseConstantSpeed':
+						cruise_segment_id = segment.id
 				input_list_struct = ['Weight|takeoff', 'Weight|battery', 'Wing|*', 'HorizontalTail|*', 'VerticalTail|*', 'Fuselage|length', ('v_cruise', f'Mission|segment_{cruise_segment_id}|speed')]
 		self.add_subsystem('structure_weight',
 							StructureWeight(vehicle=vehicle, fidelity=fidelity, tf_structure=vehicle.tf_structure),
@@ -467,9 +473,9 @@ class MTOWEstimation(om.Group):
 							promotes_outputs=['Weight|*'])
 		# includes mission segment power for takeoff for sizing booms if using Roskam method
 		if fidelity['weight_model']['structure'] == 'Roskam':
-			for i,segment in enumerate(mission.segments):
+			for i, segment in enumerate(mission.segments):
 				if segment.kind in ['HoverClimbConstantSpeed']:
-					self.connect(f'Power|LiftRotor|segment_{i+1}','structure_weight.total_req_takeoff_power')
+					self.connect(f'Power|LiftRotor|segment_{i+1}', 'structure_weight.total_req_takeoff_power')
 
 		# 4. Equipment weight
 		# includes avionics, flight control, anti icing, and furnishing
@@ -490,22 +496,22 @@ class MTOWEstimation(om.Group):
 		# 1 PAX = 100.0 kg (default)
 		n_pax = vehicle.fuselage.number_of_passenger
 		payload_per_pax = vehicle.fuselage.payload_per_pax
-		payload_weight = om.IndepVarComp('Weight|payload', val=n_pax*payload_per_pax, units='kg')
+		payload_weight = om.IndepVarComp('Weight|payload', val=n_pax * payload_per_pax, units='kg')
 		self.add_subsystem('payload', payload_weight, promotes=['*'])
 
 		# W_residual should then be driven to 0 by a nonlinear solver or treated as an optimization constraint
-		input_list = [('W_total', 		'Weight|takeoff'),
-					  ('W_payload', 	'Weight|payload'),
-					  ('W_battery', 	'Weight|battery'),
-					  ('W_propulsion', 	'Weight|propulsion'),
-					  ('W_structure', 	'Weight|structure'),
-					  ('W_equipment', 	'Weight|equipment')]
+		input_list = [('W_total', 'Weight|takeoff'),
+					  ('W_payload', 'Weight|payload'),
+					  ('W_battery', 'Weight|battery'),
+					  ('W_propulsion', 'Weight|propulsion'),
+					  ('W_structure', 'Weight|structure'),
+					  ('W_equipment', 'Weight|equipment')]
 
 		W_residual_eqn = 'W_residual = (W_total - W_payload - W_battery - W_propulsion - W_structure - W_equipment)**2'
 		self.add_subsystem('w_residual_comp',
 							om.ExecComp(W_residual_eqn, units='kg'),
 							promotes_inputs=input_list,
-							promotes_outputs=[('W_residual','Weight|residual')])
+							promotes_outputs=[('W_residual', 'Weight|residual')])
 
 		# If nonlinear solver to be used
 		if sizing_mode:
@@ -521,7 +527,7 @@ class MTOWEstimation(om.Group):
 			self.add_subsystem('weight_balance',
 								residual_balance,
 								promotes_inputs=[('lhs:W_total', 'Weight|residual')],
-								promotes_outputs=[('W_total','Weight|takeoff')])
+								promotes_outputs=[('W_total', 'Weight|takeoff')])
 
 			# Add solvers for implicit relations
 			self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=50, iprint=0, rtol=1e-3)
@@ -531,6 +537,7 @@ class MTOWEstimation(om.Group):
 			self.nonlinear_solver.linesearch.options['maxiter'] = 10
 			self.nonlinear_solver.linesearch.options['iprint'] = 0
 			self.linear_solver = om.DirectSolver(assemble_jac=True)
+
 
 class GTOWEstimation(om.Group):
 	"""
@@ -548,11 +555,11 @@ class GTOWEstimation(om.Group):
 	def setup(self):
 		
 		# Unpacking option objects
-		mission 	 = self.options['mission']
-		vehicle 	 = self.options['vehicle']
-		fidelity 	 = self.options['fidelity']
-		sizing_mode  = self.options['sizing_mode']
-		rhs_checking = self.options['rhs_checking']
+		mission 	 	= self.options['mission']
+		vehicle 	 	= self.options['vehicle']
+		fidelity 	 	= self.options['fidelity']
+		sizing_mode 	= self.options['sizing_mode']
+		rhs_checking 	= self.options['rhs_checking']
 
 		# Unpacking battery parameters
 		battery_rho 			= vehicle.battery.density
@@ -584,22 +591,22 @@ class GTOWEstimation(om.Group):
 		# 1 PAX = 100.0 kg (default)
 		n_pax = vehicle.fuselage.number_of_passenger
 		payload_per_pax = vehicle.fuselage.payload_per_pax
-		payload_weight = om.IndepVarComp('Weight|payload', val=n_pax*payload_per_pax, units='kg')
+		payload_weight = om.IndepVarComp('Weight|payload', val=n_pax * payload_per_pax, units='kg')
 		self.add_subsystem('payload', payload_weight, promotes=['*'])
 
 		# W_residual should then be driven to 0 by a nonlinear solver or treated as an optimization constraint
-		input_list = [('W_total', 		'Weight|takeoff'),
-					  ('W_payload', 	'Weight|payload'),
-					  ('W_battery', 	'Weight|battery'),
-					  ('W_propulsion', 	'Weight|propulsion'),
-					  ('W_structure', 	'Weight|structure'),
-					  ('W_equipment', 	'Weight|equipment')]
+		input_list = [('W_total', 'Weight|takeoff'),
+					  ('W_payload', 'Weight|payload'),
+					  ('W_battery', 'Weight|battery'),
+					  ('W_propulsion', 'Weight|propulsion'),
+					  ('W_structure', 'Weight|structure'),
+					  ('W_equipment', 'Weight|equipment')]
 
 		W_residual_eqn = 'W_residual = (W_total - W_payload - W_battery - W_propulsion - W_structure - W_equipment)**2'
 		self.add_subsystem('w_residual_comp',
 							om.ExecComp(W_residual_eqn, units='kg'),
 							promotes_inputs=input_list,
-							promotes_outputs=[('W_residual','Weight|residual')])
+							promotes_outputs=[('W_residual', 'Weight|residual')])
 
 		# If nonlinear solver to be used
 		if sizing_mode:
@@ -615,7 +622,7 @@ class GTOWEstimation(om.Group):
 			self.add_subsystem('weight_balance',
 								residual_balance,
 								promotes_inputs=[('lhs:W_total', 'Weight|residual')],
-								promotes_outputs=[('W_total','Weight|takeoff')])
+								promotes_outputs=[('W_total', 'Weight|takeoff')])
 
 			# Add solvers for implicit relations
 			self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=50, iprint=0, rtol=1e-3)
@@ -625,6 +632,7 @@ class GTOWEstimation(om.Group):
 			self.nonlinear_solver.linesearch.options['maxiter'] = 10
 			self.nonlinear_solver.linesearch.options['iprint'] = 0
 			self.linear_solver = om.DirectSolver(assemble_jac=True)
+
 
 class MultiPointMTOWEstimation(om.Group):
 	"""
@@ -650,7 +658,7 @@ class MultiPointMTOWEstimation(om.Group):
 		# Vehicle configuration
 		output_list = []
 
-		for n in range(1,multipoint_options['n_points']+1):
+		for n in range(1, multipoint_options['n_points'] + 1):
 			if vehicle.configuration == 'Multirotor':
 				output_list.append([('Energy|entire_mission', f'Point_{n}|Energy|entire_mission'),
 									('Weight|residual', f'Point_{n}|Weight|residual'),
@@ -675,31 +683,33 @@ class MultiPointMTOWEstimation(om.Group):
 
 			vehicles = []
 
-			for n in range(1,multipoint_options['n_points']+1):
+			for n in range(1, multipoint_options['n_points'] + 1):
 
-				if n == 1: vehicles.append(vehicle)
-				else: vehicles.append(copy.deepcopy(vehicle))
-				vehicles[n-1].battery.density = multipoint_options['value_list'][n-1]
+				if n == 1:
+					vehicles.append(vehicle)
+				else:
+					vehicles.append(copy.deepcopy(vehicle))
+				vehicles[n - 1].battery.density = multipoint_options['value_list'][n - 1]
 
 				self.add_subsystem(f'point_{n}_analysis',
 									MTOWEstimation(mission=mission,
-								  				   vehicle=vehicles[n-1],
+								  				   vehicle=vehicles[n - 1],
 								  				   fidelity=fidelity,
 								  				   sizing_mode=False,
 								  				   rhs_checking=True),
-									promotes_inputs=[('Weight|takeoff', f'Point_{n}|Weight|takeoff'),'*'],
-									promotes_outputs=output_list[n-1])			
+									promotes_inputs=[('Weight|takeoff', f'Point_{n}|Weight|takeoff'), '*'],
+									promotes_outputs=output_list[n - 1])			
 
 		# Weighted sum of takeoff weight or energy
 		# weighted_sum_of_metric = coeff_1 * metric_1 + ... + coeff_n * metric_n
 		if multipoint_options['objective'] in ['weighted_sum_of_takeoff_weight', 'weighted_sum_of_energy']:
 			metric_eq = f"{multipoint_options['objective']} = "
-			kwargs_coeff  = {}
-			kwargs_metric  = {f"{multipoint_options['objective']}": {'units': 'kg' if multipoint_options['objective'] == 'weighted_sum_of_takeoff_weight' else 'W*h'}}
+			kwargs_coeff = {}
+			kwargs_metric = {f"{multipoint_options['objective']}": {'units': 'kg' if multipoint_options['objective'] == 'weighted_sum_of_takeoff_weight' else 'W*h'}}
 			input_list = []
 			indep = self.add_subsystem('multipoint_coeffs', om.IndepVarComp())
-			for n in range(1,multipoint_options['n_points']+1):
-				indep.add_output(f'coeff_{n}', val=multipoint_options['weight_coeffs'][n-1], units=None)
+			for n in range(1, multipoint_options['n_points'] + 1):
+				indep.add_output(f'coeff_{n}', val=multipoint_options['weight_coeffs'][n - 1], units=None)
 				if n == multipoint_options['n_points']:
 					metric_eq += f'coeff_{n} * metric_{n}'
 				else:
@@ -718,8 +728,9 @@ class MultiPointMTOWEstimation(om.Group):
 								promotes_inputs=input_list,
 								promotes_outputs=[f"{multipoint_options['objective']}"])
 			
-			for n in range(1,multipoint_options['n_points']+1):
+			for n in range(1, multipoint_options['n_points'] + 1):
 				self.connect(f'multipoint_coeffs.coeff_{n}', f'multipoint_single_obj.coeff_{n}')
+
 
 class MultiPointMTOWEstimationWithFixedEmptyWeight(om.Group):
 	"""
@@ -745,7 +756,7 @@ class MultiPointMTOWEstimationWithFixedEmptyWeight(om.Group):
 		# Vehicle configuration
 		output_list = []
 
-		for n in range(1,multipoint_options['n_points']+1):
+		for n in range(1, multipoint_options['n_points'] + 1):
 			if vehicle.configuration == 'Multirotor':
 				output_list.append([('Energy|entire_mission', f'Point_{n}|Energy|entire_mission'),
 									('Weight|residual', f'Point_{n}|Weight|residual'),
@@ -770,11 +781,13 @@ class MultiPointMTOWEstimationWithFixedEmptyWeight(om.Group):
 
 			vehicles = []
 
-			for n in range(1,multipoint_options['n_points']+1):
+			for n in range(1, multipoint_options['n_points'] + 1):
 
-				if n == 1: vehicles.append(vehicle)
-				else: vehicles.append(copy.deepcopy(vehicle))
-				vehicles[n-1].battery.density = multipoint_options['value_list'][n-1]
+				if n == 1:
+					vehicles.append(vehicle)
+				else:
+					vehicles.append(copy.deepcopy(vehicle))
+				vehicles[n - 1].battery.density = multipoint_options['value_list'][n - 1]
 
 				if n == 1:
 					output_list[0].append(('Weight|propulsion', 'Point_1|Weight|propulsion'))
@@ -782,37 +795,37 @@ class MultiPointMTOWEstimationWithFixedEmptyWeight(om.Group):
 					output_list[0].append(('Weight|equipment', 'Point_1|Weight|equipment'))
 					self.add_subsystem(f'point_{n}_analysis',
 										MTOWEstimation(mission=mission,
-									  				   vehicle=vehicles[n-1],
+									  				   vehicle=vehicles[n - 1],
 									  				   fidelity=fidelity,
 									  				   sizing_mode=False,
 									  				   rhs_checking=True),
-										promotes_inputs=[('Weight|takeoff', f'Point_{n}|Weight|takeoff'),'*'],
-										promotes_outputs=output_list[n-1])
+										promotes_inputs=[('Weight|takeoff', f'Point_{n}|Weight|takeoff'), '*'],
+										promotes_outputs=output_list[n - 1])
 
 				else:
 					suboptimal_input = [('Weight|takeoff', f'Point_{n}|Weight|takeoff'),
 										('Weight|propulsion', 'Point_1|Weight|propulsion'),
 										('Weight|structure', 'Point_1|Weight|structure'),
-										('Weight|equipment', 'Point_1|Weight|equipment'),'*']
+										('Weight|equipment', 'Point_1|Weight|equipment'), '*']
 					self.add_subsystem(f'point_{n}_analysis',
 										GTOWEstimation(mission=mission,
-									  				   vehicle=vehicles[n-1],
+									  				   vehicle=vehicles[n - 1],
 									  				   fidelity=fidelity,
 									  				   sizing_mode=False,
 									  				   rhs_checking=True),
 										promotes_inputs=suboptimal_input,
-										promotes_outputs=output_list[n-1])		
+										promotes_outputs=output_list[n - 1])		
 
 		# Weighted sum of takeoff weight or energy
 		# weighted_sum_of_metric = coeff_1 * metric_1 + ... + coeff_n * metric_n
 		if multipoint_options['objective'] in ['weighted_sum_of_takeoff_weight', 'weighted_sum_of_energy']:
 			metric_eq = f"{multipoint_options['objective']} = "
-			kwargs_coeff  = {}
-			kwargs_metric  = {f"{multipoint_options['objective']}": {'units': 'kg' if multipoint_options['objective'] == 'weighted_sum_of_takeoff_weight' else 'W*h'}}
+			kwargs_coeff = {}
+			kwargs_metric = {f"{multipoint_options['objective']}": {'units': 'kg' if multipoint_options['objective'] == 'weighted_sum_of_takeoff_weight' else 'W*h'}}
 			input_list = []
 			indep = self.add_subsystem('multipoint_coeffs', om.IndepVarComp())
-			for n in range(1,multipoint_options['n_points']+1):
-				indep.add_output(f'coeff_{n}', val=multipoint_options['weight_coeffs'][n-1], units=None)
+			for n in range(1, multipoint_options['n_points'] + 1):
+				indep.add_output(f'coeff_{n}', val=multipoint_options['weight_coeffs'][n - 1], units=None)
 				if n == multipoint_options['n_points']:
 					metric_eq += f'coeff_{n} * metric_{n}'
 				else:
@@ -831,8 +844,9 @@ class MultiPointMTOWEstimationWithFixedEmptyWeight(om.Group):
 								promotes_inputs=input_list,
 								promotes_outputs=[f"{multipoint_options['objective']}"])
 			
-			for n in range(1,multipoint_options['n_points']+1):
+			for n in range(1, multipoint_options['n_points'] + 1):
 				self.connect(f'multipoint_coeffs.coeff_{n}', f'multipoint_single_obj.coeff_{n}')
+
 
 class OffDesignMTOWEstimation(om.Group):
 	"""
@@ -892,20 +906,20 @@ class OffDesignMTOWEstimation(om.Group):
 			output_list[0].append(('Weight|propulsion', 'OnDesign|Weight|propulsion'))
 			output_list[0].append(('Weight|structure', 'OnDesign|Weight|structure'))
 			output_list[0].append(('Weight|equipment', 'OnDesign|Weight|equipment'))
-			self.add_subsystem(f'ondesign_analysis',
+			self.add_subsystem('ondesign_analysis',
 								MTOWEstimation(mission=mission,
 							  				   vehicle=vehicles[0],
 							  				   fidelity=fidelity,
 							  				   sizing_mode=False,
 							  				   rhs_checking=True),
-								promotes_inputs=[('Weight|takeoff', 'OnDesign|Weight|takeoff'),'*'],
+								promotes_inputs=[('Weight|takeoff', 'OnDesign|Weight|takeoff'), '*'],
 								promotes_outputs=output_list[0])
 
 			# Off-design analysis (where objective function is evaluated)
-			ondesign_input = [('Weight|takeoff', 'OffDesign|Weight|takeoff'), # W_takeoff is suited to off-design
+			ondesign_input = [('Weight|takeoff', 'OffDesign|Weight|takeoff'),  # W_takeoff is suited to off-design
 							  ('Weight|propulsion', 'OnDesign|Weight|propulsion'),
 							  ('Weight|structure', 'OnDesign|Weight|structure'),
-							  ('Weight|equipment', 'OnDesign|Weight|equipment'),'*']
+							  ('Weight|equipment', 'OnDesign|Weight|equipment'), '*']
 			self.add_subsystem('offdesign_analysis',
 								GTOWEstimation(mission=mission,
 							  				   vehicle=vehicles[1],
@@ -914,6 +928,7 @@ class OffDesignMTOWEstimation(om.Group):
 							  				   rhs_checking=True),
 								promotes_inputs=ondesign_input,
 								promotes_outputs=output_list[1])
+
 
 class OffDesignMTOWEstimation2(om.Group):
 	"""
@@ -971,26 +986,26 @@ class OffDesignMTOWEstimation2(om.Group):
 			output_list[0].append(('Weight|propulsion', 'OnDesign|Weight|propulsion'))
 			output_list[0].append(('Weight|structure', 'OnDesign|Weight|structure'))
 			output_list[0].append(('Weight|equipment', 'OnDesign|Weight|equipment'))
-			self.add_subsystem(f'ondesign_analysis',
+			self.add_subsystem('ondesign_analysis',
 								MTOWEstimation(mission=mission,
 							  				   vehicle=vehicles[0],
 							  				   fidelity=fidelity,
 							  				   sizing_mode=False,
 							  				   rhs_checking=True),
-								promotes_inputs=[('Weight|takeoff', 'OnDesign|Weight|takeoff'),'*'],
+								promotes_inputs=[('Weight|takeoff', 'OnDesign|Weight|takeoff'), '*'],
 								promotes_outputs=output_list[0])
 
 			# Off-design analysis (where objective function is evaluated)
 			output_list[1].append(('Weight|propulsion', 'OffDesign|Weight|propulsion'))
 			output_list[1].append(('Weight|structure', 'OffDesign|Weight|structure'))
 			output_list[1].append(('Weight|equipment', 'OffDesign|Weight|equipment'))
-			self.add_subsystem(f'offdesign_analysis',
+			self.add_subsystem('offdesign_analysis',
 								MTOWEstimation(mission=mission,
 							  				   vehicle=vehicles[1],
 							  				   fidelity=fidelity,
 							  				   sizing_mode=False,
 							  				   rhs_checking=True),
-								promotes_inputs=[('Weight|takeoff', 'OffDesign|Weight|takeoff'),'*'],
+								promotes_inputs=[('Weight|takeoff', 'OffDesign|Weight|takeoff'), '*'],
 								promotes_outputs=output_list[1])
 
 			# Constraint evaluation
@@ -998,18 +1013,8 @@ class OffDesignMTOWEstimation2(om.Group):
 						  ('W_prop2', 'OffDesign|Weight|propulsion'), ('W_struct2', 'OffDesign|Weight|structure'), ('W_equip2', 'OffDesign|Weight|equipment')]
 			self.add_subsystem('constraint_eval',
 								om.ExecComp('W_empty_constr = (W_prop1 + W_struct1 + W_equip1 - W_prop2 - W_struct2 - W_equip2)**2',
-											W_empty_constr={'units':'kg**2'},
-											W_prop1={'units':'kg'}, W_struct1={'units':'kg'}, W_equip1={'units':'kg'},
-											W_prop2={'units':'kg'}, W_struct2={'units':'kg'}, W_equip2={'units':'kg'}),
+											W_empty_constr={'units': 'kg**2'},
+											W_prop1={'units': 'kg'}, W_struct1={'units': 'kg'}, W_equip1={'units': 'kg'},
+											W_prop2={'units': 'kg'}, W_struct2={'units': 'kg'}, W_equip2={'units': 'kg'}),
 								promotes_inputs=input_list,
 								promotes_outputs=["W_empty_constr"])
-
-
-
-
-
-
-
-
-
-
