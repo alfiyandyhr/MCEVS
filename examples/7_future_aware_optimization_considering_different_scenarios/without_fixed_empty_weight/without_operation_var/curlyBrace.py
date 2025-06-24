@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 '''
 Module Name : curlyBrace
@@ -12,12 +12,12 @@ Last Modified : 2019-04-22
 This module is basically an Python implementation of the function written Pål Næverlid Sævik
 for MATLAB (link in Reference).
 
-The function "curlyBrace" allows you to plot an optionally annotated curly bracket between 
+The function "curlyBrace" allows you to plot an optionally annotated curly bracket between
 two points when using matplotlib.
 
 The usual settings for line and fonts in matplotlib also apply.
 
-The function takes the axes scales into account automatically. But when the axes aspect is 
+The function takes the axes scales into account automatically. But when the axes aspect is
 set to "equal", the auto switch should be turned off.
 
 Change Log
@@ -40,8 +40,8 @@ List of functions
 
 '''
 
-import matplotlib.pyplot as plt
 import numpy as np
+
 
 def getAxSize(fig, ax):
     '''
@@ -77,8 +77,9 @@ def getAxSize(fig, ax):
 
     return ax_width, ax_height
 
+
 def curlyBrace(fig, ax, p1, p2, k_r=0.1, bool_auto=True, str_text='', int_line_num=2, fontdict={}, **kwargs):
-# def curlyBrace(fig, ax, p1, p2, k_r=0.1, bool_auto=True, str_text='', int_line_num=2, fontdict={}, **kwargs):
+    # def curlyBrace(fig, ax, p1, p2, k_r=0.1, bool_auto=True, str_text='', int_line_num=2, fontdict={}, **kwargs):
     '''
     .. _curlyBrace :
 
@@ -88,7 +89,7 @@ def curlyBrace(fig, ax, p1, p2, k_r=0.1, bool_auto=True, str_text='', int_line_n
     "p1" and "p2".
 
     Note that, when the axes aspect is not set to "equal", the axes coordinates need to be
-    transformed to screen coordinates, otherwise the arcs may not be seeable. 
+    transformed to screen coordinates, otherwise the arcs may not be seeable.
 
     Parameters
     ----------
@@ -127,7 +128,7 @@ def curlyBrace(fig, ax, p1, p2, k_r=0.1, bool_auto=True, str_text='', int_line_n
         The annotation text of the bracket. It would displayed at the mid point
         of bracket with the same rotation as the bracket.
 
-        By default, it follows the anti-clockwise convention. To flip it, swap 
+        By default, it follows the anti-clockwise convention. To flip it, swap
         the end point and the starting point.
 
         The appearance of this string can be set by using "fontdict", which follows
@@ -292,7 +293,7 @@ def curlyBrace(fig, ax, p1, p2, k_r=0.1, bool_auto=True, str_text='', int_line_n
         xscale = 1.0
         yscale = 1.0
 
-    # convert length to pixels, 
+    # convert length to pixels,
     # need to minus the lower limit to move the points back to the origin. Then add the limits back on end.
     pt1[0] = (pt1[0] - ax_xlim[0]) * xscale
     pt1[1] = (pt1[1] - ax_ylim[0]) * yscale
@@ -322,18 +323,18 @@ def curlyBrace(fig, ax, p1, p2, k_r=0.1, bool_auto=True, str_text='', int_line_n
     y44 = pt2[1] - r * np.sin(theta)
 
     # prepare the rotated
-    q = np.linspace(theta, theta + np.pi/2.0, 50)
+    q = np.linspace(theta, theta + np.pi / 2.0, 50)
 
     # reverse q
     # t = np.flip(q) # this command is not supported by lower version of numpy
     t = q[::-1]
 
     # arc coordinates
-    arc1x = r * np.cos(t + np.pi/2.0) + x11
-    arc1y = r * np.sin(t + np.pi/2.0) + y11
+    arc1x = r * np.cos(t + np.pi / 2.0) + x11
+    arc1y = r * np.sin(t + np.pi / 2.0) + y11
 
-    arc2x = r * np.cos(q - np.pi/2.0) + x22
-    arc2y = r * np.sin(q - np.pi/2.0) + y22
+    arc2x = r * np.cos(q - np.pi / 2.0) + x22
+    arc2y = r * np.sin(q - np.pi / 2.0) + y22
 
     arc3x = r * np.cos(q + np.pi) + x33
     arc3y = r * np.sin(q + np.pi) + y33
@@ -494,7 +495,7 @@ def curlyBrace(fig, ax, p1, p2, k_r=0.1, bool_auto=True, str_text='', int_line_n
         int_line_num = int(int_line_num)
 
         str_temp = '\n' * int_line_num
-        
+
         # convert radians to degree and within 0 to 360
         ang = np.degrees(theta) % 360.0
 
