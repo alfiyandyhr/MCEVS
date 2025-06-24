@@ -1,68 +1,67 @@
-import numpy as np
 from MCEVS.Vehicles.Standard import StandardMultirotorEVTOL
 from MCEVS.Vehicles.Standard import StandardLiftPlusCruiseEVTOL
 from MCEVS.Missions.Container import Mission
 from MCEVS.Analyses.Energy.Analysis import EnergyAnalysis
-from MCEVS.Utils.Plots import plot_mission_parameters, plot_performance_by_segments
+# from MCEVS.Utils.Plots import plot_mission_parameters, plot_performance_by_segments
 
 # Mission requirement
-mission_range = 60 * 1609.344 # 60 miles = 96560.64 m
-cruise_speed = 150 * 1609.344 / 3600 # 150 miles/hour = 67.056 m/s
-payload_per_pax = 100.0 # kg
+mission_range = 60 * 1609.344  # 60 miles = 96560.64 m
+cruise_speed = 150 * 1609.344 / 3600  # 150 miles/hour = 67.056 m/s
+payload_per_pax = 100.0  # kg
 
 # Hover climb config
-hover_climb_speed = 500*0.3048/60 # m/s; 500 ft/min
-hover_climb_distance = 1000*0.3048 # m; 1000 ft
+hover_climb_speed = 500 * 0.3048 / 60  # m/s; 500 ft/min
+hover_climb_distance = 1000 * 0.3048  # m; 1000 ft
 
 # Hover descent config
-hover_descent_speed = 300*0.3048/60 # m/s; 300 ft/min
-hover_descent_distance = 1000*0.3048 # m; 1000 ft
+hover_descent_speed = 300 * 0.3048 / 60  # m/s; 300 ft/min
+hover_descent_distance = 1000 * 0.3048  # m; 1000 ft
 
 # No credit climb/descent
-no_credit_distance = (6500-6000)*0.3048 # m; 500 ft
+no_credit_distance = (6500 - 6000) * 0.3048  # m; 500 ft
 
 # Take-off from 5000 ft ASL
-mission = Mission(planet='Earth', takeoff_altitude=5000*0.3048, n_repetition=1)
+mission = Mission(planet='Earth', takeoff_altitude=5000 * 0.3048, n_repetition=1)
 mission.add_segment(name='Hover Climb', kind='HoverClimbConstantSpeed', speed=hover_climb_speed, distance=hover_climb_distance, n_discrete=10)
 mission.add_segment(name='No Credit Climb', kind='NoCreditClimb', distance_Y=no_credit_distance, distance_X=0.0, n_discrete=10)
 mission.add_segment('Cruise', kind='CruiseConstantSpeed', speed=cruise_speed, distance=mission_range, AoA=5.0, n_discrete=10)
 mission.add_segment(name='No Credit Descent', kind='NoCreditDescent', distance_Y=no_credit_distance, distance_X=0.0, n_discrete=10)
 mission.add_segment(name='Hover Descent', kind='HoverDescentConstantSpeed', speed=hover_descent_speed, distance=hover_descent_distance, n_discrete=10)
-mission.add_segment(name='Reserve Cruise', kind='ReserveCruise', duration=20*60)
+mission.add_segment(name='Reserve Cruise', kind='ReserveCruise', duration=20 * 60)
 # plot_mission_parameters(mission, print_info=False)
 
 # Design and operation variables
-design_var1 = {'r_lift_rotor': 4.20624} # 13.8 ft = 4.20624 m
-operation_var1 = {'RPM_lift_rotor': {'hover_climb':None,'cruise':450.0}}
+design_var1 = {'r_lift_rotor': 4.20624}  # 13.8 ft = 4.20624 m
+operation_var1 = {'RPM_lift_rotor': {'hover_climb': None, 'cruise': 450.0}}
 design_var2 = {'wing_area': 19.53547845, 'wing_aspect_ratio': 12.12761, 'r_lift_rotor': 1.524, 'r_propeller': 1.3716}
-operation_var2 = {'RPM_lift_rotor':{'hover_climb':None}, 'RPM_propeller': {'cruise':500.0}}
+operation_var2 = {'RPM_lift_rotor': {'hover_climb': None}, 'RPM_propeller': {'cruise': 500.0}}
 
 # Technology factors
-tfs = {'tf_structure':0.8, 'tf_propulsion':0.8, 'tf_equipment':0.8}
+tfs = {'tf_structure': 0.8, 'tf_propulsion': 0.8, 'tf_equipment': 0.8}
 
 vehicle1 = StandardMultirotorEVTOL(design_var1, operation_var1, tfs, n_pax=6, payload_per_pax=payload_per_pax)
 vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, operation_var2, tfs, n_pax=6, payload_per_pax=payload_per_pax)
 # vehicle1.print_info()
 
 # Fidelity
-fidelity = {'aero':1, 'hover_climb':0}
+fidelity = {'aero': 1, 'hover_climb': 0}
 if fidelity['hover_climb'] == 0:
-	vehicle1.weight.max_takeoff = 4121.13997362
-	vehicle1.lift_rotor.RPM['hover_climb'] = 400.0
-	vehicle2.weight.max_takeoff = 2858.88805887
-	vehicle2.lift_rotor.RPM['hover_climb'] = 400.0
+    vehicle1.weight.max_takeoff = 4121.13997362
+    vehicle1.lift_rotor.RPM['hover_climb'] = 400.0
+    vehicle2.weight.max_takeoff = 2858.88805887
+    vehicle2.lift_rotor.RPM['hover_climb'] = 400.0
 elif fidelity['hover_climb'] == 1:
-	vehicle1.weight.max_takeoff = 4112.30957032
-	vehicle1.lift_rotor.RPM['hover_climb'] = 400.0
-	vehicle2.weight.max_takeoff = 2814.18805917
-	vehicle2.lift_rotor.RPM['hover_climb'] = 700.0
+    vehicle1.weight.max_takeoff = 4112.30957032
+    vehicle1.lift_rotor.RPM['hover_climb'] = 400.0
+    vehicle2.weight.max_takeoff = 2814.18805917
+    vehicle2.lift_rotor.RPM['hover_climb'] = 700.0
 elif fidelity['hover_climb'] == 2:
-	vehicle1.weight.max_takeoff = 3920.99011566
-	vehicle1.lift_rotor.global_twist = 15.43370966
-	vehicle1.lift_rotor.RPM['hover_climb'] = 289.78701964
-	vehicle2.weight.max_takeoff = 2854.57864184
-	vehicle2.lift_rotor.global_twist = 23.5959419443252
-	vehicle2.lift_rotor.RPM['hover_climb'] = 680.160987077815
+    vehicle1.weight.max_takeoff = 3920.99011566
+    vehicle1.lift_rotor.global_twist = 15.43370966
+    vehicle1.lift_rotor.RPM['hover_climb'] = 289.78701964
+    vehicle2.weight.max_takeoff = 2854.57864184
+    vehicle2.lift_rotor.global_twist = 23.5959419443252
+    vehicle2.lift_rotor.RPM['hover_climb'] = 680.160987077815
 
 # Analysis (change vehicle=vehicle1 or vehicle=vehicle2)
 vehicle = vehicle1
@@ -85,9 +84,3 @@ print(f"Energy|entire_mission = {results.get_val('Energy|entire_mission', 'kW*h'
 # Analyses to check:
 # 	fidelity['hover_climb'] in [0, 1, 2]
 # 	vehicle=vehicle1 or vehicle=vehicle2
-
-
-
-
-
-
