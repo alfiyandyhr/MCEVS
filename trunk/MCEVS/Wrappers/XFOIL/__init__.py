@@ -1,1 +1,1 @@
-from .Core import XFOIL
+from .Core import XFOIL  # noqa: F401
