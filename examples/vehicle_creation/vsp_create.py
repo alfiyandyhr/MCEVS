@@ -1,9 +1,9 @@
 import openvsp as vsp
-from MCEVS.Wrappers.OpenVSP.Components.Wing import NASA_LPC_Wing
-from MCEVS.Wrappers.OpenVSP.Components.Fuselage import NASA_QR_Fuselage, NASA_LPC_Fuselage
-from MCEVS.Wrappers.OpenVSP.Components.Boom import NASA_QR_Boom, NASA_LPC_Boom
-from MCEVS.Wrappers.OpenVSP.Components.Rotor import NASA_QR_Lift_Rotor, NASA_LPC_Lift_Rotor, NASA_LPC_Propeller
-from MCEVS.Wrappers.OpenVSP.Components.Landing_Gear import NASA_QR_Landing_Gear
+# from MCEVS.Wrappers.OpenVSP.Components.Wing import NASA_LPC_Wing
+# from MCEVS.Wrappers.OpenVSP.Components.Fuselage import NASA_QR_Fuselage, NASA_LPC_Fuselage
+# from MCEVS.Wrappers.OpenVSP.Components.Boom import NASA_QR_Boom, NASA_LPC_Boom
+# from MCEVS.Wrappers.OpenVSP.Components.Rotor import NASA_QR_Lift_Rotor, NASA_LPC_Lift_Rotor, NASA_LPC_Propeller
+# from MCEVS.Wrappers.OpenVSP.Components.Landing_Gear import NASA_QR_Landing_Gear
 
 # n_pax = 4
 
@@ -47,13 +47,13 @@ comp_id = vsp.FindGeoms()[0]
 
 # # # # # # print(vsp.GetParmVal(wing_id,'Diameter','XSecCurve1'))
 # # # xsec = vsp.GetXSec(comp_surf, 1)
-parm_groups 	= vsp.FindContainerGroupNames(comp_id)
+parm_groups = vsp.FindContainerGroupNames(comp_id)
 print(parm_groups)
 
-parm_ids 	= vsp.FindContainerParmIDs(comp_id) 
+parm_ids = vsp.FindContainerParmIDs(comp_id)
 for parm_id in parm_ids:
-	parm_name = vsp.GetParmName(parm_id)
-	print(parm_name)
+    parm_name = vsp.GetParmName(parm_id)
+    print(parm_name)
 
 # print(vsp.GetParmVal(comp_id, 'CrvType', 'Chord'))
 # print(vsp.GetParmVal(comp_id, 'crd_0', 'Chord'))
@@ -64,5 +64,3 @@ for parm_id in parm_ids:
 
 # # print(vsp.GetParmVal(wing_id, 'Angle', 'Design'))
 # # # print(vsp.GetParmVal(wing_id, 'Chevron_Type', parm_groups[3]))
-
-

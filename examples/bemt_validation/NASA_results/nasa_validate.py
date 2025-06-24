@@ -1,4 +1,4 @@
-from MCEVS.Analyses.Aerodynamics.BEMT.Solver import BEMTSolverOM, BEMTSolver
+from MCEVS.Analyses.Aerodynamics.BEMT.Solver import BEMTSolverOM, BEMTSolver  # noqa: F401
 from MCEVS.Constants.Container import EarthGravityAndAtmosphere
 import pandas as pd
 import numpy as np
@@ -39,8 +39,8 @@ constants = EarthGravityAndAtmosphere('US_Standard_1976').compute_constants(alti
 n_discrete = 15
 r_lift_rotor = 9.1 * 0.3048
 r_list = np.array([0.120, 0.175, 0.285, 0.395, 0.505, 0.615, 0.725, 0.835, 0.945, 1.000])
-c_list = (-0.194318182*r_list+0.708318182) * 0.3048
-p_list = -12.0*r_list + 9.0
+c_list = (-0.194318182 * r_list + 0.708318182) * 0.3048
+p_list = -12.0 * r_list + 9.0
 
 # mean_c = 1.44 * 0.3048
 mean_c = np.mean(c_list)
@@ -58,25 +58,25 @@ CT_sigma_res = np.zeros(len(global_twist_list))
 # print(solidity)
 
 for i in range(len(global_twist_list)):
-	print(f'Solving for collective pitch = {global_twist_list[i]}')
+    print(f'Solving for collective pitch = {global_twist_list[i]}')
 
-	rotorDict = {'nblades': 3, 'diameter': 2*r_lift_rotor, 'hub_radius': 0.12*r_lift_rotor, 'global_twist': global_twist_list[i]}
-	sectionDict = {'n_sections': n_discrete,
-				   'airfoil_list': n_discrete*['BOEING_VERTOL_VR12_with_rotation'],
-				   'radius_list': r_lift_rotor * r_list,
-				   'chord_list': c_list,
-				   'pitch_list': p_list}
-	fluidDict = {'rho': constants['rho'], 'mu': constants['mu']}
+    rotorDict = {'nblades': 3, 'diameter': 2 * r_lift_rotor, 'hub_radius': 0.12 * r_lift_rotor, 'global_twist': global_twist_list[i]}
+    sectionDict = {'n_sections': n_discrete,
+                   'airfoil_list': n_discrete * ['BOEING_VERTOL_VR12_with_rotation'],
+                   'radius_list': r_lift_rotor * r_list,
+                   'chord_list': c_list,
+                   'pitch_list': p_list}
+    fluidDict = {'rho': constants['rho'], 'mu': constants['mu']}
 
-	solverOM = BEMTSolver(rotorDict, sectionDict, fluidDict)
-	resultsOM = solverOM.run(v_inf=0.01, rpm=350.0)
+    solverOM = BEMTSolver(rotorDict, sectionDict, fluidDict)
+    resultsOM = solverOM.run(v_inf=0.01, rpm=350.0)
 
-	FM_res[i] = resultsOM['FM']
-	CT_sigma_res[i] = resultsOM['CT']/solidity
+    FM_res[i] = resultsOM['FM']
+    CT_sigma_res[i] = resultsOM['CT'] / solidity
 
 # RPM 350
-plt.plot(raw_data.CT_sigma[0:7],raw_data.FM[0:7],'o-')
-plt.plot(CT_sigma_res, FM_res,'o-')
+plt.plot(raw_data.CT_sigma[0:7], raw_data.FM[0:7], 'o-')
+plt.plot(CT_sigma_res, FM_res, 'o-')
 plt.grid()
 plt.xlabel(r'$C_{T}/\sigma$')
 plt.ylabel(r'FM')

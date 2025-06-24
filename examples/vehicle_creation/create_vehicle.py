@@ -7,8 +7,8 @@ from MCEVS.Wrappers.OpenVSP.Standard_Vehicles import create_NASA_QuadRotor_vsp3,
 design_var1 = {'r_lift_rotor': 1.5, 'rotor_advance_ratio': 0.3}
 
 design_var2 = {'wing_area': 16.2, 'wing_aspect_ratio': 7.32,
-			   'r_lift_rotor': 1.0, 'r_propeller': 1.0,
-			   'propeller_advance_ratio': 1.0}
+               'r_lift_rotor': 1.0, 'r_propeller': 1.0,
+               'propeller_advance_ratio': 1.0}
 
 vehicle1 = StandardMultirotorEVTOL(design_var1, n_pax=4)
 # vehicle1.print_info()
