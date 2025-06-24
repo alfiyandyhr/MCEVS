@@ -4,181 +4,182 @@ from MCEVS.Analyses.Weight.Analysis import MTOWEstimation, GTOWEstimation, OffDe
 from MCEVS.Analyses.Weight.Analysis import MultiPointMTOWEstimation, MultiPointMTOWEstimationWithFixedEmptyWeight
 from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraint
 from MCEVS.Analyses.Geometry.Rotor import MeanChord
-from MCEVS.Utils.Performance import record_performance_by_segments
+# from MCEVS.Utils.Performance import record_performance_by_segments
 
-def run_gradient_based_optimization(DesignProblem:object):
 
-	prob = om.Problem(reports=False)
+def run_gradient_based_optimization(DesignProblem: object):
 
-	indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
+    prob = om.Problem(reports=False)
 
-	# Default input values
-	for input_name in DesignProblem.default_input_values:
-		indeps.add_output(input_name,
-						  DesignProblem.default_input_values[input_name][0],
-						  units=DesignProblem.default_input_values[input_name][1])
+    indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
-	# Initial values
-	for var_name in DesignProblem.design_variables:
-		indeps.add_output(var_name,
-						  DesignProblem.design_variables[var_name][2],
-						  units=DesignProblem.design_variables[var_name][3])
-	
-	# Objective function
-	for obj_name in DesignProblem.objectives:
-		prob.model.add_objective(DesignProblem.objectives[obj_name][0],
-								 ref=DesignProblem.objectives[obj_name][1],
-								 units=DesignProblem.objectives[obj_name][2])
+    # Default input values
+    for input_name in DesignProblem.default_input_values:
+        indeps.add_output(input_name,
+                          DesignProblem.default_input_values[input_name][0],
+                          units=DesignProblem.default_input_values[input_name][1])
 
-	# Design variables and their boundaries
-	for var_name in DesignProblem.design_variables:
-		prob.model.add_design_var(var_name,
-								  lower=DesignProblem.design_variables[var_name][0],
-								  upper=DesignProblem.design_variables[var_name][1],
-								  ref=DesignProblem.design_variables[var_name][2],
-								  units=DesignProblem.design_variables[var_name][3])
+    # Initial values
+    for var_name in DesignProblem.design_variables:
+        indeps.add_output(var_name,
+                          DesignProblem.design_variables[var_name][2],
+                          units=DesignProblem.design_variables[var_name][3])
 
-	# Constraints
-	for cnstr_name in DesignProblem.constraints:
-		prob.model.add_constraint(cnstr_name,
-								  lower=DesignProblem.constraints[cnstr_name][0],
-								  upper=DesignProblem.constraints[cnstr_name][1],
-								  ref=DesignProblem.constraints[cnstr_name][2],
-								  units=DesignProblem.constraints[cnstr_name][3])
+    # Objective function
+    for obj_name in DesignProblem.objectives:
+        prob.model.add_objective(DesignProblem.objectives[obj_name][0],
+                                 ref=DesignProblem.objectives[obj_name][1],
+                                 units=DesignProblem.objectives[obj_name][2])
 
-	# Geometric analysis
-	if DesignProblem.vehicle.configuration == 'Multirotor':
-		# Convert mean_c_to_R into mean_chord
-		prob.model.add_subsystem('chord_calc_lift_rotor',
-								  MeanChord(),
-								  promotes_inputs=[('mean_c_to_R', 'LiftRotor|mean_c_to_R'), ('R', 'LiftRotor|radius')],
-								  promotes_outputs=[('mean_chord', 'LiftRotor|chord')])
+    # Design variables and their boundaries
+    for var_name in DesignProblem.design_variables:
+        prob.model.add_design_var(var_name,
+                                  lower=DesignProblem.design_variables[var_name][0],
+                                  upper=DesignProblem.design_variables[var_name][1],
+                                  ref=DesignProblem.design_variables[var_name][2],
+                                  units=DesignProblem.design_variables[var_name][3])
 
-	elif DesignProblem.vehicle.configuration == 'LiftPlusCruise':
-		# Calculate spanwise clearance constraint for lift rotor of LPC config
-		if DesignProblem.kind in ['SingleObjectiveProblem', 'MultiObjectiveProblem', 'GTOWSingleObjectiveProblem']:
-			prob.model.add_subsystem('lift_rotor_clearance',
-									  LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
-									  							   max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
-									  							   percent_max_span=95.0),
-									  promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
-									  promotes_outputs=[('clearance_constraint', 'LiftRotor|clearance_constraint')])
-		elif DesignProblem.kind in ['MultiPointSingleObjectiveProblem', 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight']:
-			for n in range(1,DesignProblem.multipoint_options['n_points']+1):
-	 			prob.model.add_subsystem(f'lift_rotor_clearance_{n}',
-						  LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
-						  							   max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
-						  							   percent_max_span=95.0),
-						  promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
-						  promotes_outputs=[('clearance_constraint', f'Point_{n}|LiftRotor|clearance_constraint')])
-		elif DesignProblem.kind in ['OffDesignSingleObjectiveProblem']:
-			points = ['OnDesign', 'OffDesign']
-			for point in points:
-	 			prob.model.add_subsystem(f'lift_rotor_clearance_{point}',
-						  LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
-						  							   max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
-						  							   percent_max_span=95.0),
-						  promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
-						  promotes_outputs=[('clearance_constraint', f'{point}|LiftRotor|clearance_constraint')])
-		
-		# Convert mean_c_to_R into mean_chord
-		prob.model.add_subsystem('chord_calc_lift_rotor',
-								  MeanChord(),
-								  promotes_inputs=[('mean_c_to_R', 'LiftRotor|mean_c_to_R'), ('R', 'LiftRotor|radius')],
-								  promotes_outputs=[('mean_chord', 'LiftRotor|chord')])
-		prob.model.add_subsystem('chord_calc_propeller',
-								  MeanChord(),
-								  promotes_inputs=[('mean_c_to_R', 'Propeller|mean_c_to_R'), ('R', 'Propeller|radius')],
-								  promotes_outputs=[('mean_chord', 'Propeller|chord')])
+    # Constraints
+    for cnstr_name in DesignProblem.constraints:
+        prob.model.add_constraint(cnstr_name,
+                                  lower=DesignProblem.constraints[cnstr_name][0],
+                                  upper=DesignProblem.constraints[cnstr_name][1],
+                                  ref=DesignProblem.constraints[cnstr_name][2],
+                                  units=DesignProblem.constraints[cnstr_name][3])
 
-	# Analysis
+    # Geometric analysis
+    if DesignProblem.vehicle.configuration == 'Multirotor':
+        # Convert mean_c_to_R into mean_chord
+        prob.model.add_subsystem('chord_calc_lift_rotor',
+                                 MeanChord(),
+                                 promotes_inputs=[('mean_c_to_R', 'LiftRotor|mean_c_to_R'), ('R', 'LiftRotor|radius')],
+                                 promotes_outputs=[('mean_chord', 'LiftRotor|chord')])
 
-	if DesignProblem.kind == 'SingleObjectiveProblem':
-		prob.model.add_subsystem('weight_estimation',
-								  MTOWEstimation(mission=DesignProblem.mission,
-								  				 vehicle=DesignProblem.vehicle,
-								  				 fidelity=DesignProblem.fidelity,
-								  				 sizing_mode=False,
-								  				 rhs_checking=True),
-								  promotes_inputs=['*'],
-								  promotes_outputs=['*'])
-	
-	elif DesignProblem.kind == 'MultiPointSingleObjectiveProblem':
-		
-		prob.model.add_subsystem('multipoint_weight_estimation',
-								  MultiPointMTOWEstimation(mission=DesignProblem.mission,
-								  						   vehicle=DesignProblem.vehicle,
-								  						   fidelity=DesignProblem.fidelity,
-								  						   multipoint_options=DesignProblem.multipoint_options),
-								  promotes_inputs=['*'],
-								  promotes_outputs=['*'])
+    elif DesignProblem.vehicle.configuration == 'LiftPlusCruise':
+        # Calculate spanwise clearance constraint for lift rotor of LPC config
+        if DesignProblem.kind in ['SingleObjectiveProblem', 'MultiObjectiveProblem', 'GTOWSingleObjectiveProblem']:
+            prob.model.add_subsystem('lift_rotor_clearance',
+                                     LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
+                                                                  max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
+                                                                  percent_max_span=95.0),
+                                     promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
+                                     promotes_outputs=[('clearance_constraint', 'LiftRotor|clearance_constraint')])
+        elif DesignProblem.kind in ['MultiPointSingleObjectiveProblem', 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight']:
+            for n in range(1, DesignProblem.multipoint_options['n_points'] + 1):
+                prob.model.add_subsystem(f'lift_rotor_clearance_{n}',
+                                         LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
+                                                                      max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
+                                                                      percent_max_span=95.0),
+                                         promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
+                                         promotes_outputs=[('clearance_constraint', f'Point_{n}|LiftRotor|clearance_constraint')])
+        elif DesignProblem.kind in ['OffDesignSingleObjectiveProblem']:
+            points = ['OnDesign', 'OffDesign']
+            for point in points:
+                prob.model.add_subsystem(f'lift_rotor_clearance_{point}',
+                                         LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
+                                                                      max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
+                                                                      percent_max_span=95.0),
+                                         promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
+                                         promotes_outputs=[('clearance_constraint', f'{point}|LiftRotor|clearance_constraint')])
 
-	elif DesignProblem.kind == 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight':
+        # Convert mean_c_to_R into mean_chord
+        prob.model.add_subsystem('chord_calc_lift_rotor',
+                                 MeanChord(),
+                                 promotes_inputs=[('mean_c_to_R', 'LiftRotor|mean_c_to_R'), ('R', 'LiftRotor|radius')],
+                                 promotes_outputs=[('mean_chord', 'LiftRotor|chord')])
+        prob.model.add_subsystem('chord_calc_propeller',
+                                 MeanChord(),
+                                 promotes_inputs=[('mean_c_to_R', 'Propeller|mean_c_to_R'), ('R', 'Propeller|radius')],
+                                 promotes_outputs=[('mean_chord', 'Propeller|chord')])
 
-		prob.model.add_subsystem('multipoint_weight_estimation',
-								  MultiPointMTOWEstimationWithFixedEmptyWeight(mission=DesignProblem.mission,
-								  											   vehicle=DesignProblem.vehicle,
-								  											   fidelity=DesignProblem.fidelity,
-								  											   multipoint_options=DesignProblem.multipoint_options),
-								  promotes_inputs=['*'],
-								  promotes_outputs=['*'])
+    # Analysis
 
-	elif DesignProblem.kind == 'OffDesignSingleObjectiveProblem':
+    if DesignProblem.kind == 'SingleObjectiveProblem':
+        prob.model.add_subsystem('weight_estimation',
+                                 MTOWEstimation(mission=DesignProblem.mission,
+                                                vehicle=DesignProblem.vehicle,
+                                                fidelity=DesignProblem.fidelity,
+                                                sizing_mode=False,
+                                                rhs_checking=True),
+                                 promotes_inputs=['*'],
+                                 promotes_outputs=['*'])
 
-		prob.model.add_subsystem('off_design_weight_estimation',
-								  OffDesignMTOWEstimation(mission=DesignProblem.mission,
-								  						  vehicle=DesignProblem.vehicle,
-								  						  fidelity=DesignProblem.fidelity,
-								  						  offdesign_options=DesignProblem.offdesign_options),
-								  promotes_inputs=['*'],
-								  promotes_outputs=['*'])
+    elif DesignProblem.kind == 'MultiPointSingleObjectiveProblem':
 
-	elif DesignProblem.kind == 'GTOWSingleObjectiveProblem':
+        prob.model.add_subsystem('multipoint_weight_estimation',
+                                 MultiPointMTOWEstimation(mission=DesignProblem.mission,
+                                                          vehicle=DesignProblem.vehicle,
+                                                          fidelity=DesignProblem.fidelity,
+                                                          multipoint_options=DesignProblem.multipoint_options),
+                                 promotes_inputs=['*'],
+                                 promotes_outputs=['*'])
 
-		indeps.add_output('Weight|propulsion', DesignProblem.vehicle.weight.propulsion, units='kg')
-		indeps.add_output('Weight|structure', DesignProblem.vehicle.weight.structure, units='kg')
-		indeps.add_output('Weight|equipment', DesignProblem.vehicle.weight.equipment, units='kg')
-		prob.model.add_subsystem('weight_estimation',
-								  GTOWEstimation(mission=DesignProblem.mission,
-								  				 vehicle=DesignProblem.vehicle,
-								  				 fidelity=DesignProblem.fidelity,
-								  				 sizing_mode=False,
-								  				 rhs_checking=True),
-								  promotes_inputs=['*'],
-								  promotes_outputs=['*'])
+    elif DesignProblem.kind == 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight':
 
-	else:
-		raise NotImplementedError('Please check your "DesignProblem.objectives"')
+        prob.model.add_subsystem('multipoint_weight_estimation',
+                                 MultiPointMTOWEstimationWithFixedEmptyWeight(mission=DesignProblem.mission,
+                                                                              vehicle=DesignProblem.vehicle,
+                                                                              fidelity=DesignProblem.fidelity,
+                                                                              multipoint_options=DesignProblem.multipoint_options),
+                                 promotes_inputs=['*'],
+                                 promotes_outputs=['*'])
 
-	# Optimizer settings
-	# debug_print = ['desvars', 'nl_cons', 'objs']
-	# debug_print = ['desvars', 'nl_cons', 'objs', 'totals']
-	# debug_print = ['objs', 'desvars', 'nl_cons']
-	debug_print = []
-	prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, singular_jac_tol=1e-16, debug_print=debug_print, disp=True)
-	# prob.driver = om.ScipyOptimizeDriver(optimizer='shgo', tol=1e-3, singular_jac_tol=1e-16, debug_print=debug_print, disp=True)
-	# prob.driver = om.pyOptSparseDriver(optimizer='', print_opt_prob=True)
-	# prob.driver = om.DifferentialEvolutionDriver(max_gen=5)
-	# prob.driver.recording_options['includes'] = ['*']
-	# prob.driver.recording_options['record_objectives'] = True
-	# prob.driver.recording_options['record_constraints'] = True
-	# prob.driver.recording_options['record_desvars'] = True
-	# prob.driver.recording_options['record_inputs'] = True
-	# prob.driver.recording_options['record_outputs'] = True
-	# prob.driver.recording_options['record_residuals'] = True
+    elif DesignProblem.kind == 'OffDesignSingleObjectiveProblem':
 
-	# if DesignProblem.vehicle.configuration == 'Multirotor':
-	# 	prob.driver.add_recorder(om.SqliteRecorder("multirotor_opt_cases.sql"))
-	# elif DesignProblem.vehicle.configuration == 'LiftPlusCruise':
-	# 	prob.driver.add_recorder(om.SqliteRecorder("liftcruise_opt_cases.sql"))
+        prob.model.add_subsystem('off_design_weight_estimation',
+                                 OffDesignMTOWEstimation(mission=DesignProblem.mission,
+                                                         vehicle=DesignProblem.vehicle,
+                                                         fidelity=DesignProblem.fidelity,
+                                                         offdesign_options=DesignProblem.offdesign_options),
+                                 promotes_inputs=['*'],
+                                 promotes_outputs=['*'])
 
-	# Run optimization
-	prob.setup(check=False)
-	res_info = prob.run_driver()
+    elif DesignProblem.kind == 'GTOWSingleObjectiveProblem':
 
-	# prob.list_problem_vars(driver_scaling=False)
+        indeps.add_output('Weight|propulsion', DesignProblem.vehicle.weight.propulsion, units='kg')
+        indeps.add_output('Weight|structure', DesignProblem.vehicle.weight.structure, units='kg')
+        indeps.add_output('Weight|equipment', DesignProblem.vehicle.weight.equipment, units='kg')
+        prob.model.add_subsystem('weight_estimation',
+                                 GTOWEstimation(mission=DesignProblem.mission,
+                                                vehicle=DesignProblem.vehicle,
+                                                fidelity=DesignProblem.fidelity,
+                                                sizing_mode=False,
+                                                rhs_checking=True),
+                                 promotes_inputs=['*'],
+                                 promotes_outputs=['*'])
 
-	# Record the optimal design performance
-	# record_performance_by_segments(prob, DesignProblem.vehicle.configuration, DesignProblem.mission)
+    else:
+        raise NotImplementedError('Please check your "DesignProblem.objectives"')
 
-	return prob, res_info
+    # Optimizer settings
+    # debug_print = ['desvars', 'nl_cons', 'objs']
+    # debug_print = ['desvars', 'nl_cons', 'objs', 'totals']
+    # debug_print = ['objs', 'desvars', 'nl_cons']
+    debug_print = []
+    prob.driver = om.ScipyOptimizeDriver(optimizer='SLSQP', tol=1e-3, singular_jac_tol=1e-16, debug_print=debug_print, disp=True)
+    # prob.driver = om.ScipyOptimizeDriver(optimizer='shgo', tol=1e-3, singular_jac_tol=1e-16, debug_print=debug_print, disp=True)
+    # prob.driver = om.pyOptSparseDriver(optimizer='', print_opt_prob=True)
+    # prob.driver = om.DifferentialEvolutionDriver(max_gen=5)
+    # prob.driver.recording_options['includes'] = ['*']
+    # prob.driver.recording_options['record_objectives'] = True
+    # prob.driver.recording_options['record_constraints'] = True
+    # prob.driver.recording_options['record_desvars'] = True
+    # prob.driver.recording_options['record_inputs'] = True
+    # prob.driver.recording_options['record_outputs'] = True
+    # prob.driver.recording_options['record_residuals'] = True
+
+    # if DesignProblem.vehicle.configuration == 'Multirotor':
+    # 	prob.driver.add_recorder(om.SqliteRecorder("multirotor_opt_cases.sql"))
+    # elif DesignProblem.vehicle.configuration == 'LiftPlusCruise':
+    # 	prob.driver.add_recorder(om.SqliteRecorder("liftcruise_opt_cases.sql"))
+
+    # Run optimization
+    prob.setup(check=False)
+    res_info = prob.run_driver()
+
+    # prob.list_problem_vars(driver_scaling=False)
+
+    # Record the optimal design performance
+    # record_performance_by_segments(prob, DesignProblem.vehicle.configuration, DesignProblem.mission)
+
+    return prob, res_info
