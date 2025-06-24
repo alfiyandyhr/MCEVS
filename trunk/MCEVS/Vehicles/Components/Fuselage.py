@@ -1,60 +1,62 @@
 import numpy as np
 
+
 class Fuselage(object):
-	"""
-	docstring for Fuselage
-	"""
-	def __init__(self, kwargs:dict):
-		super(Fuselage, self).__init__()
-		self.kwargs = kwargs
-		self.name = 'fuselage'
+    """
+    docstring for Fuselage
+    """
 
-		self.length = None
-		self.max_diameter = None
-		self.number_of_passenger = None
-		self.payload_per_pax = 100.0 # kg (default)
-		self.fineness_ratio = None
-		self.weight = None
+    def __init__(self, kwargs: dict):
+        super(Fuselage, self).__init__()
+        self.kwargs = kwargs
+        self.name = 'fuselage'
 
-		# Use of new material that reduces weight?
-		self.technology_factor = None
+        self.length = None
+        self.max_diameter = None
+        self.number_of_passenger = None
+        self.payload_per_pax = 100.0  # kg (default)
+        self.fineness_ratio = None
+        self.weight = None
 
-		# Equivalent plat plate area (aerodynamics)
-		self.flat_plate_area = {'climb':None, 'cruise': None, 'descent': None} 
-	
-	def _initialize(self):
-		for item in list(self.kwargs):
-			if item == 'length':
-				self.length = float(self.kwargs[item])
-			elif item == 'max_diameter':
-				self.max_diameter = float(self.kwargs[item])
-			elif item == 'payload_per_pax':
-				self.payload_per_pax = float(self.kwargs[item])
-			elif item == 'number_of_passenger':
-				self.number_of_passenger = int(self.kwargs[item])
-			elif item == 'technology_factor':
-				self.technology_factor = float(self.kwargs[item])
+        # Use of new material that reduces weight?
+        self.technology_factor = None
 
-		self.fineness_ratio = self.length / self.max_diameter
+        # Equivalent plat plate area (aerodynamics)
+        self.flat_plate_area = {'climb': None, 'cruise': None, 'descent': None}
 
-	def _calculate_weight_given_mtow(self, mtow):
-		W_fuselage = 14.86 * (mtow*2.20462)**0.144
-		W_fuselage *= (self.length/(np.pi * self.max_diameter))**0.778
-		W_fuselage *= (self.length*3.28084)**0.383
-		W_fuselage *= self.number_of_passenger**0.455
-		self.weight = W_fuselage * 0.453592 * self.technology_factor
+    def _initialize(self):
+        for item in list(self.kwargs):
+            if item == 'length':
+                self.length = float(self.kwargs[item])
+            elif item == 'max_diameter':
+                self.max_diameter = float(self.kwargs[item])
+            elif item == 'payload_per_pax':
+                self.payload_per_pax = float(self.kwargs[item])
+            elif item == 'number_of_passenger':
+                self.number_of_passenger = int(self.kwargs[item])
+            elif item == 'technology_factor':
+                self.technology_factor = float(self.kwargs[item])
 
-	def _info(self):
-		info = '\tComponent name: Fuselage\n'
-		info += f'\t\tLength = {self.length} m\n'
-		info += f'\t\tMax diameter = {self.max_diameter} m\n'
-		info += f'\t\tNumber of passenger = {self.number_of_passenger}\n'
-		info += f'\t\tPayload per pax = {self.payload_per_pax} kg'
-		return info
+        self.fineness_ratio = self.length / self.max_diameter
 
-	def print_info(self):
-		print('Component name: Fuselage')
-		print(f'\tLength = {self.length} m')
-		print(f'\tMax diameter = {self.max_diameter} m')
-		print(f'\tNumber of passenger = {self.number_of_passenger}')
-		print(f'\tPayload per pax = {self.payload_per_pax} kg')
+    def _calculate_weight_given_mtow(self, mtow):
+        W_fuselage = 14.86 * (mtow * 2.20462)**0.144
+        W_fuselage *= (self.length / (np.pi * self.max_diameter))**0.778
+        W_fuselage *= (self.length * 3.28084)**0.383
+        W_fuselage *= self.number_of_passenger**0.455
+        self.weight = W_fuselage * 0.453592 * self.technology_factor
+
+    def _info(self):
+        info = '\tComponent name: Fuselage\n'
+        info += f'\t\tLength = {self.length} m\n'
+        info += f'\t\tMax diameter = {self.max_diameter} m\n'
+        info += f'\t\tNumber of passenger = {self.number_of_passenger}\n'
+        info += f'\t\tPayload per pax = {self.payload_per_pax} kg'
+        return info
+
+    def print_info(self):
+        print('Component name: Fuselage')
+        print(f'\tLength = {self.length} m')
+        print(f'\tMax diameter = {self.max_diameter} m')
+        print(f'\tNumber of passenger = {self.number_of_passenger}')
+        print(f'\tPayload per pax = {self.payload_per_pax} kg')
