@@ -262,7 +262,7 @@ if plot_evaluation_data:
     utopian_data = pd.read_csv('optimal_results_by_scenario_by_year.csv')
     opt_test_data = pd.read_csv('opt_test_results.csv')
 
-    fig, axes = plt.subplots(1, 3, figsize=(14, 6), sharey=False)
+    fig, axes = plt.subplots(1, 3, figsize=(12, 5), sharey=False)
 
     for i, scenario in enumerate(battery_dict):
 
@@ -272,16 +272,16 @@ if plot_evaluation_data:
         # Plot evaluation data
         for year_opt in selected_years:
             test_data2 = test_data[test_data['year_opt'] == year_opt]
-            axes[i].plot(test_data2['year_test'], test_data2[parameter], '-', markersize=3, label=f'Opt in {year_opt}' if i == 0 else None)
+            axes[i].plot(test_data2['year_test'], test_data2[parameter], '-', markersize=3, label=f'Design opt in {year_opt}' if i == 0 else None)
 
         # Plot data on each subplot
-        axes[i].plot(data['year'], data[parameter], 'k--', markersize=10, label='Utopian energy' if i == 0 else None)
+        axes[i].plot(data['year'], data[parameter], 'k--', markersize=10, label='Utopian designs' if i == 0 else None)
         axes[i].set_title(f'{scenario}')
-        axes[i].set_xlabel('Year')
+        axes[i].set_xlabel('Sizing year')
         if i == 0:
             axes[i].set_ylabel(r'Energy consumption $[kWh]$')
 
-    plt.subplots_adjust(bottom=0.2, top=0.82, wspace=0.1)
+    plt.subplots_adjust(bottom=0.2, top=0.80, wspace=0.13)
     fig.legend(ncols=len(selected_years) + 1, bbox_to_anchor=(0.5, 0.93), loc='upper center')
-    fig.suptitle('Optimal energy by year based on different battery projection scenarios', size=16)
+    fig.suptitle('Suboptimality analysis based on different battery projection scenarios', size=16)
     plt.show()

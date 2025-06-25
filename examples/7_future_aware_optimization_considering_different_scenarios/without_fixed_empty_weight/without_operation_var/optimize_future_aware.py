@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from scipy.integrate import simpson
 
 calc_utopian_J = False
-plot_psi_for_every_year = True
-compare_best_year_with_current_year = False
+plot_psi_for_every_year = False
+compare_best_year_with_current_year = True
 
 # 40 year lifespan of the product
 year_list = np.arange(2030, 2071, 1)
@@ -146,7 +146,7 @@ if compare_best_year_with_current_year:
     opt_test_results = pd.read_csv('opt_test_results.csv')
     utopian_data = pd.read_csv('optimal_results_by_scenario_by_year.csv')
 
-    fig, axes = plt.subplots(1, 3, figsize=(14, 6), sharey=False)
+    fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=False)
 
     for i, scenario in enumerate(battery_dict):
 
