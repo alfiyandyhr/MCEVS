@@ -40,7 +40,7 @@ for i, scenario in enumerate(battery_dict):
 
 
 def calc_psi_given_energy_year_data(energy_data: list or np.array, year_data: list or np.array, scenario: str, is_continouous: bool):
-    opt_results = pd.read_csv('optimal_results_by_scenario_by_year.csv')
+    opt_results = pd.read_csv('../1_utopian_data/optimal_results_by_scenario_by_year.csv')
     opt_results = opt_results[opt_results['scenario'] == scenario]
     utopian_energy = opt_results['Energy|entire_mission'].to_numpy()
     J_tilde = simpson(utopian_energy, year_list) / (year_list[-1] - year_list[0])
@@ -57,7 +57,7 @@ def calc_psi_given_energy_year_data(energy_data: list or np.array, year_data: li
 
 if calc_utopian_J:
 
-    opt_results = pd.read_csv('optimal_results_by_scenario_by_year.csv')
+    opt_results = pd.read_csv('../1_utopian_data/optimal_results_by_scenario_by_year.csv')
 
     for i, scenario in enumerate(battery_dict):
         opt_results_i = opt_results[opt_results['scenario'] == scenario]
@@ -76,7 +76,7 @@ if calc_utopian_J:
 
 if plot_psi_for_every_year:
 
-    opt_test_results = pd.read_csv('opt_test_results.csv')
+    opt_test_results = pd.read_csv('../1_utopian_data/opt_test_results.csv')
 
     psi_list = []
 
@@ -143,8 +143,8 @@ if compare_best_year_with_current_year:
 
     parameter = 'Energy|entire_mission'
 
-    opt_test_results = pd.read_csv('opt_test_results.csv')
-    utopian_data = pd.read_csv('optimal_results_by_scenario_by_year.csv')
+    opt_test_results = pd.read_csv('../1_utopian_data/opt_test_results.csv')
+    utopian_data = pd.read_csv('../1_utopian_data/optimal_results_by_scenario_by_year.csv')
 
     fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=False)
 

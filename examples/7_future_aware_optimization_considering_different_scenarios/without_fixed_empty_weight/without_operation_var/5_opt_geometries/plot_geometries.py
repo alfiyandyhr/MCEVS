@@ -7,7 +7,7 @@ plot_geometries_with_minimum_psi = True
 
 if plot_geometries_by_scenario:
 
-    utopian_data = pd.read_csv('optimal_results_by_scenario_by_year.csv')
+    utopian_data = pd.read_csv('../1_utopian_data/optimal_results_by_scenario_by_year.csv')
 
     scenario_list = ['conservative', 'nominal', 'aggresive']
 
@@ -51,7 +51,7 @@ if plot_geometries_by_scenario:
 
 if plot_geometries_with_minimum_psi:
 
-    utopian_data = pd.read_csv('optimal_results_by_scenario_by_year.csv')
+    utopian_data = pd.read_csv('../1_utopian_data/optimal_results_by_scenario_by_year.csv')
 
     scenario_list = ['conservative', 'nominal', 'aggresive']
 

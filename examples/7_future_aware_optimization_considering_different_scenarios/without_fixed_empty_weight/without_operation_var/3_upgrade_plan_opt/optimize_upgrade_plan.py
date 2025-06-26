@@ -30,7 +30,7 @@ year_list = np.arange(2030, 2071, 1)
 
 
 def calc_psi_given_energy_year_data(energy_data: list or np.array, year_data: list or np.array, scenario: str, is_continouous: bool):
-    opt_results = pd.read_csv('optimal_results_by_scenario_by_year.csv')
+    opt_results = pd.read_csv('../1_utopian_data/optimal_results_by_scenario_by_year.csv')
     opt_results = opt_results[opt_results['scenario'] == scenario]
     utopian_energy = opt_results['Energy|entire_mission'].to_numpy()
     J_tilde = simpson(utopian_energy, year_list) / (year_list[-1] - year_list[0])
@@ -110,7 +110,7 @@ if optimize_plan:
     # scenario = 'aggresive'
     # design_year = 2041
 
-    opt_test_data = pd.read_csv('opt_test_results.csv')
+    opt_test_data = pd.read_csv('../1_utopian_data/opt_test_results.csv')
     continuous_plan_data = opt_test_data[(opt_test_data['scenario'] == scenario) & (opt_test_data['year_opt'] == design_year)]
 
     # Test
@@ -137,8 +137,8 @@ if plot_upgrade_plan:
 
     parameter = 'Energy|entire_mission'
 
-    utopian_data = pd.read_csv('optimal_results_by_scenario_by_year.csv')
-    opt_test_data = pd.read_csv('opt_test_results.csv')
+    utopian_data = pd.read_csv('../1_utopian_data/optimal_results_by_scenario_by_year.csv')
+    opt_test_data = pd.read_csv('../1_utopian_data/opt_test_results.csv')
 
     fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=True)
 
