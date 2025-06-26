@@ -46,4 +46,4 @@ for config in config_list:
         vehicle_list.append(vehicle)
         cruise_speed_list.append(data[data['mission_range'] == mission_range]['cruise_speed'].to_numpy()[0])
 
-    plot_geometries(vehicle_list, label_list, cruise_speed_list, figname=f'{config}_objs_opt_geom', savefig=False)
+    plot_geometries(vehicle_list, label_list, cruise_speed_list, figname=f'figures/{config}_objs_opt_geom', savefig=False)
