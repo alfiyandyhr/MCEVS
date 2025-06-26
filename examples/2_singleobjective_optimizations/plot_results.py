@@ -7,7 +7,7 @@ plot_minimizing_mission_time = False
 
 plot_minimizing_all_objs = True
 
-figname = 'opt_exploring_objectives'
+figname = 'figures/opt_exploring_objectives'
 savefig = False
 
 configuration = 'multirotor'
