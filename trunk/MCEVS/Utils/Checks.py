@@ -6,8 +6,7 @@ def check_fidelity_dict(fidelity: object, vehicle_config: str):
             if vehicle_config == 'Multirotor':
                 if aero_model not in ['WeightBasedRegression', 'ComponentBuildUp']:
                     raise ValueError('Parasite drag model should be in ["WeightBasedRegression", "ComponentBuildUp"]')
-        elif drag_type == 'parasite':
-            if vehicle_config == 'LiftPlusCruise':
+            elif vehicle_config == 'LiftPlusCruise':
                 if aero_model not in ['WeightBasedRegression', 'ComponentBuildUp', 'BacchiniExperimentalFixedValueForLPC']:
                     raise ValueError('Parasite drag model should be in ["WeightBasedRegression", "ComponentBuildUp", "BacchiniExperimentalFixedValueForLPC"]')
         if drag_type == 'induced':
