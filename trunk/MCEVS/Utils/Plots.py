@@ -573,3 +573,59 @@ def plot_power_energy_breakdown(data_list: list, label_list: list = None, color_
     ax.legend()
     plt.tight_layout()
     plt.savefig(f'{figname}.pdf', format='pdf', dpi=300) if savefig else plt.show()
+
+
+def plot_weight_breakdown_pie_chart(data_list: list, label_list: list = None, color_list=['gray', 'blue', 'red', 'green', 'purple'],
+                                    figname='fig', figtitle='Component Weight Breakdown For Varying Battery Levels', savefig=False):
+
+    if not isinstance(data_list, list):
+        return ValueError('Please provide a list of pd.DataFrame!')
+
+    if label_list is None:
+        label_list = [f'Battery {i+1}' for i in range(len(data_list))]
+
+    # Component labels
+    components = ['Payload', 'Battery', 'Structure', 'Propulsion', 'Equipment']
+
+    # Function to display both percentage and value
+    def autopct_format(values):
+        def inner_autopct(pct):
+            total = sum(values)
+            val = int(round(pct * total / 100.0))
+            return '{:.1f}%\n({:d})'.format(pct, val)
+        return inner_autopct
+
+    fig, axs = plt.subplots(1, 3, figsize=(14, 6))
+
+    # Store wedges just once for global legend
+    data_0 = data_list[0][['Weight|payload', 'Weight|battery', 'Weight|structure', 'Weight|propulsion', 'Weight|equipment']].to_numpy()[0]
+    wedges, _, _ = axs[0].pie(
+        data_0,
+        autopct=autopct_format(data_0),
+        startangle=90,
+        textprops={'fontsize': 12},
+        colors=color_list,
+        wedgeprops={'edgecolor': 'white', 'linewidth': 2, 'alpha': 0.5}
+    )
+    axs[0].set_title(label_list[0])
+
+    for i, data in enumerate(data_list):
+
+        data_i = data[['Weight|payload', 'Weight|battery', 'Weight|structure', 'Weight|propulsion', 'Weight|equipment']].to_numpy()[0]
+
+        axs[i].pie(
+            data_i,
+            autopct=autopct_format(data_i),
+            startangle=90,
+            textprops={'fontsize': 12},
+            colors=color_list,
+            wedgeprops={'edgecolor': 'white', 'linewidth': 2, 'alpha': 0.5 if i > 0 else 0.0},
+        )
+        axs[i].set_title(label_list[i], loc='center', y=0.95, fontsize=12)
+
+    # Add a single global legend at the top center
+    fig.legend(wedges, components, loc='upper center', ncol=len(components), fontsize=12, title_fontsize=13, bbox_to_anchor=(0.5, 0.89))
+    fig.suptitle(f'{figtitle}', fontsize=16)
+    plt.tight_layout(rect=[0, 0, 1, 0.87])
+    plt.subplots_adjust(wspace=-0.3)
+    plt.savefig(f'{figname}.pdf', format='pdf', dpi=300) if savefig else plt.show()
