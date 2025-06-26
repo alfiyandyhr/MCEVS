@@ -43,39 +43,39 @@ def plot_mission_parameters(mission: object, print_info=False, save_fig=False):
     plt.show()
 
     # Plot bulk
-    fig, axs = plt.subplots(nrows=3, ncols=2, sharex=False, figsize=(12, 9))
-    axs[0, 0].plot(t / 60.0, x / 1000.0, '-o')
-    axs[0, 0].set_ylabel('Range ($km$) in X-dir')
-    axs[0, 0].minorticks_on()
-    axs[0, 0].grid(which='major', linewidth=0.8)
-    axs[0, 0].grid(which='minor', linewidth=0.2)
-    axs[0, 1].plot(t / 60.0, y, '-o')
-    axs[0, 1].set_ylabel('AGL Altitude ($m$) in Y-dir')
-    axs[0, 1].minorticks_on()
-    axs[0, 1].grid(which='major', linewidth=0.8)
-    axs[0, 1].grid(which='minor', linewidth=0.2)
-    axs[1, 0].plot(t / 60.0, vx * 3.6, '-o')
-    axs[1, 0].set_ylabel('Velocity x-dir ($km/h$)')
-    axs[1, 0].minorticks_on()
-    axs[1, 0].grid(which='major', linewidth=0.8)
-    axs[1, 0].grid(which='minor', linewidth=0.2)
-    axs[1, 1].plot(t / 60.0, vy, '-o')
-    axs[1, 1].set_ylabel('Velocity y-dir ($m/s$)')
-    axs[1, 1].minorticks_on()
-    axs[1, 1].grid(which='major', linewidth=0.8)
-    axs[1, 1].grid(which='minor', linewidth=0.2)
-    axs[2, 0].plot(t / 60.0, ax, '-o')
-    axs[2, 0].set_ylabel('Acceleration x-dir ($m/s^2$)')
-    axs[2, 0].set_xlabel('Time ($min$)')
-    axs[2, 0].minorticks_on()
-    axs[2, 0].grid(which='major', linewidth=0.8)
-    axs[2, 0].grid(which='minor', linewidth=0.2)
-    axs[2, 1].plot(t / 60.0, ay, '-o')
-    axs[2, 1].set_ylabel('Acceleration y-dir ($m/s^2$)')
-    axs[2, 1].set_xlabel('Time ($min$)')
-    axs[2, 1].minorticks_on()
-    axs[2, 1].grid(which='major', linewidth=0.8)
-    axs[2, 1].grid(which='minor', linewidth=0.2)
+    fig, ax = plt.subplots(nrows=3, ncols=2, sharex=False, figsize=(12, 9))
+    ax[0, 0].plot(t / 60.0, x / 1000.0, '-o')
+    ax[0, 0].set_ylabel('Range ($km$) in X-dir')
+    ax[0, 0].minorticks_on()
+    ax[0, 0].grid(which='major', linewidth=0.8)
+    ax[0, 0].grid(which='minor', linewidth=0.2)
+    ax[0, 1].plot(t / 60.0, y, '-o')
+    ax[0, 1].set_ylabel('AGL Altitude ($m$) in Y-dir')
+    ax[0, 1].minorticks_on()
+    ax[0, 1].grid(which='major', linewidth=0.8)
+    ax[0, 1].grid(which='minor', linewidth=0.2)
+    ax[1, 0].plot(t / 60.0, vx * 3.6, '-o')
+    ax[1, 0].set_ylabel('Velocity x-dir ($km/h$)')
+    ax[1, 0].minorticks_on()
+    ax[1, 0].grid(which='major', linewidth=0.8)
+    ax[1, 0].grid(which='minor', linewidth=0.2)
+    ax[1, 1].plot(t / 60.0, vy, '-o')
+    ax[1, 1].set_ylabel('Velocity y-dir ($m/s$)')
+    ax[1, 1].minorticks_on()
+    ax[1, 1].grid(which='major', linewidth=0.8)
+    ax[1, 1].grid(which='minor', linewidth=0.2)
+    ax[2, 0].plot(t / 60.0, ax, '-o')
+    ax[2, 0].set_ylabel('Acceleration x-dir ($m/s^2$)')
+    ax[2, 0].set_xlabel('Time ($min$)')
+    ax[2, 0].minorticks_on()
+    ax[2, 0].grid(which='major', linewidth=0.8)
+    ax[2, 0].grid(which='minor', linewidth=0.2)
+    ax[2, 1].plot(t / 60.0, ay, '-o')
+    ax[2, 1].set_ylabel('Acceleration y-dir ($m/s^2$)')
+    ax[2, 1].set_xlabel('Time ($min$)')
+    ax[2, 1].minorticks_on()
+    ax[2, 1].grid(which='major', linewidth=0.8)
+    ax[2, 1].grid(which='minor', linewidth=0.2)
     if save_fig:
         plt.savefig('flight_params.pdf', format='pdf')
     plt.show()
@@ -108,29 +108,29 @@ def plot_performance_by_segments(mission: object, vehicle: object):
             DL_lift_rotor = np.concatenate((DL_lift_rotor, DL))
 
         # Plot bulk
-        fig, axs = plt.subplots(nrows=2, ncols=2, sharex=False)
-        axs[0, 0].plot(t / 60.0, P_lift_rotor / 1000.0, '-o')
-        axs[0, 0].set_ylabel('LiftRotor power total ($kW$)')
-        axs[0, 0].minorticks_on()
-        axs[0, 0].grid(which='major', linewidth=0.8)
-        axs[0, 0].grid(which='minor', linewidth=0.2)
-        axs[0, 1].plot(t / 60.0, P_propeller / 1000.0, '-o')
-        axs[0, 1].set_ylabel('Propeller power total ($kW$)')
-        axs[0, 1].minorticks_on()
-        axs[0, 1].grid(which='major', linewidth=0.8)
-        axs[0, 1].grid(which='minor', linewidth=0.2)
-        axs[1, 0].plot(t / 60.0, DL_lift_rotor, '-o')
-        axs[1, 0].set_ylabel('LiftRotor disk loading each ($N/m^2$)')
-        axs[1, 0].minorticks_on()
-        axs[1, 0].grid(which='major', linewidth=0.8)
-        axs[1, 0].grid(which='minor', linewidth=0.2)
-        axs[1, 0].set_xlabel('Time ($min$)')
-        axs[1, 1].plot(t / 60.0, DL_propeller, '-o')
-        axs[1, 1].set_ylabel('Propeller disk loading each ($N/m^2$)')
-        axs[1, 1].minorticks_on()
-        axs[1, 1].grid(which='major', linewidth=0.8)
-        axs[1, 1].grid(which='minor', linewidth=0.2)
-        axs[1, 1].set_xlabel('Time ($min$)')
+        fig, ax = plt.subplots(nrows=2, ncols=2, sharex=False)
+        ax[0, 0].plot(t / 60.0, P_lift_rotor / 1000.0, '-o')
+        ax[0, 0].set_ylabel('LiftRotor power total ($kW$)')
+        ax[0, 0].minorticks_on()
+        ax[0, 0].grid(which='major', linewidth=0.8)
+        ax[0, 0].grid(which='minor', linewidth=0.2)
+        ax[0, 1].plot(t / 60.0, P_propeller / 1000.0, '-o')
+        ax[0, 1].set_ylabel('Propeller power total ($kW$)')
+        ax[0, 1].minorticks_on()
+        ax[0, 1].grid(which='major', linewidth=0.8)
+        ax[0, 1].grid(which='minor', linewidth=0.2)
+        ax[1, 0].plot(t / 60.0, DL_lift_rotor, '-o')
+        ax[1, 0].set_ylabel('LiftRotor disk loading each ($N/m^2$)')
+        ax[1, 0].minorticks_on()
+        ax[1, 0].grid(which='major', linewidth=0.8)
+        ax[1, 0].grid(which='minor', linewidth=0.2)
+        ax[1, 0].set_xlabel('Time ($min$)')
+        ax[1, 1].plot(t / 60.0, DL_propeller, '-o')
+        ax[1, 1].set_ylabel('Propeller disk loading each ($N/m^2$)')
+        ax[1, 1].minorticks_on()
+        ax[1, 1].grid(which='major', linewidth=0.8)
+        ax[1, 1].grid(which='minor', linewidth=0.2)
+        ax[1, 1].set_xlabel('Time ($min$)')
 
         plt.show()
 
@@ -144,19 +144,19 @@ def plot_performance_by_segments(mission: object, vehicle: object):
             DL_lift_rotor = np.concatenate((DL_lift_rotor, DL))
 
         # Plot bulk
-        fig, axs = plt.subplots(nrows=1, ncols=2, sharex=False)
-        axs[0].plot(t / 60.0, P_lift_rotor / 1000.0, '-o')
-        axs[0].set_ylabel('Rotor power total ($kW$)')
-        axs[0].minorticks_on()
-        axs[0].grid(which='major', linewidth=0.8)
-        axs[0].grid(which='minor', linewidth=0.2)
-        axs[0].set_xlabel('Time ($min$)')
-        axs[1].plot(t / 60.0, DL_lift_rotor, '-o')
-        axs[1].set_ylabel('Rotor disk loading each ($N/m^2$)')
-        axs[1].minorticks_on()
-        axs[1].grid(which='major', linewidth=0.8)
-        axs[1].grid(which='minor', linewidth=0.2)
-        axs[1].set_xlabel('Time ($min$)')
+        fig, ax = plt.subplots(nrows=1, ncols=2, sharex=False)
+        ax[0].plot(t / 60.0, P_lift_rotor / 1000.0, '-o')
+        ax[0].set_ylabel('Rotor power total ($kW$)')
+        ax[0].minorticks_on()
+        ax[0].grid(which='major', linewidth=0.8)
+        ax[0].grid(which='minor', linewidth=0.2)
+        ax[0].set_xlabel('Time ($min$)')
+        ax[1].plot(t / 60.0, DL_lift_rotor, '-o')
+        ax[1].set_ylabel('Rotor disk loading each ($N/m^2$)')
+        ax[1].minorticks_on()
+        ax[1].grid(which='major', linewidth=0.8)
+        ax[1].grid(which='minor', linewidth=0.2)
+        ax[1].set_xlabel('Time ($min$)')
 
         plt.show()
 
@@ -493,3 +493,83 @@ def plot_geometries(vehicle_list: list, label_list: list, cruise_speed_list=[Non
         ax.set_ylabel('Y [m]')
         ax.legend(loc='lower left')
         plt.savefig(f'{figname}.pdf', format='pdf', dpi=300) if savefig else plt.show()
+
+
+def plot_weight_breakdown(data_list: list, label_list: list = None, color_list=['gray', 'blue', 'red', 'green'], figname='fig', figtitle='Component Weight Breakdown', savefig=False):
+    
+    if not isinstance(data_list, list):
+        return ValueError('Please provide a list of pd.DataFrame!')
+
+    if label_list is None:
+        label_list = [f'Design {i+1}' for i in range(len(data_list))]
+
+    components = ['Payload', 'Battery', 'Structure', 'Propulsion', 'Equipment']
+
+    fig, ax = plt.subplots(figsize=(max(6, len(components) * 2.0), 6))
+
+    x = np.arange(len(components))
+    width = 0.8 / len(data_list)  # total width = 0.8, divided among designs
+
+    for i, data in enumerate(data_list):
+
+        data_i = data[['Weight|payload', 'Weight|battery', 'Weight|structure', 'Weight|propulsion', 'Weight|equipment']]
+
+        offset = (i - (len(data_list) - 1) / 2) * width
+        bars = ax.bar(x + offset, data_i.to_numpy()[0], width, label=label_list[i], color=color_list[i], alpha=0.5)
+        
+        # Add value labels on top of bars
+        for bar in bars:
+            height = np.round(bar.get_height(), 1)
+            ax.annotate(f'{height}',
+                        xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom', fontsize=8)
+
+    ax.set_ylabel(r'Weight $[kg]$', fontsize=12)
+    ax.set_title(f'{figtitle}', fontsize=16)
+    ax.set_xticks(x)
+    ax.set_xticklabels(components)
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig(f'{figname}.pdf', format='pdf', dpi=300) if savefig else plt.show()
+
+
+def plot_power_energy_breakdown(data_list: list, label_list: list = None, color_list=['gray', 'blue', 'red', 'green'],
+                                figname='fig', figtitle='Power Energy Breakdown', savefig=False,
+                                xticks_labels=[r'HoverClimb $[kW]$', r'Cruise $[kW]$', r'HoverDescent $[kW]$', r'Energy Capacity $[kWh]$'],
+                                indexes=['Power|segment_1', 'Power|segment_2', 'Power|segment_3', 'Energy|entire_mission']):
+    
+    if not isinstance(data_list, list):
+        return ValueError('Please provide a list of pd.DataFrame!')
+
+    if label_list is None:
+        label_list = [f'Design {i+1}' for i in range(len(data_list))]
+
+    fig, ax = plt.subplots(figsize=(max(6, len(xticks_labels) * 2.0), 6))
+
+    x = np.arange(len(xticks_labels))
+    width = 0.8 / len(data_list)  # total width = 0.8, divided among designs
+
+    for i, data in enumerate(data_list):
+
+        data_i = data[indexes]
+
+        offset = (i - (len(data_list) - 1) / 2) * width
+        bars = ax.bar(x + offset, data_i.to_numpy()[0], width, label=label_list[i], color=color_list[i], alpha=0.5)
+        
+        # Add value labels on top of bars
+        for bar in bars:
+            height = np.round(bar.get_height(), 1)
+            ax.annotate(f'{height}',
+                        xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom', fontsize=8)
+
+    ax.set_title(f'{figtitle}', fontsize=16)
+    ax.set_xticks(x)
+    ax.set_xticklabels(xticks_labels)
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig(f'{figname}.pdf', format='pdf', dpi=300) if savefig else plt.show()
