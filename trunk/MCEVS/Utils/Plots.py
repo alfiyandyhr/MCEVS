@@ -503,7 +503,7 @@ def plot_weight_breakdown(data_list: list, label_list: list = None, color_list=[
     if label_list is None:
         label_list = [f'Design {i+1}' for i in range(len(data_list))]
 
-    components = ['Payload', 'Battery', 'Structure', 'Propulsion', 'Equipment']
+    components = ['MTOW', 'Battery', 'Structure', 'Propulsion', 'Equipment']
 
     fig, ax = plt.subplots(figsize=(max(6, len(components) * 2.0), 6))
 
@@ -512,7 +512,7 @@ def plot_weight_breakdown(data_list: list, label_list: list = None, color_list=[
 
     for i, data in enumerate(data_list):
 
-        data_i = data[['Weight|payload', 'Weight|battery', 'Weight|structure', 'Weight|propulsion', 'Weight|equipment']]
+        data_i = data[['Weight|takeoff', 'Weight|battery', 'Weight|structure', 'Weight|propulsion', 'Weight|equipment']]
 
         offset = (i - (len(data_list) - 1) / 2) * width
         bars = ax.bar(x + offset, data_i.to_numpy()[0], width, label=label_list[i], color=color_list[i], alpha=0.5)
