@@ -171,9 +171,19 @@ class DesignProblem(object):
             self.default_input_values['Propeller|mean_c_to_R'] = [self.vehicle.propeller.mean_c_to_R, None]
             self.default_input_values['Wing|area'] = [self.vehicle.wing.area, 'm**2']
             self.default_input_values['Wing|aspect_ratio'] = [self.vehicle.wing.aspect_ratio, None]
+            self.default_input_values['Wing|airfoil|CL_alpha'] = [self.vehicle.wing.airfoil.CL_alpha, '1/rad']
+            self.default_input_values['Wing|airfoil|CL_0'] = [self.vehicle.wing.airfoil.CL_0, None]
+            self.default_input_values['HorizontalTail|area'] = [self.vehicle.horizontal_tail.area, 'm**2']
+            self.default_input_values['HorizontalTail|aspect_ratio'] = [self.vehicle.horizontal_tail.aspect_ratio, None]
+            self.default_input_values['HorizontalTail|max_root_thickness'] = [self.vehicle.horizontal_tail.max_root_thickness, 'm']
+            self.default_input_values['VerticalTail|area'] = [self.vehicle.vertical_tail.area, 'm**2']
+            self.default_input_values['VerticalTail|aspect_ratio'] = [self.vehicle.vertical_tail.aspect_ratio, None]
+            self.default_input_values['VerticalTail|max_root_thickness'] = [self.vehicle.vertical_tail.max_root_thickness, 'm']
+            self.default_input_values['VerticalTail|sweep_angle'] = [self.vehicle.vertical_tail.sweep_angle, 'deg']
+            self.default_input_values['Fuselage|length'] = [self.vehicle.fuselage.length, 'm']
 
         # Variables needed for BEMT
-        if self.fidelity['hover_climb'] == 2:
+        if self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
             n_sections = self.vehicle.lift_rotor.n_section
             r_to_R_list = self.vehicle.lift_rotor.r_to_R_list
             c_to_R_list = self.vehicle.lift_rotor.c_to_R_list
