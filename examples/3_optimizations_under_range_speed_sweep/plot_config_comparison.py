@@ -10,7 +10,7 @@ selection_by = 'selection_by_weight' 			# results from weight-based optimization
 battery_energy_density = 250 					# [250,400,550] Wh/kg
 battery_energy_density_list = [250, 400, 550] 	# Wh/kg
 
-plot_multi_range_multi_speed_optimal_config_all = False
+plot_multi_range_multi_speed_optimal_config_all = True
 savefig = False
 
 plot_multi_range_multi_speed_optimal_config = False
