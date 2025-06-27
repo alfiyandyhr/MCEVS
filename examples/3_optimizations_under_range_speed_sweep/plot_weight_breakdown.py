@@ -7,8 +7,8 @@ selection_by = 'weight'  # ['weight', 'energy']
 config_list = ['multirotor', 'liftcruise']
 battery_list = [250, 400, 550]
 
-mission_range = 70 	# km [10,...,220]
-cruise_speed = 220  # km/h [80,...,320]
+mission_range = 60 	# km [10,...,220]
+cruise_speed = 200  # km/h [80,...,320]
 
 for config in config_list:
 

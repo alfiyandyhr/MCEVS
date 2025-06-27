@@ -5,9 +5,10 @@ plot_minimizing_takeoff_weight = False
 plot_minimizing_energy = False
 plot_minimizing_mission_time = False
 
-plot_minimizing_all_objs = True
+plot_minimizing_all_objs = False
 
-figname = 'figures/opt_exploring_objectives'
+plot_multi_range_at_optimal_speeds = True
+
 savefig = False
 
 configuration = 'multirotor'
@@ -133,4 +134,118 @@ if plot_minimizing_all_objs:
     fig.suptitle('Single-objective optimization results')
     fig.legend(ncols=2, bbox_to_anchor=(0.78, 0.96))
     plt.subplots_adjust(left=0.09, bottom=0.1, right=0.97, top=0.81, hspace=0.1)
-    plt.savefig(f'{figname}.pdf', format='pdf', dpi=300) if savefig else plt.show()
+    plt.savefig('figures/opt_exploring_objectives.pdf', format='pdf', dpi=300) if savefig else plt.show()
+
+if plot_multi_range_at_optimal_speeds:
+
+    objective_list = ['takeoff_weight', 'energy', 'mission_time']
+
+    for objective in objective_list:
+
+        battery_list = [250, 400, 550]
+
+        data_dict = {}
+        for battery in battery_list:
+        
+            data_df = pd.read_csv(f'minimizing_{objective}/multirotor/battery_{battery}_Whpkg/results_with_speed_as_design_var.csv')
+            data_df2 = pd.read_csv(f'minimizing_{objective}/liftcruise/battery_{battery}_Whpkg/results_with_speed_as_design_var.csv')
+
+            data_df = data_df[data_df['Weight|residual'] < 0.1]
+            data_df = data_df[data_df['LiftRotor|HoverClimb|T_to_P'] < 12.01]
+            data_df = data_df[data_df['LiftRotor|Cruise|T_to_P'] < 12.01]
+            data_df = data_df[data_df['LiftRotor|HoverDescent|T_to_P'] < 12.01]
+            data_df = data_df[data_df['LiftRotor|Cruise|mu'] < 1.1]
+            data_df = data_df[data_df['LiftRotor|Cruise|CT/sigma'] < 0.15]
+
+            data_df2 = data_df2[data_df2['Weight|residual'] < 0.1]
+            data_df2 = data_df2[data_df2['Aero|Cruise|CL'] < 0.91]
+            data_df2 = data_df2[data_df2['LiftRotor|HoverClimb|T_to_P'] < 12.01]
+            data_df2 = data_df2[data_df2['Propeller|Cruise|T_to_P'] < 12.01]
+            data_df2 = data_df2[data_df2['LiftRotor|HoverDescent|T_to_P'] < 12.01]
+            data_df2 = data_df2[data_df2['Propeller|Cruise|J'] < 3.01]
+            data_df2 = data_df2[data_df2['Propeller|Cruise|CT/sigma'] < 0.15]
+            data_df2 = data_df2[data_df2['LiftRotor|clearance_constraint'] < 0.1]
+
+            data_dict[f'{battery}'] = [data_df, data_df2]
+
+        if objective == 'takeoff_weight':
+            metric_tag = 'Weight|takeoff'
+            y_label = r'Takeoff Weight $[kg]$'
+            title_tag = 'Takeoff Weight'
+            fig_tag = 'weight'
+
+        elif objective == 'energy':
+            metric_tag = 'Energy|entire_mission'
+            y_label = r'Energy Consumption $[kWh]$'
+            title_tag = 'Energy'
+            fig_tag = 'energy'
+
+        elif objective == 'mission_time':
+            metric_tag = None
+            y_label = r'Mission Time $[mins]$'
+            title_tag = 'Mission Time'
+            fig_tag = 'time'
+        
+        # --- Objective Function vs Mission Range --- #
+
+        fig, axes = plt.subplots(1, 3, figsize=(12, 5), sharey=False)
+
+        for i, ax in enumerate(axes):
+
+            if objective in ['takeoff_weight', 'energy']:
+                ax.plot(data_dict[f'{battery_list[i]}'][0]['mission_range'], data_dict[f'{battery_list[i]}'][0][f'{metric_tag}'], '-o', ms=4, label='Multirotor' if i == 0 else None)
+                ax.plot(data_dict[f'{battery_list[i]}'][1]['mission_range'], data_dict[f'{battery_list[i]}'][1][f'{metric_tag}'], '-o', ms=4, label='Lift+Cruise' if i == 0 else None)
+
+            elif objective in ['mission_time']:
+                R_0 = data_dict[f'{battery_list[i]}'][0]['mission_range']
+                v_0 = data_dict[f'{battery_list[i]}'][0]['cruise_speed']
+                R_1 = data_dict[f'{battery_list[i]}'][1]['mission_range']
+                v_1 = data_dict[f'{battery_list[i]}'][1]['cruise_speed']
+                ax.plot(data_dict[f'{battery_list[i]}'][0]['mission_range'], R_0 / v_0 * 60 + 5.34, '-o', ms=4, label='Multirotor' if i == 0 else None)
+                ax.plot(data_dict[f'{battery_list[i]}'][1]['mission_range'], R_1 / v_1 * 60 + 5.34, '-o', ms=4, label='Lift+Cruise' if i == 0 else None)
+                    
+            ax.set_title(f'Battery GED= {battery_list[i]} Wh/kg')
+            ax.set_xlabel(r'Mission range $[km]$')
+            if i == 0:
+                ax.set_ylabel(y_label)
+
+        fig.legend(loc='upper center', bbox_to_anchor=(0.5, 0.94), ncol=2, prop={'size': 12})
+        fig.suptitle(f'Optimal {title_tag} vs Mission Range', size=16)
+        plt.subplots_adjust(bottom=0.25, top=0.80, wspace=0.25)
+        plt.savefig(f'figures/{fig_tag}_vs_range.pdf', format='pdf', dpi=300) if savefig else plt.show()
+
+        # --- Equivalent L/D vs Mission Range --- #
+
+        fig, axes = plt.subplots(1, 3, figsize=(12, 5), sharey=True)
+
+        for i, ax in enumerate(axes):
+
+            g = 9.81  # m/s**2
+
+            W_0 = data_dict[f'{battery_list[i]}'][0]['Weight|takeoff']
+            v_0 = data_dict[f'{battery_list[i]}'][0]['cruise_speed'] * 1000 / 3600  # m/s
+            P_0 = data_dict[f'{battery_list[i]}'][0]['Power|segment_3'] * 1000  # W
+
+            W_1 = data_dict[f'{battery_list[i]}'][1]['Weight|takeoff']
+            v_1 = data_dict[f'{battery_list[i]}'][1]['cruise_speed'] * 1000 / 3600  # m/s
+            P_1 = data_dict[f'{battery_list[i]}'][1]['Power|segment_3'] * 1000  # W
+
+            ax.plot(data_dict[f'{battery_list[i]}'][0]['mission_range'], W_0 * g * v_0 / P_0, '-o', ms=4, label='Multirotor' if i == 0 else None)
+            ax.plot(data_dict[f'{battery_list[i]}'][1]['mission_range'], W_1 * g * v_1 / P_1, '-o', ms=4, label='Lift+Cruise' if i == 0 else None)
+            
+            ax.set_title(f'Battery GED: {battery_list[i]} Wh/kg')
+            ax.set_xlabel(r'Mission range $[km]$')
+            if i == 0:
+                ax.set_ylabel(r'$L/D_{e} = W*v/P$')
+
+        if objective == 'takeoff_weight':
+            title_tag2 = 'Weight'
+        elif objective == 'energy':
+            title_tag2 = 'Energy'
+        elif objective == 'mission_time':
+            title_tag2 = 'Time'
+
+        fig.legend(loc='upper center', bbox_to_anchor=(0.5, 0.94), ncol=2, prop={'size': 12})
+        fig.suptitle(f'Equivalent L/D vs Mission Range for {title_tag2}-Minimal Designs', size=16)
+        plt.subplots_adjust(bottom=0.25, top=0.80, wspace=0.1)
+        plt.savefig(f'figures/{fig_tag}_LbyD_vs_range.pdf', format='pdf', dpi=300) if savefig else plt.show()
