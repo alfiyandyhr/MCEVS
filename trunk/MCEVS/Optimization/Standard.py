@@ -31,7 +31,7 @@ def RunStandardSingleObjectiveOptimization(vehicle: object, mission: object, fid
 
     if vehicle.configuration == 'Multirotor':
 
-        if fidelity['hover_climb'] == 0:
+        if fidelity['power_model']['hover_climb'] == 'MomentumTheory':
             problem.add_design_var('Weight|takeoff', 100.0, 10000.0, mtow_guess, 'kg')
             problem.add_design_var('LiftRotor|radius', 1.0, 5.0, vehicle.lift_rotor.radius, 'm')
             problem.add_design_var('LiftRotor|Cruise|RPM', 100.0, 1500.0, vehicle.lift_rotor.RPM['cruise'], 'rpm')
@@ -47,7 +47,7 @@ def RunStandardSingleObjectiveOptimization(vehicle: object, mission: object, fid
 
     elif vehicle.configuration == 'LiftPlusCruise':
 
-        if fidelity['hover_climb'] == 0:
+        if fidelity['power_model']['hover_climb'] == 'MomentumTheory':
             problem.add_design_var('Weight|takeoff', 100.0, 10000.0, mtow_guess, 'kg')
             problem.add_design_var('Wing|area', 6.0, 30.0, vehicle.wing.area, 'm**2')
             problem.add_design_var('Wing|aspect_ratio', 4.0, 12.0, vehicle.wing.aspect_ratio, None)
@@ -122,7 +122,7 @@ def RunMultiPointSingleObjectiveOptimization(type: str, value_list: list, object
 
     if vehicle.configuration == 'Multirotor':
 
-        if fidelity['hover_climb'] == 0:
+        if fidelity['power_model']['hover_climb'] == 'MomentumTheory':
             problem.add_design_var('LiftRotor|radius', 1.0, 5.0, vehicle.lift_rotor.radius, 'm')
             problem.add_design_var('LiftRotor|Cruise|RPM', 100.0, 1500.0, vehicle.lift_rotor.RPM['cruise'], 'rpm')
             if speed_as_design_var:
@@ -141,7 +141,7 @@ def RunMultiPointSingleObjectiveOptimization(type: str, value_list: list, object
 
     elif vehicle.configuration == 'LiftPlusCruise':
 
-        if fidelity['hover_climb'] == 0:
+        if fidelity['power_model']['hover_climb'] == 'MomentumTheory':
             problem.add_design_var('Wing|area', 6.0, 30.0, vehicle.wing.area, 'm**2')
             problem.add_design_var('Wing|aspect_ratio', 4.0, 12.0, vehicle.wing.aspect_ratio, None)
             problem.add_design_var('LiftRotor|radius', 0.8, 2.5, vehicle.lift_rotor.radius, 'm')
@@ -220,7 +220,7 @@ def RunOffDesignSingleObjectiveOptimization(type: str, objective: str, empty_wei
 
     if vehicle.configuration == 'Multirotor':
 
-        if fidelity['hover_climb'] == 0:
+        if fidelity['power_model']['hover_climb'] == 'MomentumTheory':
             problem.add_design_var('LiftRotor|radius', 1.0, 5.0, vehicle.lift_rotor.radius, 'm')
             problem.add_design_var('LiftRotor|Cruise|RPM', 100.0, 1500.0, vehicle.lift_rotor.RPM['cruise'], 'rpm')
             if speed_as_design_var:
@@ -240,7 +240,7 @@ def RunOffDesignSingleObjectiveOptimization(type: str, objective: str, empty_wei
 
     elif vehicle.configuration == 'LiftPlusCruise':
 
-        if fidelity['hover_climb'] == 0:
+        if fidelity['power_model']['hover_climb'] == 'MomentumTheory':
             problem.add_design_var('Wing|area', 6.0, 30.0, vehicle.wing.area, 'm**2')
             problem.add_design_var('Wing|aspect_ratio', 4.0, 12.0, vehicle.wing.aspect_ratio, None)
             problem.add_design_var('LiftRotor|radius', 0.8, 2.5, vehicle.lift_rotor.radius, 'm')
