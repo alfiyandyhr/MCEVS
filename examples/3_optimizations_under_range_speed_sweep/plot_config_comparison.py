@@ -527,7 +527,7 @@ if plot_multi_range_multi_speed_optimal_config_all:
         # Adjust layout to prevent overlap
         fig.suptitle('Optimal configuration by MTOW from weight-based optimization', size=16)
         plt.subplots_adjust(bottom=0.25, top=0.82, wspace=0.03)
-        plt.savefig('config_selection_by_weight.pdf', format='pdf', dpi=300) if savefig else plt.show()
+        plt.savefig('figures/config_selection_by_weight.pdf', format='pdf', dpi=300) if savefig else plt.show()
 
     if selection_by == 'selection_by_energy':
 
@@ -559,4 +559,4 @@ if plot_multi_range_multi_speed_optimal_config_all:
         # Adjust layout to prevent overlap
         fig.suptitle('Optimal configuration by energy from energy-based optimization', size=16)
         plt.subplots_adjust(bottom=0.25, top=0.82, wspace=0.03)
-        plt.savefig('config_selection_by_energy.pdf', format='pdf', dpi=300) if savefig else plt.show()
+        plt.savefig('figures/config_selection_by_energy.pdf', format='pdf', dpi=300) if savefig else plt.show()

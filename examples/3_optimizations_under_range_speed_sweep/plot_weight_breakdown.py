@@ -31,4 +31,4 @@ for config in config_list:
                                                 f'${{\\mathbf{{Battery= {battery_list[1]} Wh/kg}}}}$\nMTOW= {np.round(mtow_list[1])} kg',
                                                 f'${{\\mathbf{{Battery= {battery_list[2]} Wh/kg}}}}$\nMTOW= {np.round(mtow_list[2])} kg'],
                                     figtitle=f'Component Weight Breakdown for {vehicle_config}\nRange= {mission_range} km; Speed= {cruise_speed} km/h', savefig=False,
-                                    figname=f'component_weight_breakdown_{config}')
+                                    figname=f'figures/component_weight_breakdown_{config}')
