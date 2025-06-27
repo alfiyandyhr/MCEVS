@@ -93,7 +93,7 @@ def NASA_LPC_Wing(area=210.27814, aspect_ratio=12.12761, l_fuse=30.0, fuse_id=No
         vsp.SetParmValUpdate(wing_id, 'OutLEDihedral', f'XSec_{i}', OutLEDihedral[i - 1])
 
     # Change airfoil shape using NASA/LANGLEY LS(1)-0417 (GA(W)-1) AIRFOIL
-    airfoil_dir = MCEVS.__file__[:-11] + 'Applications/OpenVSP/Components/Airfoils/LS417.dat'
+    airfoil_dir = MCEVS.__file__[:-11] + 'Wrappers/OpenVSP/Components/Airfoils/LS417.dat'
     wing_surf = vsp.GetXSecSurf(wing_id, 0)
     xsec_num = vsp.GetNumXSec(wing_surf)
     for i in range(xsec_num):
