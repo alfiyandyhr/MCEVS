@@ -25,7 +25,11 @@ class PowerAnalysis(object):
         self.fidelity = fidelity
 
         # Check solver fidelity
-        check_fidelity_dict(self.fidelity, self.vehicle.configuration)
+        if vehicle.configuration == 'Multirotor':
+            modules_to_check = ['aerodynamics', 'power_model']
+        elif vehicle.configuration == 'LiftPlusCruise':
+            modules_to_check = ['aerodynamics', 'power_model', 'stability']
+        check_fidelity_dict(self.fidelity, self.vehicle.configuration, modules_to_check)
 
     def evaluate(self, record=False):
         # print('### --- Solving for power requirement --- ###')
@@ -59,7 +63,7 @@ class PowerAnalysis(object):
             l_fuse = self.vehicle.fuselage.length 						# m
 
         # --- OpenMDAO probolem --- #
-        prob = om.Problem()
+        prob = om.Problem(reports=False)
         indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
         # MTOW should be defined since this is not in sizing mode
@@ -160,7 +164,8 @@ class PowerAnalysis(object):
         prob.model.add_subsystem('power_model',
                                  PowerRequirement(mission=self.mission,
                                                   vehicle=self.vehicle,
-                                                  fidelity=self.fidelity),
+                                                  fidelity=self.fidelity,
+                                                  rhs_checking=False),
                                  promotes_inputs=['*'],
                                  promotes_outputs=['*'])
 

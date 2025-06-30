@@ -79,7 +79,11 @@ class WeightAnalysis(object):
         self.fidelity = fidelity
 
         # Check solver fidelity
-        check_fidelity_dict(self.fidelity, self.vehicle.configuration)
+        if vehicle.configuration == 'Multirotor':
+            modules_to_check = ['aerodynamics', 'power_model', 'weight_model']
+        elif vehicle.configuration == 'LiftPlusCruise':
+            modules_to_check = ['aerodynamics', 'power_model', 'stability', 'weight_model']
+        check_fidelity_dict(self.fidelity, self.vehicle.configuration, modules_to_check)
 
         self.sizing_mode = sizing_mode
         self.solved_by = solved_by

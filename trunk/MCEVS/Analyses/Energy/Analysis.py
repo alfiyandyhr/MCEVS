@@ -17,7 +17,11 @@ class EnergyAnalysis(object):
         self.fidelity = fidelity
 
         # Check solver fidelity
-        check_fidelity_dict(self.fidelity, self.vehicle.configuration)
+        if vehicle.configuration == 'Multirotor':
+            modules_to_check = ['aerodynamics', 'power_model']
+        elif vehicle.configuration == 'LiftPlusCruise':
+            modules_to_check = ['aerodynamics', 'power_model', 'stability']
+        check_fidelity_dict(self.fidelity, self.vehicle.configuration, modules_to_check)
 
     def evaluate(self, record=False):
         # print('### --- Solving for energy requirement --- ###')
@@ -51,7 +55,7 @@ class EnergyAnalysis(object):
             l_fuse = self.vehicle.fuselage.length 						# m
 
         # --- OpenMDAO probolem --- #
-        prob = om.Problem()
+        prob = om.Problem(reports=False)
         indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
         # MTOW should be defined since this is not in sizing mode
@@ -113,7 +117,7 @@ class EnergyAnalysis(object):
             indeps.add_output('Fuselage|length', l_fuse, units='m')
 
         # Variables needed for BEMT
-        if self.fidelity['hover_climb'] == 2:
+        if self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
             n_sections = self.vehicle.lift_rotor.n_section
             r_to_R_list = self.vehicle.lift_rotor.r_to_R_list
             c_to_R_list = self.vehicle.lift_rotor.c_to_R_list
@@ -152,7 +156,8 @@ class EnergyAnalysis(object):
         prob.model.add_subsystem('energy_model',
                                  EnergyConsumption(mission=self.mission,
                                                    vehicle=self.vehicle,
-                                                   fidelity=self.fidelity),
+                                                   fidelity=self.fidelity,
+                                                   rhs_checking=False),
                                  promotes_inputs=['*'],
                                  promotes_outputs=['*'])
 
