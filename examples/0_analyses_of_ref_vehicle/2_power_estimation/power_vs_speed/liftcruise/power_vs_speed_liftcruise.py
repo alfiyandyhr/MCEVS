@@ -47,14 +47,13 @@ for i, cruise_speed in enumerate(cruise_speed_list):
     vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, tfs, n_pax=6, payload_per_pax=payload_per_pax)
     # vehicle.print_info()
 
-    # Fidelity
-    fidelity = {'aero': 1, 'hover_climb': 0}
-    if fidelity['hover_climb'] == 0:
-        vehicle.weight.max_takeoff = 2142.96575588
-    elif fidelity['hover_climb'] == 1:
-        vehicle.weight.max_takeoff = 2318.37756911
-        vehicle.lift_rotor.global_twist = 27.593661190971346
-        vehicle.lift_rotor.RPM['hover_climb'] = 567.0922900053763
+    # Solver fidelity
+    fidelity = {'aerodynamics': {'parasite': 'ComponentBuildUp', 'induced': 'ParabolicDragPolar'},
+                'power_model': {'hover_climb': 'MomentumTheory'},
+                'stability': {'AoA_trim': {'cruise': 'ManualFixedValue'}}}
+
+    vehicle.weight.max_takeoff = 2858.88808663
+    vehicle.lift_rotor.RPM['hover_climb'] = 400.0
 
     # Analysis
     analysis = PowerAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity)
