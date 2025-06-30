@@ -296,7 +296,7 @@ class BEMTSolverOMGroup(om.Group):
                            ('phi', f'Section{i+1}|phi')]
 
             self.add_subsystem(f'section{i+1}_solver',
-                               SectionSolverOM(airfoil=airfoil_list[i], nblades=nblades, rho=rho),
+                               SectionSolverOM(airfoil=airfoil_list[i], nblades=nblades),
                                promotes_inputs=input_list,
                                promotes_outputs=output_list)
 
