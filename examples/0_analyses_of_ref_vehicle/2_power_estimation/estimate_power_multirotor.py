@@ -1,5 +1,4 @@
 from MCEVS.Vehicles.Standard import StandardMultirotorEVTOL
-from MCEVS.Vehicles.Standard import StandardLiftPlusCruiseEVTOL
 from MCEVS.Missions.Container import Mission
 from MCEVS.Analyses.Power.Analysis import PowerAnalysis
 # from MCEVS.Utils.Plots import plot_mission_parameters, plot_performance_by_segments
@@ -39,32 +38,26 @@ operation_var2 = {'RPM_lift_rotor': {'hover_climb': None}, 'RPM_propeller': {'cr
 # Technology factors
 tfs = {'tf_structure': 0.8, 'tf_propulsion': 0.8, 'tf_equipment': 0.8}
 
-vehicle1 = StandardMultirotorEVTOL(design_var1, operation_var1, tfs, n_pax=6, payload_per_pax=payload_per_pax)
-vehicle2 = StandardLiftPlusCruiseEVTOL(design_var2, operation_var2, tfs, n_pax=6, payload_per_pax=payload_per_pax)
-# vehicle1.print_info()
+vehicle = StandardMultirotorEVTOL(design_var1, operation_var1, tfs, n_pax=6, payload_per_pax=payload_per_pax)
+# vehicle.print_info()
 
-# Fidelity
-fidelity = {'aero': 1, 'hover_climb': 0}
-if fidelity['hover_climb'] == 0:
-    vehicle1.weight.max_takeoff = 4121.13997362
-    vehicle1.lift_rotor.RPM['hover_climb'] = 400.0
-    vehicle2.weight.max_takeoff = 2858.88805887
-    vehicle2.lift_rotor.RPM['hover_climb'] = 400.0
-elif fidelity['hover_climb'] == 1:
-    vehicle1.weight.max_takeoff = 4112.30957032
-    vehicle1.lift_rotor.RPM['hover_climb'] = 400.0
-    vehicle2.weight.max_takeoff = 2814.18805917
-    vehicle2.lift_rotor.RPM['hover_climb'] = 700.0
-elif fidelity['hover_climb'] == 2:
-    vehicle1.weight.max_takeoff = 3920.99011566
-    vehicle1.lift_rotor.global_twist = 15.43370966
-    vehicle1.lift_rotor.RPM['hover_climb'] = 289.78701964
-    vehicle2.weight.max_takeoff = 2854.57864184
-    vehicle2.lift_rotor.global_twist = 23.5959419443252
-    vehicle2.lift_rotor.RPM['hover_climb'] = 680.160987077815
+# Solver fidelity
+fidelity = {'aerodynamics': {'parasite': 'ComponentBuildUp', 'induced': 'ParabolicDragPolar'},
+            'power_model': {'hover_climb': 'MomentumTheory'}
+            # 'power_model': {'hover_climb': 'ModifiedMomentumTheory'}
+            # 'power_model': {'hover_climb': 'BladeElementMomentumTheory'}
+            }
 
-# Analysis (change vehicle=vehicle1 or vehicle=vehicle2)
-vehicle = vehicle1
+if fidelity['power_model']['hover_climb'] == 'MomentumTheory':
+    vehicle.weight.max_takeoff = 4121.13997362
+    vehicle.lift_rotor.RPM['hover_climb'] = 400.0
+elif fidelity['power_model']['hover_climb'] == 'ModifiedMomentumTheory':
+    vehicle.weight.max_takeoff = 4112.30957032
+    vehicle.lift_rotor.RPM['hover_climb'] = 400.0
+elif fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
+    vehicle.weight.max_takeoff = 3920.99011566
+    vehicle.lift_rotor.global_twist = 15.43370966
+    vehicle.lift_rotor.RPM['hover_climb'] = 289.78701964
 
 # Run analysis
 analysis = PowerAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity)
@@ -82,5 +75,4 @@ print('FM = ', results.get_val('LiftRotor|HoverClimb|FM'))
 
 # Note:
 # Analyses to check:
-# 	fidelity['hover_climb'] in [0, 1, 2]
-# 	vehicle=vehicle1 or vehicle=vehicle2
+#   fidelity['power_model']['hover_climb'] in ['MomentumTheory', 'ModifiedMomentumTheory', 'BladeElementMomentumTheory']
