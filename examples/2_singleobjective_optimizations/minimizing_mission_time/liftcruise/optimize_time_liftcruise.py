@@ -17,7 +17,11 @@ range_array = np.arange(range_i, range_f, d_range)
 
 print(range_array)
 
-solution_fidelity = {'aero': 1, 'hover_climb': 0}
+# Solver fidelity
+fidelity = {'aerodynamics': {'parasite': 'ComponentBuildUp', 'induced': 'ParabolicDragPolar'},
+            'power_model': {'hover_climb': 'MomentumTheory'},
+            'weight_model': {'structure': 'Roskam'},
+            'stability': {'AoA_trim': {'cruise': 'ManualFixedValue'}}}
 
 if run_with_speed_as_design_var_one_opt:
 
@@ -41,7 +45,7 @@ if run_with_speed_as_design_var_one_opt:
     # Standard optimization
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'mission_time', mtow_guess, speed_as_design_var=True, print=True)
+        results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'mission_time', mtow_guess, speed_as_design_var=True, print=True)
         print(results)
 
 # Expensive simulations, run once !!!
@@ -75,6 +79,11 @@ if run_with_speed_as_design_var_all_opt:
         # Changed battery density
         vehicle.battery.density = float(battery_energy_density)
 
+        # Fixed assumed parasite drag from the ref vehicle
+        if i != 0:
+            vehicle.f_total_non_hub_non_wing = {'climb': None, 'cruise': f_non_hub_non_wing, 'descent': None}  # noqa: F821
+            vehicle.wing.Cd0 = {'climb': None, 'cruise': Cd0_wing, 'descent': None}  # noqa: F821
+
         print(f"Iter= {i}, Range= {mission_range}, Speed guess= {cruise_speed_guess}")
 
         # Standard mission
@@ -83,10 +92,14 @@ if run_with_speed_as_design_var_all_opt:
         # Standard optimization
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'mission_time', mtow_guess, speed_as_design_var=True, print=False)
+            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'mission_time', mtow_guess, speed_as_design_var=True, print=False)
             # print(results)
+
+        if i == 0:
+            f_non_hub_non_wing = results['Aero|Cruise|f_total_non_hub_non_wing']
+            Cd0_wing = results['Aero|Cruise|Cd0_wing']
 
         results_df = pd.DataFrame(results, index=[i])
 
         results_df.to_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv', mode='a', header=True if i == 0 else False)
-        # results_df.to_csv(f'battery_{battery_energy_density}_Whpkg/results_test.csv', mode='a', header=True if i==0 else False)
+        # results_df.to_csv(f'battery_{battery_energy_density}_Whpkg/results_test.csv', mode='a', header=True if i == 0 else False)

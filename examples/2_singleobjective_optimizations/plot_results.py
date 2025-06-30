@@ -5,73 +5,57 @@ plot_minimizing_takeoff_weight = False
 plot_minimizing_energy = False
 plot_minimizing_mission_time = False
 
-plot_minimizing_all_objs = False
+plot_minimizing_all_objs = True
 
-plot_multi_range_at_optimal_speeds = True
+plot_multi_range_at_optimal_speeds = False
 
 savefig = False
 
-configuration = 'multirotor'
-# configuration = 'liftcruise'
+configurations = ['multirotor', 'liftcruise']
 
 if plot_minimizing_takeoff_weight or plot_minimizing_energy or plot_minimizing_mission_time:
 
-    if plot_minimizing_takeoff_weight:
-        folder = 'minimizing_takeoff_weight'
-        label = 'Weight-minimal'
-        df_label = 'Weight|takeoff'
-        # df_label = 'Energy|entire_mission'
-        # df_label = 'cruise_speed'
-        y_label = 'Takeoff weight [kg]'
-    if plot_minimizing_energy:
-        folder = 'minimizing_energy'
-        label = 'Energy-minimal'
-        df_label = 'Energy|entire_mission'
-        df_label = 'Weight|takeoff'
-        # df_label = 'cruise_speed'
-        y_label = 'Energy [kWh]'
-    if plot_minimizing_mission_time:
-        folder = 'minimizing_mission_time'
-        label = 'Time-minimal'
-        df_label = 'mission_time'
-        # df_label = 'Weight|takeoff'
-        # df_label = 'Energy|entire_mission'
-        y_label = 'Mission time [mins]'
+    for configuration in configurations:
 
-    data_df1 = pd.read_csv(f'{folder}/{configuration}/battery_250_Whpkg/results_with_speed_as_design_var.csv')
-    data_df2 = pd.read_csv(f'{folder}/{configuration}/battery_400_Whpkg/results_with_speed_as_design_var.csv')
-    data_df3 = pd.read_csv(f'{folder}/{configuration}/battery_550_Whpkg/results_with_speed_as_design_var.csv')
-    data_list = [data_df1, data_df2, data_df3]
+        if plot_minimizing_takeoff_weight:
+            folder = 'minimizing_takeoff_weight'
+            label = 'Weight-minimal'
+            df_label = 'Weight|takeoff'
+            # df_label = 'Energy|entire_mission'
+            # df_label = 'cruise_speed'
+            y_label = r'Takeoff weight $[kg]$'
+        if plot_minimizing_energy:
+            folder = 'minimizing_energy'
+            label = 'Energy-minimal'
+            df_label = 'Energy|entire_mission'
+            # df_label = 'Weight|takeoff'
+            # df_label = 'cruise_speed'
+            y_label = r'Energy $[kWh]$'
+        if plot_minimizing_mission_time:
+            folder = 'minimizing_mission_time'
+            label = 'Time-minimal'
+            df_label = 'mission_time'
+            # df_label = 'Weight|takeoff'
+            # df_label = 'Energy|entire_mission'
+            y_label = r'Mission time $[mins]$'
 
-    if configuration == 'multirotor':
+        data_df1 = pd.read_csv(f'{folder}/{configuration}/battery_250_Whpkg/results_with_speed_as_design_var.csv')
+        data_df2 = pd.read_csv(f'{folder}/{configuration}/battery_400_Whpkg/results_with_speed_as_design_var.csv')
+        data_df3 = pd.read_csv(f'{folder}/{configuration}/battery_550_Whpkg/results_with_speed_as_design_var.csv')
+        data_list = [data_df1, data_df2, data_df3]
+
         for i in range(3):
-            data_list[i] = data_list[i][data_list[i]['Weight|residual'] < 0.1]
-            data_list[i] = data_list[i][data_list[i]['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-            data_list[i] = data_list[i][data_list[i]['LiftRotor|Cruise|T_to_P'] < 12.01]
-            data_list[i] = data_list[i][data_list[i]['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-            data_list[i] = data_list[i][data_list[i]['LiftRotor|Cruise|mu'] < 1.0]
-            data_list[i] = data_list[i][data_list[i]['LiftRotor|Cruise|CT/sigma'] < 0.15]
+            data_list[i] = data_list[i][data_list[i]['success']]
 
-    elif configuration == 'liftcruise':
-        for i in range(3):
-            data_list[i] = data_list[i][data_list[i]['Weight|residual'] < 0.1]
-            data_list[i] = data_list[i][data_list[i]['Aero|Cruise|CL'] < 0.91]
-            data_list[i] = data_list[i][data_list[i]['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-            data_list[i] = data_list[i][data_list[i]['Propeller|Cruise|T_to_P'] < 12.01]
-            data_list[i] = data_list[i][data_list[i]['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-            data_list[i] = data_list[i][data_list[i]['Propeller|Cruise|J'] < 3.01]
-            data_list[i] = data_list[i][data_list[i]['Propeller|Cruise|CT/sigma'] < 0.15]
-            data_list[i] = data_list[i][data_list[i]['LiftRotor|clearance_constraint'] < 0.1]
+        plt.plot(data_list[0]['mission_range'], data_list[0][df_label], '-o', label=f'{label} {configuration}; 250 Wh/kg')
+        plt.plot(data_list[1]['mission_range'], data_list[1][df_label], '-o', label=f'{label} {configuration}; 400 Wh/kg')
+        plt.plot(data_list[2]['mission_range'], data_list[2][df_label], '-o', label=f'{label} {configuration}; 550 Wh/kg')
 
-    plt.plot(data_list[0]['mission_range'], data_list[0][df_label], '-o', label=f'{label} {configuration}; 250 Wh/kg')
-    plt.plot(data_list[1]['mission_range'], data_list[1][df_label], '-o', label=f'{label} {configuration}; 400 Wh/kg')
-    plt.plot(data_list[2]['mission_range'], data_list[2][df_label], '-o', label=f'{label} {configuration}; 550 Wh/kg')
-
-    plt.xlabel('Mission range [km]')
-    plt.ylabel(y_label)
-    plt.legend()
-    plt.grid()
-    plt.show()
+        plt.xlabel(r'Mission range $[km]$')
+        plt.ylabel(y_label)
+        plt.legend()
+        plt.grid()
+        plt.show()
 
 if plot_minimizing_all_objs:
 
@@ -146,7 +130,7 @@ if plot_multi_range_at_optimal_speeds:
 
         data_dict = {}
         for battery in battery_list:
-        
+
             data_df = pd.read_csv(f'minimizing_{objective}/multirotor/battery_{battery}_Whpkg/results_with_speed_as_design_var.csv')
             data_df2 = pd.read_csv(f'minimizing_{objective}/liftcruise/battery_{battery}_Whpkg/results_with_speed_as_design_var.csv')
 
@@ -185,7 +169,7 @@ if plot_multi_range_at_optimal_speeds:
             y_label = r'Mission Time $[mins]$'
             title_tag = 'Mission Time'
             fig_tag = 'time'
-        
+
         # --- Objective Function vs Mission Range --- #
 
         fig, axes = plt.subplots(1, 3, figsize=(12, 5), sharey=False)
@@ -203,7 +187,7 @@ if plot_multi_range_at_optimal_speeds:
                 v_1 = data_dict[f'{battery_list[i]}'][1]['cruise_speed']
                 ax.plot(data_dict[f'{battery_list[i]}'][0]['mission_range'], R_0 / v_0 * 60 + 5.34, '-o', ms=4, label='Multirotor' if i == 0 else None)
                 ax.plot(data_dict[f'{battery_list[i]}'][1]['mission_range'], R_1 / v_1 * 60 + 5.34, '-o', ms=4, label='Lift+Cruise' if i == 0 else None)
-                    
+    
             ax.set_title(f'Battery GED= {battery_list[i]} Wh/kg')
             ax.set_xlabel(r'Mission range $[km]$')
             if i == 0:
@@ -232,7 +216,7 @@ if plot_multi_range_at_optimal_speeds:
 
             ax.plot(data_dict[f'{battery_list[i]}'][0]['mission_range'], W_0 * g * v_0 / P_0, '-o', ms=4, label='Multirotor' if i == 0 else None)
             ax.plot(data_dict[f'{battery_list[i]}'][1]['mission_range'], W_1 * g * v_1 / P_1, '-o', ms=4, label='Lift+Cruise' if i == 0 else None)
-            
+
             ax.set_title(f'Battery GED: {battery_list[i]} Wh/kg')
             ax.set_xlabel(r'Mission range $[km]$')
             if i == 0:
