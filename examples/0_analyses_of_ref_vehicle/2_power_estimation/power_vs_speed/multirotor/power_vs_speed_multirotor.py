@@ -36,7 +36,7 @@ for i, cruise_speed in enumerate(cruise_speed_list):
     # plot_mission_parameters(mission, print_info=False)
 
     # Design and operation variables
-    design_var = {'r_lift_rotor': 4.0}
+    design_var = {'r_lift_rotor': 4.20624}  # 13.8 ft = 4.20624 m
     operation_var = {'RPM_lift_rotor': {'hover_climb': 500.0, 'cruise': 450.0}}
 
     # Technology factors
@@ -45,14 +45,12 @@ for i, cruise_speed in enumerate(cruise_speed_list):
     vehicle = StandardMultirotorEVTOL(design_var, operation_var, tfs, n_pax=6, payload_per_pax=payload_per_pax)
     # vehicle.print_info()
 
-    # Fidelity
-    fidelity = {'aero': 1, 'hover_climb': 0}
-    if fidelity['hover_climb'] == 0:
-        vehicle.weight.max_takeoff = 2141.99321998
-    elif fidelity['hover_climb'] == 1:
-        vehicle.weight.max_takeoff = 2199.6029094
-        vehicle.lift_rotor.global_twist = 7.8645777892370585
-        vehicle.lift_rotor.RPM['hover_climb'] = 354.76421553294784
+    # Solver fidelity
+    fidelity = {'aerodynamics': {'parasite': 'ComponentBuildUp', 'induced': 'ParabolicDragPolar'},
+                'power_model': {'hover_climb': 'MomentumTheory'}}
+
+    vehicle.weight.max_takeoff = 4121.13997362
+    vehicle.lift_rotor.RPM['hover_climb'] = 400.0
 
     # Analysis
     analysis = PowerAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity)

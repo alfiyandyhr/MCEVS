@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-plot_power_breakdown = False
+plot_power_breakdown = True
 plot_type_of_speeds = True
+savefig = False
 
 data = pd.read_csv('multirotor_P_vs_v.csv')
 
@@ -15,12 +16,11 @@ if plot_power_breakdown:
     ax.plot(data['cruise_speed'], data['induced_power'], '--', label='Induced power')
     ax.plot(data['cruise_speed'], data['propulsive_power'], '--', label='Propulsive power')
     ax.grid()
-    ax.set_ylabel('Power [kW]')
-    ax.set_xlabel('Cruise speed [km/h]')
+    ax.set_ylabel(r'Power $[kW]$')
+    ax.set_xlabel(r'Cruise speed $[km/h]$')
     ax.legend()
     ax.set_title('Multirotor cruise power breakdown')
-    plt.show()
-    # plt.savefig('cruise_power_breakdown_multirotor.png', format='png', dpi=300)
+    plt.savefig('cruise_power_breakdown_multirotor.png', format='png', dpi=300) if savefig else plt.show()
 
 if plot_type_of_speeds:
 
@@ -36,10 +36,11 @@ if plot_type_of_speeds:
     P_BE = cruise_power_polytrends(v_BE)
 
     # Compute best range speed
-    m = 1.168
+    m = 1.7055  # manually find this m!!!
     y_grad, x_grad = m * np.arange(0, 310, 10), np.arange(0, 310, 10)
     roots = np.roots(cruise_power_polycoeffs - [0, 0, 0, 0, 0, m, 0])
     roots = roots[np.isreal(roots)]
+    print(roots)
     v_BR = (roots[2].real + roots[3].real) / 2
     P_BR = cruise_power_polytrends(v_BR)
 
@@ -66,5 +67,4 @@ if plot_type_of_speeds:
     ax.grid()
     ax.set_title('Multirotor cruise power vs speed')
     ax.legend()
-    # plt.show()
-    plt.savefig('cruise_power_vs_speed_multirotor.png', format='png', dpi=300)
+    plt.savefig('cruise_power_vs_speed_multirotor.png', format='png', dpi=300) if savefig else plt.show()
