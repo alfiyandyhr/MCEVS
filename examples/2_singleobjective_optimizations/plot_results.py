@@ -70,21 +70,9 @@ if plot_minimizing_all_objs:
                 data_list.append(pd.read_csv(f'minimizing_{obj}/{config}/battery_{battery}_Whpkg/results_with_speed_as_design_var.csv'))
 
     for i in range(9):
-        data_list[i] = data_list[i][data_list[i]['Weight|residual'] < 0.1]
-        data_list[i] = data_list[i][data_list[i]['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-        data_list[i] = data_list[i][data_list[i]['LiftRotor|Cruise|T_to_P'] < 12.01]
-        data_list[i] = data_list[i][data_list[i]['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-        data_list[i] = data_list[i][data_list[i]['LiftRotor|Cruise|mu'] < 1.0]
-        data_list[i] = data_list[i][data_list[i]['LiftRotor|Cruise|CT/sigma'] < 0.15]
+        data_list[i] = data_list[i][data_list[i]['success']]
         data_list[i]['mission_time'] *= 60
-        data_list[i + 9] = data_list[i + 9][data_list[i + 9]['Weight|residual'] < 0.1]
-        data_list[i + 9] = data_list[i + 9][data_list[i + 9]['Aero|Cruise|CL'] < 0.91]
-        data_list[i + 9] = data_list[i + 9][data_list[i + 9]['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-        data_list[i + 9] = data_list[i + 9][data_list[i + 9]['Propeller|Cruise|T_to_P'] < 12.01]
-        data_list[i + 9] = data_list[i + 9][data_list[i + 9]['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-        data_list[i + 9] = data_list[i + 9][data_list[i + 9]['Propeller|Cruise|J'] < 3.01]
-        data_list[i + 9] = data_list[i + 9][data_list[i + 9]['Propeller|Cruise|CT/sigma'] < 0.15]
-        data_list[i + 9] = data_list[i + 9][data_list[i + 9]['LiftRotor|clearance_constraint'] < 0.1]
+        data_list[i + 9] = data_list[i + 9][data_list[i + 9]['success']]
         data_list[i + 9]['mission_time'] *= 60
 
     fig, axs = plt.subplots(3, 3, figsize=(9, 7), sharex=True)
@@ -93,13 +81,13 @@ if plot_minimizing_all_objs:
         for j, obj in enumerate(obj_list):
 
             if obj == 'takeoff_weight':
-                obj_ylabel = 'Takeoff weight [kg]'
+                obj_ylabel = r'Takeoff weight $[kg]$'
                 obj_dflabel = 'Weight|takeoff'
             elif obj == 'energy':
-                obj_ylabel = 'Energy [kWh]'
+                obj_ylabel = r'Energy $[kWh]$'
                 obj_dflabel = 'Energy|entire_mission'
             elif obj == 'mission_time':
-                obj_ylabel = 'Mission time [mins]'
+                obj_ylabel = r'Mission time $[mins]$'
                 obj_dflabel = 'mission_time'
 
             axs[j, i].plot(data_list[i * 3 + 0]['mission_range'], data_list[i * 3 + 0][obj_dflabel], 'r.', label='Weight-minimal multirotor' if i == 0 and j == 0 else None)
@@ -111,7 +99,7 @@ if plot_minimizing_all_objs:
             if i * 3 + j in [0, 1, 2]:
                 axs[j, i].set_ylabel(obj_ylabel)
             if i * 3 + j in [2, 5, 8]:
-                axs[j, i].set_xlabel('Mission range [km]')
+                axs[j, i].set_xlabel(r'Mission range $[km]$')
             if i * 3 + j in [0, 3, 6]:
                 axs[j, i].set_title(f'Battery {battery} Wh/kg', size=10.0)
 
@@ -134,21 +122,8 @@ if plot_multi_range_at_optimal_speeds:
             data_df = pd.read_csv(f'minimizing_{objective}/multirotor/battery_{battery}_Whpkg/results_with_speed_as_design_var.csv')
             data_df2 = pd.read_csv(f'minimizing_{objective}/liftcruise/battery_{battery}_Whpkg/results_with_speed_as_design_var.csv')
 
-            data_df = data_df[data_df['Weight|residual'] < 0.1]
-            data_df = data_df[data_df['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-            data_df = data_df[data_df['LiftRotor|Cruise|T_to_P'] < 12.01]
-            data_df = data_df[data_df['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-            data_df = data_df[data_df['LiftRotor|Cruise|mu'] < 1.1]
-            data_df = data_df[data_df['LiftRotor|Cruise|CT/sigma'] < 0.15]
-
-            data_df2 = data_df2[data_df2['Weight|residual'] < 0.1]
-            data_df2 = data_df2[data_df2['Aero|Cruise|CL'] < 0.91]
-            data_df2 = data_df2[data_df2['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-            data_df2 = data_df2[data_df2['Propeller|Cruise|T_to_P'] < 12.01]
-            data_df2 = data_df2[data_df2['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-            data_df2 = data_df2[data_df2['Propeller|Cruise|J'] < 3.01]
-            data_df2 = data_df2[data_df2['Propeller|Cruise|CT/sigma'] < 0.15]
-            data_df2 = data_df2[data_df2['LiftRotor|clearance_constraint'] < 0.1]
+            data_df = data_df[data_df['success']]
+            data_df2 = data_df2[data_df2['success']]
 
             data_dict[f'{battery}'] = [data_df, data_df2]
 
