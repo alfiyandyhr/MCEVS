@@ -30,15 +30,13 @@ mission.add_segment(name='Reserve Cruise', kind='ReserveCruise', duration=20 * 6
 # plot_mission_parameters(mission, print_info=False)
 
 # Design and operation variables
-design_var1 = {'r_lift_rotor': 4.20624}  # 13.8 ft = 4.20624 m
-operation_var1 = {'RPM_lift_rotor': {'hover_climb': None, 'cruise': 450.0}}
-design_var2 = {'wing_area': 19.53547845, 'wing_aspect_ratio': 12.12761, 'r_lift_rotor': 1.524, 'r_propeller': 1.3716}
-operation_var2 = {'RPM_lift_rotor': {'hover_climb': None}, 'RPM_propeller': {'cruise': 500.0}}
+design_var = {'r_lift_rotor': 4.20624}  # 13.8 ft = 4.20624 m
+operation_var = {'RPM_lift_rotor': {'hover_climb': None, 'cruise': 450.0}}
 
 # Technology factors
 tfs = {'tf_structure': 0.8, 'tf_propulsion': 0.8, 'tf_equipment': 0.8}
 
-vehicle = StandardMultirotorEVTOL(design_var1, operation_var1, tfs, n_pax=6, payload_per_pax=payload_per_pax)
+vehicle = StandardMultirotorEVTOL(design_var, operation_var, tfs, n_pax=6, payload_per_pax=payload_per_pax)
 # vehicle.print_info()
 
 # Solver fidelity
