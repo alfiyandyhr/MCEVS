@@ -7,7 +7,7 @@ import warnings
 analyze_ref_vehicle = False
 optimize_ref_vehicle = True
 
-# Fixed mission requirement
+# Reference mission requirement
 mission_range = 60 * 1609.344  # 60 miles = 96560.64 m
 cruise_speed = 150 * 1609.344 / 3600  # 150 miles/hour = 67.056 m/s
 
@@ -86,5 +86,5 @@ if optimize_ref_vehicle:
     # Standard optimization
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        results = RunStandardSingleObjectiveOptimization(vehicle, mission, fidelity, 'energy', weight_guess, speed_as_design_var=False, print=True)
+        results = RunStandardSingleObjectiveOptimization(vehicle, mission, fidelity, 'energy', weight_guess, speed_as_design_var=True, print=True)
         print(results)

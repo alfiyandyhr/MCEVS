@@ -7,16 +7,20 @@ import warnings
 analyze_ref_vehicle = False
 optimize_ref_vehicle = True
 
-# Fixed mission requirement
+# Reference mission requirement
 mission_range = 60 * 1609.344  # 60 miles = 96560.64 m
 cruise_speed = 150 * 1609.344 / 3600  # 150 miles/hour = 67.056 m/s
 
 # Standard mission
 mission = StandardMissionProfile(mission_range, cruise_speed)
 
-solution_fidelity = {'aero': 1, 'hover_climb': 0}
+# Solver fidelity
+fidelity = {'aerodynamics': {'parasite': 'ComponentBuildUp', 'induced': 'ParabolicDragPolar'},
+            'power_model': {'hover_climb': 'MomentumTheory'},
+            'weight_model': {'structure': 'Roskam'},
+            'stability': {'AoA_trim': {'cruise': 'ManualFixedValue'}}}
 
-mtow_guess = 4000.0
+weight_guess = 4000.0
 
 if analyze_ref_vehicle:
 
@@ -27,8 +31,8 @@ if analyze_ref_vehicle:
     vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, tfs, n_pax=6, payload_per_pax=100.0)
 
     # Weight analysis
-    analysis = WeightAnalysis(vehicle, mission, solution_fidelity, sizing_mode=True, solved_by='optimization')
-    res = analysis.evaluate(record=False, mtow_guess=mtow_guess)
+    analysis = WeightAnalysis(vehicle, mission, fidelity, weight_type='maximum', sizing_mode=True, solved_by='optimization')
+    res = analysis.evaluate(record=False, weight_guess=weight_guess)
 
     # Bookkeeping results
     results = {}
@@ -78,7 +82,7 @@ if analyze_ref_vehicle:
 
 if optimize_ref_vehicle:
 
-    mtow_guess = 4000.0
+    weight_guess = 4000.0
 
     # Standard vehicle
     design_var = {'wing_area': 19.53547845, 'wing_aspect_ratio': 12.12761, 'r_lift_rotor': 1.524, 'r_propeller': 1.3716}
@@ -89,5 +93,5 @@ if optimize_ref_vehicle:
     # Standard optimization
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        results = RunStandardSingleObjectiveOptimization(vehicle, mission, solution_fidelity, 'mission_time', mtow_guess, speed_as_design_var=True, print=True)
+        results = RunStandardSingleObjectiveOptimization(vehicle, mission, fidelity, 'mission_time', weight_guess, speed_as_design_var=True, print=True)
         print(results)
