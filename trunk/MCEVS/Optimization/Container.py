@@ -3,6 +3,7 @@ from MCEVS.Analyses.Weight.Analysis import WeightAnalysis
 from MCEVS.Vehicles.Standard import StandardLiftPlusCruiseEVTOL, StandardMultirotorEVTOL
 from MCEVS.Optimization.Gradient_Based.Algorithm import run_gradient_based_optimization
 from MCEVS.Optimization.Gradient_Free.Algorithm import run_gradient_free_optimization
+from MCEVS.Utils.Checks import check_fidelity_dict
 
 
 class DesignProblem(object):
@@ -25,6 +26,13 @@ class DesignProblem(object):
         self.vehicle = vehicle
         self.mission = mission
         self.fidelity = fidelity
+
+        # Check solver fidelity
+        if vehicle.configuration == 'Multirotor':
+            modules_to_check = ['aerodynamics', 'power_model', 'weight_model']
+        elif vehicle.configuration == 'LiftPlusCruise':
+            modules_to_check = ['aerodynamics', 'power_model', 'stability', 'weight_model']
+        check_fidelity_dict(self.fidelity, self.vehicle.configuration, modules_to_check)
 
         # Design problem
         self.objectives = {}
