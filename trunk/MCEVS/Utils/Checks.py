@@ -25,8 +25,9 @@ def check_fidelity_dict(fidelity: object, vehicle_config: str):
             elif vehicle_config == 'LiftPlusCruise':
                 if weight_model not in ['Roskam', 'M4Regression']:
                     raise ValueError('Weight model should be in ["Roskam", "M4Regression"]')
-    for stability_type, segment_val in fidelity['stability'].items():
-        if stability_type == 'AoA_trim':
-            for segment, val in segment_val.items():
-                if val not in ['ManualFixedValue', 'Automatic']:
-                    raise ValueError('AoA_trim should be in ["ManualFixedValue", "Automatic"]')
+    if vehicle_config == 'LiftPlusCruise':
+        for stability_type, segment_val in fidelity['stability'].items():
+            if stability_type == 'AoA_trim':
+                for segment, val in segment_val.items():
+                    if val not in ['ManualFixedValue', 'Automatic']:
+                        raise ValueError('AoA_trim should be in ["ManualFixedValue", "Automatic"]')                    

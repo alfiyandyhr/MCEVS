@@ -41,19 +41,25 @@ vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, tfs, n_pax=6, p
 # vehicle.print_info()
 
 # Solver fidelity
-fidelity = {'aero': 1, 'hover_climb': 2}
-if fidelity['hover_climb'] == 0:
+fidelity = {'aerodynamics': {'parasite': 'ComponentBuildUp', 'induced': 'ParabolicDragPolar'},
+            'power_model': {'hover_climb': 'MomentumTheory'},
+            # 'power_model': {'hover_climb': 'ModifiedMomentumTheory'},
+            # 'power_model': {'hover_climb': 'BladeElementMomentumTheory'},
+            'weight_model': {'structure': 'Roskam'},
+            'stability': {'AoA_trim': {'cruise': 'ManualFixedValue'}}}
+
+if fidelity['power_model']['hover_climb'] == 'MomentumTheory':
     vehicle.lift_rotor.RPM['hover_climb'] = 400.0
-elif fidelity['hover_climb'] == 1:
+elif fidelity['power_model']['hover_climb'] == 'ModifiedMomentumTheory':
     vehicle.lift_rotor.RPM['hover_climb'] = 700.0
-elif fidelity['hover_climb'] == 2:
+elif fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
     vehicle.lift_rotor.RPM['hover_climb'] = 500.0
     vehicle.lift_rotor.motor_power_margin = 0.0
     vehicle.propeller.motor_power_margin = 0.0
 
 # Analysis
-analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity, sizing_mode=True, solved_by='optimization')
-results = analysis.evaluate(record=True, mtow_guess=2500.0)
+analysis = WeightAnalysis(vehicle=vehicle, mission=mission, fidelity=fidelity, weight_type='maximum', sizing_mode=True, solved_by='optimization')
+results = analysis.evaluate(record=True, weight_guess=2500.0)
 
 # plot_performance_by_segments(mission=mission, vehicle=vehicle)
 
@@ -80,6 +86,6 @@ print('\n--- Sanity Check: Residuals and others---')
 print(f"LiftRotor|global_twist = {results.get_val('LiftRotor|global_twist')[0]}")
 print(f"LiftRotor|HoverClimb|RPM = {results.get_val('LiftRotor|HoverClimb|RPM')[0]}")
 print(f"LiftRotor|HoverClimb|FM = {results.get_val('LiftRotor|HoverClimb|FM')[0]}")
-if fidelity['hover_climb'] == 2:
+if fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
     print(f"LiftRotor|HoverClimb|thrust_residual_square = {results.get_val('LiftRotor|HoverClimb|thrust_residual_square')[0]}")
 print('Weight|residual = ', results.get_val('Weight|residual')[0])
