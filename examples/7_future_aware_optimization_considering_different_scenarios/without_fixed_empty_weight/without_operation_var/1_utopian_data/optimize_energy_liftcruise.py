@@ -12,8 +12,10 @@ produce_utopian_data = False
 produce_suboptimal_data_from_utopian = False
 
 plot_utopian_data = False
-plot_suboptimal_data_from_utopian_2D = True
-plot_suboptimal_data_from_utopian_contour = False
+plot_suboptimal_data_from_utopian_2D = False
+plot_suboptimal_data_from_utopian_contour = True
+
+savefig = False
 
 # 40 year lifespan of the product
 year_list = np.arange(2030, 2071, 1)
@@ -22,7 +24,11 @@ year_list = np.arange(2030, 2071, 1)
 mission_range = 60 * 1609.344  # 60 miles = 96560.64 m
 cruise_speed = 150 * 1609.344 / 3600  # 150 miles/hour = 67.056 m/s
 
-solution_fidelity = {'aero': 1, 'hover_climb': 0}
+# Solver fidelity
+fidelity = {'aerodynamics': {'parasite': 'ComponentBuildUp', 'induced': 'ParabolicDragPolar'},
+            'power_model': {'hover_climb': 'MomentumTheory'},
+            'weight_model': {'structure': 'Roskam'},
+            'stability': {'AoA_trim': {'cruise': 'ManualFixedValue'}}}
 
 
 def Boltzman_Sigmoid_Battery_Pack_GED(t, scenario):
@@ -55,19 +61,24 @@ for i, scenario in enumerate(battery_dict):
 # --- Optimal designs by year ---
 if produce_utopian_data:
 
+    iter_idx = 0
+
+    f_total_non_hub_non_wing = None
+    Cd0_wing = None
+
     for i, scenario in enumerate(battery_dict):
 
         for j, year in enumerate(year_list):
 
-            k = 41 * i + j
+            iter_idx += 1
 
             battery_energy_density = battery_dict[scenario][j]
 
-            print(f'{k}, Scenario= {scenario}; Year= {year}; Battery GED= {battery_energy_density} Wh/kg')
+            print(f'{iter_idx}, Scenario= {scenario}; Year= {year}; Battery GED= {battery_energy_density} Wh/kg')
             sys.stdout.flush()  # To flush the above print output
 
             if scenario == 'aggresive':
-                if year in [2031, 2032, 2033, 2035, 2037, 2038, 2041, 2045, 2046, 2051, 2055, 2056, 2057, 2061, 2065, 2068]:
+                if year in [2031, 2032, 2033, 2035, 2037, 2038, 2039, 2040, 2041, 2044, 2045, 2046, 2051, 2052, 2053, 2054, 2055, 2056, 2057, 2059, 2061, 2062, 2065, 2068]:
                     mtow_guess = 1500.0  # kg
                 elif year in [2047, 2048]:
                     mtow_guess = 1200.0
@@ -75,9 +86,9 @@ if produce_utopian_data:
                     mtow_guess = 1000.0  # kg
 
             if scenario == 'nominal':
-                if year in [2037, 2038, 2046, 2050, 2051, 2055, 2061, 2062, 2065, 2070]:
+                if year in [2037, 2038, 2046, 2051, 2055, 2061, 2062, 2063, 2065, 2070]:
                     mtow_guess = 2000.0  # kg
-                elif year in [2031, 2034, 2049, 2058, 2059, 2064]:
+                elif year in [2031, 2034, 2035, 2044, 2049, 2050, 2058, 2059, 2060, 2064]:
                     mtow_guess = 1500.0  # kg
                 elif year in [2032]:
                     mtow_guess = 1200.0  # kg
@@ -85,7 +96,7 @@ if produce_utopian_data:
                     mtow_guess = 1000.0  # kg
 
             if scenario == 'conservative':
-                if year in [2063, 2068]:
+                if year in [2063, 2067, 2068, 2070]:
                     mtow_guess = 1500.0  # kg
                 else:
                     mtow_guess = 1000.0  # kg
@@ -99,6 +110,11 @@ if produce_utopian_data:
             # Changed battery density
             vehicle.battery.density = float(battery_energy_density)
 
+            # Fixed assumed parasite drag from the ref vehicle
+            if f_total_non_hub_non_wing is not None and Cd0_wing is not None:
+                vehicle.f_total_non_hub_non_wing = {'climb': None, 'cruise': f_total_non_hub_non_wing, 'descent': None}  # noqa: F821
+                vehicle.wing.Cd0 = {'climb': None, 'cruise': Cd0_wing, 'descent': None}  # noqa: F821
+
             # Standard mission
             mission = StandardMissionProfile(mission_range, cruise_speed)
 
@@ -106,15 +122,19 @@ if produce_utopian_data:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 results = {'scenario': scenario, 'year': year, 'battery_energy_density': battery_energy_density}
-                results.update(RunStandardSingleObjectiveOptimization(vehicle, mission, solution_fidelity, 'energy', mtow_guess, speed_as_design_var=False, print=True))
-                results_df = pd.DataFrame(results, index=[k])
-                results_df.to_csv('optimal_results_by_scenario_by_year.csv', mode='a', header=True if k == 0 else False)
+                results.update(RunStandardSingleObjectiveOptimization(vehicle, mission, fidelity, 'energy', mtow_guess, speed_as_design_var=False, print=True))
+                results_df = pd.DataFrame(results, index=[iter_idx])
+                results_df.to_csv('optimal_results_by_scenario_by_year.csv', mode='a', header=True if iter_idx == 1 else False)
+
+            if f_total_non_hub_non_wing is None and Cd0_wing is None:
+                f_total_non_hub_non_wing = results['Aero|Cruise|f_total_non_hub_non_wing']
+                Cd0_wing = results['Aero|Cruise|Cd0_wing']
 
 if produce_suboptimal_data_from_utopian:
 
     utopian_data = pd.read_csv('optimal_results_by_scenario_by_year.csv')
 
-    counter = -1
+    iter_idx = 0
     for i, scenario in enumerate(battery_dict):
 
         opt_results = utopian_data[utopian_data['scenario'] == scenario]
@@ -125,12 +145,12 @@ if produce_suboptimal_data_from_utopian:
 
             for k, year2 in enumerate(year_list):
 
-                counter += 1
+                iter_idx += 1
 
                 battery_energy_density_opt = battery_energy_density_list[j]
                 battery_energy_density_test = battery_energy_density_list[k]
 
-                print(f'No={counter}; Scenario={scenario}; Optimized in  Year={year1}; tested in Year={year2}')
+                print(f'No={iter_idx}; Scenario={scenario}; Optimized in  Year={year1}; tested in Year={year2}')
                 sys.stdout.flush()  # To flush the above print output
 
                 wing_area = opt_results[opt_results['year'] == year1]['Wing|area'].to_numpy()[0]
@@ -161,7 +181,7 @@ if produce_suboptimal_data_from_utopian:
                 mission = StandardMissionProfile(mission_range, cruise_speed * 1000 / 3600)
 
                 # MTOWEstimation at test year
-                analysis = WeightAnalysis(vehicle, mission, solution_fidelity, weight_type='maximum', sizing_mode=True, solved_by='optimization')
+                analysis = WeightAnalysis(vehicle, mission, fidelity, weight_type='maximum', sizing_mode=True, solved_by='optimization')
                 res = analysis.evaluate(record=False, weight_guess=2500.0, print=False)
 
                 # Bookkeeping results
@@ -213,8 +233,8 @@ if produce_suboptimal_data_from_utopian:
                 results['Aero|Cruise|total_drag'] = res.get_val('Aero|Cruise|total_drag', 'N')[0]
 
                 # Saving to csv file
-                results_df = pd.DataFrame(results, index=[counter])
-                results_df.to_csv('opt_test_results.csv', mode='a', header=True if counter == 0 else False)
+                results_df = pd.DataFrame(results, index=[iter_idx])
+                results_df.to_csv('opt_test_results.csv', mode='a', header=True if iter_idx == 1 else False)
 
 if plot_utopian_data:
 
@@ -227,6 +247,7 @@ if plot_utopian_data:
     # parameter = 'Propeller|Cruise|RPM'
 
     utopian_data = pd.read_csv('optimal_results_by_scenario_by_year.csv')
+    utopian_data = utopian_data[utopian_data['success']]
 
     # selected_years = [2030, 2040, 2050, 2060, 2070]
     # utopian_data = utopian_data[utopian_data['year'].isin(selected_years)]
@@ -280,8 +301,8 @@ if plot_suboptimal_data_from_utopian_2D:
         axes[i].plot(utopian_data_i['year'], utopian_data_i[parameter], 'k--')
 
     plt.subplots_adjust(bottom=0.2, top=0.82, wspace=0.1)
-    fig.suptitle(f'{parameter} by year based on different scenarios', size=16)
-    plt.show()
+    fig.suptitle('Suboptimality analysis under different battery projection scenarios', size=16)
+    plt.savefig('suboptimal_data_from_utopian_2D.pdf', format='pdf', dpi=300) if savefig else plt.show()
 
 if plot_suboptimal_data_from_utopian_contour:
 
@@ -303,9 +324,9 @@ if plot_suboptimal_data_from_utopian_contour:
         ax = axes[i]
         cp = ax.contourf(X, Y, Z, 10, cmap='viridis', vmin=np.nanmin(Z), vmax=np.nanmax(Z), extend='both')
         ax.set_title(f'{scenario}')
-        ax.set_xlabel('Optimized Year')
+        ax.set_xlabel('Optimization Year')
         if i == 0:
-            ax.set_ylabel('Tested Year')
+            ax.set_ylabel('Sizing Year')
         ax.set_xticks(range(2030, 2071, 10))  # Show ticks every 10 units
         ax.set_yticks(range(2030, 2071, 10))  # Show ticks every 10 units
 
@@ -317,4 +338,4 @@ if plot_suboptimal_data_from_utopian_contour:
     fig.suptitle('Suboptimality analysis under different battery projection scenarios', size=14)
     # plt.subplots_adjust(bottom=0.25, top=0.82, wspace=0.12)
     plt.subplots_adjust(bottom=0.2, top=0.88, wspace=0.15)  # Adjust spacing between
-    plt.show()
+    plt.savefig('suboptimal_data_from_utopian_contour.pdf', format='pdf', dpi=300) if savefig else plt.show()

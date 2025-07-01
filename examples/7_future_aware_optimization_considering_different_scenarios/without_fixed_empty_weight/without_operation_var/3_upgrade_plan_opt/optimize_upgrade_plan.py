@@ -19,11 +19,12 @@ optimal_plan_years = {'conservative': [2030, 2036, 2044, 2055, 2070],
 
 optimize_plan = False
 plot_upgrade_plan = True
+savefig = True
 
 scenario_list = ['conservative', 'nominal', 'aggresive']
 
 # design_years = ['utopian', 'utopian', 'utopian']
-design_years = ['2044', '2043', '2041']
+design_years = ['2043', '2044', '2041']
 
 # 40 year lifespan of the product
 year_list = np.arange(2030, 2071, 1)
@@ -102,10 +103,10 @@ if optimize_plan:
             out["G"] = G
 
     scenario = 'conservative'
-    design_year = 2044
+    design_year = 2043
 
     # scenario = 'nominal'
-    # design_year = 2043
+    # design_year = 2044
 
     # scenario = 'aggresive'
     # design_year = 2041
@@ -147,33 +148,33 @@ if plot_upgrade_plan:
         if design_years[i] == 'utopian':
             data = utopian_data[utopian_data['scenario'] == scenario]
             continuous_psi = calc_psi_given_energy_year_data(data[parameter], year_list, scenario, True)
-            axes[i].plot(data['year'], data[parameter], 'k--', markersize=4, label=fr'Utopian; $\psi={continuous_psi}$')
+            axes[i].plot(data['year'], data[parameter], 'k--', markersize=4, label=fr'Utopian; $\Psi={continuous_psi}$')
             data = data.rename(columns={'year': 'year_test'})
 
         else:
             data = utopian_data[utopian_data['scenario'] == scenario]
             continuous_psi = calc_psi_given_energy_year_data(data[parameter], year_list, scenario, True)
-            axes[i].plot(data['year'], data[parameter], 'k--', markersize=4, label=fr'Utopian; $\psi={continuous_psi}$')
+            axes[i].plot(data['year'], data[parameter], 'k--', markersize=4, label=fr'Utopian; $\Psi={continuous_psi}$')
 
             data = opt_test_data[(opt_test_data['scenario'] == scenario) & (opt_test_data['year_opt'] == int(design_years[i]))]
             continuous_psi = calc_psi_given_energy_year_data(data[parameter], year_list, scenario, True)
-            axes[i].plot(data['year_test'], data[parameter], '-', color='grey', markersize=4, label=fr'Opt {design_years[i]}; $\psi={np.round(continuous_psi,4)}$')
+            axes[i].plot(data['year_test'], data[parameter], '-', color='grey', markersize=4, label=fr'Opt {design_years[i]}; $\Psi={np.round(continuous_psi,4)}$')
 
         # Base plan
         base_year_data, base_plan_data = create_plan_data_given_plan_years_and_continous_plan_data(base_plan_years, parameter, data)
         base_psi = calc_psi_given_energy_year_data(base_plan_data, base_year_data, scenario, False)
-        axes[i].plot(base_year_data, base_plan_data, 'r-', markersize=4, label=fr'Uniform; $\psi={np.round(base_psi,4)}$')
+        axes[i].plot(base_year_data, base_plan_data, 'r-', markersize=4, label=fr'Uniform; $\Psi={np.round(base_psi,4)}$')
 
         # Optimal plan
         optimal_year_data, optimal_plan_data = create_plan_data_given_plan_years_and_continous_plan_data(optimal_plan_years[scenario], parameter, data)
         optimal_psi = calc_psi_given_energy_year_data(optimal_plan_data, optimal_year_data, scenario, False)
-        axes[i].plot(optimal_year_data, optimal_plan_data, 'b-', markersize=4, label=fr'Optimal; $\psi={np.round(optimal_psi,4)}$')
+        axes[i].plot(optimal_year_data, optimal_plan_data, 'b-', markersize=4, label=fr'Optimal; $\Psi={np.round(optimal_psi,4)}$')
 
         axes[i].legend()
         axes[i].set_title(f'{scenario}')
         axes[i].set_xlabel('Sizing year')
         if i == 0:
-            axes[i].set_ylabel(r'Energy consumption $[kWh]$')
+            axes[i].set_ylabel('Energy consumption (kWh)')
 
     for i, scenario in enumerate(scenario_list):
         if i == 0:
@@ -212,4 +213,4 @@ if plot_upgrade_plan:
 
     plt.subplots_adjust(bottom=0.2, top=0.86, wspace=0.08)
     fig.suptitle('Optimal upgrade timing plan under different battery projection scenarios', size=14)
-    plt.show()
+    plt.savefig('optimal_upgrade_plan.pdf', format='pdf', dpi=300) if savefig else plt.show()

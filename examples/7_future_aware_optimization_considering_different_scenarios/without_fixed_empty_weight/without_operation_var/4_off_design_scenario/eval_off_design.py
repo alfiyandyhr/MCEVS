@@ -10,6 +10,7 @@ import sys
 
 eval_off_design_performace = False
 plot_off_design_performance = True
+savefig = False
 
 # 40 year lifespan of the product
 year_list = np.arange(2030, 2071, 1)
@@ -57,13 +58,13 @@ if eval_off_design_performace:
 
     utopian_data = pd.read_csv('../1_utopian_data/optimal_results_by_scenario_by_year.csv')
 
-    counter = -1
+    iter_idx = 0
     for i, opt_scenario in enumerate(battery_dict):
 
         if opt_scenario == 'conservative':
-            min_psi_year = 2044
-        if opt_scenario == 'nominal':
             min_psi_year = 2043
+        if opt_scenario == 'nominal':
+            min_psi_year = 2044
         if opt_scenario == 'aggresive':
             min_psi_year = 2041
 
@@ -87,11 +88,11 @@ if eval_off_design_performace:
 
             for k, sizing_year in enumerate(year_list):
 
-                counter += 1
+                iter_idx += 1
 
                 battery_energy_density_test = battery_energy_density_test_list[k]
 
-                print(f'No={counter}; Opt scenario={opt_scenario}; Test scenario= {test_scenario}; Optimized in Year={min_psi_year}; Tested in Year={sizing_year}')
+                print(f'No={iter_idx}; Opt scenario={opt_scenario}; Test scenario= {test_scenario}; Optimized in Year={min_psi_year}; Tested in Year={sizing_year}')
                 sys.stdout.flush()  # To flush the above print output
 
                 # Standard vehicle
@@ -164,8 +165,8 @@ if eval_off_design_performace:
                 results['Aero|Cruise|total_drag'] = res.get_val('Aero|Cruise|total_drag', 'N')[0]
 
                 # Saving to csv file
-                results_df = pd.DataFrame(results, index=[counter])
-                results_df.to_csv('off_design_results.csv', mode='a', header=True if counter == 0 else False)
+                results_df = pd.DataFrame(results, index=[iter_idx])
+                results_df.to_csv('off_design_results.csv', mode='a', header=True if iter_idx == 1 else False)
 
 if plot_off_design_performance:
 
@@ -184,11 +185,11 @@ if plot_off_design_performance:
             time_averaged_J = simpson(y_array, year_list) / (year_list[-1] - year_list[0])
 
             if test_scenario == 'conservative':
-                time_averaged_utopian_J = 103.1168141777948
+                time_averaged_utopian_J = 103.11640095639873
             if test_scenario == 'nominal':
-                time_averaged_utopian_J = 88.53625756668183
+                time_averaged_utopian_J = 88.53419623780462
             if test_scenario == 'aggresive':
-                time_averaged_utopian_J = 83.01589005149472
+                time_averaged_utopian_J = 83.01572130903654
 
             psi_ij = time_averaged_J / time_averaged_utopian_J - 1
 
@@ -198,8 +199,8 @@ if plot_off_design_performance:
     plt.figure(figsize=(8, 5))
     sns.lineplot(data=psi_df, x="test_scenario", y="psi", hue="opt_scenario", marker='o')
     plt.xlabel("Test Scenario")
-    plt.ylabel(r"Future-aware optimality metric $\psi$")
-    plt.title(r"$\psi$ by Test Scenario (Lines by Opt Scenario)")
-    plt.legend(title="Opt Scenario")
+    plt.ylabel(r"Future-aware optimality metric $\Psi$")
+    plt.title(r"Off-design performance of $\Psi$-minimal designs")
+    plt.legend(title="Optimized Scenario")
     plt.tight_layout()
-    plt.show()
+    plt.savefig('off_design_performance_future_aware.pdf', format='pdf', dpi=300) if savefig else plt.show()

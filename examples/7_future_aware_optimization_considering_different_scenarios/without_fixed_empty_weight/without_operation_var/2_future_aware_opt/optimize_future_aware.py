@@ -4,8 +4,10 @@ import matplotlib.pyplot as plt
 from scipy.integrate import simpson
 
 calc_utopian_J = False
-plot_psi_for_every_year = False
+plot_psi_for_every_year = True
 compare_best_year_with_current_year = True
+
+savefig = False
 
 # 40 year lifespan of the product
 year_list = np.arange(2030, 2071, 1)
@@ -69,10 +71,10 @@ if calc_utopian_J:
         time_averaged_J = simpson(y, year_list) / (year_list[-1] - year_list[0])
         print(f"Time-averaged J for scenario={scenario}: {time_averaged_J}")
 
-    # # Results
-    # time_averaged_J_conservative = 103.1168141777948
-    # time_averaged_J_nominal = 88.53625756668183
-    # time_averaged_J_aggresive = 83.01589005149472
+    # Results
+    # Time-averaged J for scenario=conservative: 103.11640095639873
+    # Time-averaged J for scenario=nominal: 88.53419623780462
+    # Time-averaged J for scenario=aggresive: 83.01572130903654
 
 if plot_psi_for_every_year:
 
@@ -93,11 +95,11 @@ if plot_psi_for_every_year:
             time_averaged_J = simpson(y_array, year_list) / (year_list[-1] - year_list[0])
 
             if scenario == 'conservative':
-                time_averaged_utopian_J = 103.1168141777948
+                time_averaged_utopian_J = 103.11640095639873
             if scenario == 'nominal':
-                time_averaged_utopian_J = 88.53625756668183
+                time_averaged_utopian_J = 88.53419623780462
             if scenario == 'aggresive':
-                time_averaged_utopian_J = 83.01589005149472
+                time_averaged_utopian_J = 83.01572130903654
 
             psi_i[j] = time_averaged_J / time_averaged_utopian_J - 1
 
@@ -133,11 +135,11 @@ if plot_psi_for_every_year:
         axes[i].ticklabel_format(style='sci', axis='y', scilimits=(-3, -3))
         if i == 0:
             axes[i].set_ylabel(r'Future-aware optimality $\Psi$')
-        axes[i].legend(bbox_to_anchor=(0.65, 0.98), loc='upper center')
+        axes[i].legend(bbox_to_anchor=(0.63, 0.98), loc='upper center')
 
     plt.subplots_adjust(bottom=0.2, top=0.86, wspace=0.18)
     fig.suptitle('Future-aware optimality metrics under different battery projection scenarios', size=14)
-    plt.show()
+    plt.savefig('psi_vs_year_under_different_scenarios.pdf', format='pdf', dpi=300) if savefig else plt.show()
 
 if compare_best_year_with_current_year:
 
@@ -154,9 +156,9 @@ if compare_best_year_with_current_year:
         utopian_data_i = utopian_data[utopian_data['scenario'] == scenario]
 
         if scenario == 'conservative':
-            best_year_i = 2044
-        if scenario == 'nominal':
             best_year_i = 2043
+        if scenario == 'nominal':
+            best_year_i = 2044
         if scenario == 'aggresive':
             best_year_i = 2041
 
@@ -170,17 +172,17 @@ if compare_best_year_with_current_year:
         psi_2070 = calc_psi_given_energy_year_data(opt_in_2070, year_list, scenario, True)
 
         # Plot data on each subplot
-        axes[i].plot(year_list, opt_in_2030, '-', label=fr'Opt in 2030; $\psi={np.round(psi_2030,4)}$')
-        axes[i].plot(year_list, opt_in_2070, '-', label=fr'Opt in 2070; $\psi={np.round(psi_2070,4)}$')
-        axes[i].plot(year_list, best_data, '-', label=fr'Min $\psi$ ({best_year_i}); $\psi={np.round(psi_best,4)}$')
-        axes[i].plot(utopian_data_i['year'], utopian_data_i[parameter], 'k--', markersize=4, label=r'Utopian; $\psi=0.0$')
+        axes[i].plot(year_list, opt_in_2030, '-', label=fr'Opt in 2030; $\Psi={np.round(psi_2030,4)}$')
+        axes[i].plot(year_list, opt_in_2070, '-', label=fr'Opt in 2070; $\Psi={np.round(psi_2070,4)}$')
+        axes[i].plot(year_list, best_data, '-', label=fr'Min $\Psi$ ({best_year_i}); $\Psi={np.round(psi_best,4)}$')
+        axes[i].plot(utopian_data_i['year'], utopian_data_i[parameter], 'k--', markersize=4, label=r'Utopian; $\Psi=0.0$')
         axes[i].set_title(f'{scenario}')
         axes[i].set_xlabel('Sizing year')
         if i == 0:
-            axes[i].set_ylabel(r'Energy consumption $[kWh]$')
+            axes[i].set_ylabel('Energy consumption (kWh)')
         axes[i].legend()
 
     # fig.legend(ncols=3,bbox_to_anchor=(0.49,0.93),loc='upper center')
     plt.subplots_adjust(bottom=0.2, top=0.86, wspace=0.18)
     fig.suptitle('Comparison between future-aware designs under different battery projection scenarios', size=14)
-    plt.show()
+    plt.savefig('energy_comparison_future_aware_designs.pdf', format='pdf', dpi=300) if savefig else plt.show()

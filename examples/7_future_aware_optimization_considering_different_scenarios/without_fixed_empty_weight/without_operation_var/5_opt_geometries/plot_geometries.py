@@ -2,7 +2,7 @@ from MCEVS.Vehicles.Standard import StandardLiftPlusCruiseEVTOL
 from MCEVS.Utils.Plots import plot_geometries
 import pandas as pd
 
-plot_geometries_by_scenario = False
+plot_geometries_by_scenario = True
 plot_geometries_with_minimum_psi = True
 
 if plot_geometries_by_scenario:
@@ -18,9 +18,9 @@ if plot_geometries_by_scenario:
         cruise_speed_list = []
 
         if scenario == 'conservative':
-            year_list = [2030, 2044, 2070]
-        if scenario == 'nominal':
             year_list = [2030, 2043, 2070]
+        if scenario == 'nominal':
+            year_list = [2030, 2044, 2070]
         if scenario == 'aggresive':
             year_list = [2030, 2041, 2070]
 
@@ -61,9 +61,9 @@ if plot_geometries_with_minimum_psi:
 
     for scenario in scenario_list:
         if scenario == 'conservative':
-            min_psi_year = 2044
-        elif scenario == 'nominal':
             min_psi_year = 2043
+        elif scenario == 'nominal':
+            min_psi_year = 2044
         elif scenario == 'aggresive':
             min_psi_year = 2041
 
