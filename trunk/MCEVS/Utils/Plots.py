@@ -526,7 +526,7 @@ def plot_weight_breakdown(data_list: list, label_list: list = None, color_list=[
                         textcoords="offset points",
                         ha='center', va='bottom', fontsize=8)
 
-    ax.set_ylabel(r'Weight $[kg]$', fontsize=12)
+    ax.set_ylabel('Weight (kg)', fontsize=12)
     ax.set_title(f'{figtitle}', fontsize=16)
     ax.set_xticks(x)
     ax.set_xticklabels(components)
@@ -537,7 +537,7 @@ def plot_weight_breakdown(data_list: list, label_list: list = None, color_list=[
 
 def plot_power_energy_breakdown(data_list: list, label_list: list = None, color_list=['gray', 'blue', 'red', 'green'],
                                 figname='fig', figtitle='Power Energy Breakdown', savefig=False,
-                                xticks_labels=[r'HoverClimb $[kW]$', r'Cruise $[kW]$', r'HoverDescent $[kW]$', r'Energy Capacity $[kWh]$'],
+                                xticks_labels=['HoverClimb (kW)', 'Cruise (kW)', 'HoverDescent (kW)', 'Energy Capacity (kWh)'],
                                 indexes=['Power|segment_1', 'Power|segment_2', 'Power|segment_3', 'Energy|entire_mission']):
     
     if not isinstance(data_list, list):

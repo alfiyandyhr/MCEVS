@@ -23,21 +23,21 @@ if plot_minimizing_takeoff_weight or plot_minimizing_energy or plot_minimizing_m
             df_label = 'Weight|takeoff'
             # df_label = 'Energy|entire_mission'
             # df_label = 'cruise_speed'
-            y_label = r'Takeoff weight $[kg]$'
+            y_label = 'Takeoff weight (kg)'
         if plot_minimizing_energy:
             folder = 'minimizing_energy'
             label = 'Energy-minimal'
             df_label = 'Energy|entire_mission'
             # df_label = 'Weight|takeoff'
             # df_label = 'cruise_speed'
-            y_label = r'Energy $[kWh]$'
+            y_label = 'Energy (kWh)'
         if plot_minimizing_mission_time:
             folder = 'minimizing_mission_time'
             label = 'Time-minimal'
             df_label = 'mission_time'
             # df_label = 'Weight|takeoff'
             # df_label = 'Energy|entire_mission'
-            y_label = r'Mission time $[mins]$'
+            y_label = 'Mission time (mins)'
 
         data_df1 = pd.read_csv(f'{folder}/{configuration}/battery_250_Whpkg/results_with_speed_as_design_var.csv')
         data_df2 = pd.read_csv(f'{folder}/{configuration}/battery_400_Whpkg/results_with_speed_as_design_var.csv')
@@ -51,7 +51,7 @@ if plot_minimizing_takeoff_weight or plot_minimizing_energy or plot_minimizing_m
         plt.plot(data_list[1]['mission_range'], data_list[1][df_label], '-o', label=f'{label} {configuration}; 400 Wh/kg')
         plt.plot(data_list[2]['mission_range'], data_list[2][df_label], '-o', label=f'{label} {configuration}; 550 Wh/kg')
 
-        plt.xlabel(r'Mission range $[km]$')
+        plt.xlabel('Mission range (km)')
         plt.ylabel(y_label)
         plt.legend()
         plt.grid()
@@ -81,13 +81,13 @@ if plot_minimizing_all_objs:
         for j, obj in enumerate(obj_list):
 
             if obj == 'takeoff_weight':
-                obj_ylabel = r'Takeoff weight $[kg]$'
+                obj_ylabel = 'Takeoff weight (kg)'
                 obj_dflabel = 'Weight|takeoff'
             elif obj == 'energy':
-                obj_ylabel = r'Energy $[kWh]$'
+                obj_ylabel = 'Energy (kWh)'
                 obj_dflabel = 'Energy|entire_mission'
             elif obj == 'mission_time':
-                obj_ylabel = r'Mission time $[mins]$'
+                obj_ylabel = 'Mission time (mins)'
                 obj_dflabel = 'mission_time'
 
             axs[j, i].plot(data_list[i * 3 + 0]['mission_range'], data_list[i * 3 + 0][obj_dflabel], 'r.', label='Weight-minimal multirotor' if i == 0 and j == 0 else None)
@@ -99,7 +99,7 @@ if plot_minimizing_all_objs:
             if i * 3 + j in [0, 1, 2]:
                 axs[j, i].set_ylabel(obj_ylabel)
             if i * 3 + j in [2, 5, 8]:
-                axs[j, i].set_xlabel(r'Mission range $[km]$')
+                axs[j, i].set_xlabel('Mission range (km)')
             if i * 3 + j in [0, 3, 6]:
                 axs[j, i].set_title(f'Battery {battery} Wh/kg', size=10.0)
 
@@ -129,19 +129,19 @@ if plot_multi_range_at_optimal_speeds:
 
         if objective == 'takeoff_weight':
             metric_tag = 'Weight|takeoff'
-            y_label = r'Takeoff Weight $[kg]$'
+            y_label = 'Takeoff Weight (kg)'
             title_tag = 'Takeoff Weight'
             fig_tag = 'weight'
 
         elif objective == 'energy':
             metric_tag = 'Energy|entire_mission'
-            y_label = r'Energy Consumption $[kWh]$'
+            y_label = 'Energy Consumption (kWh)'
             title_tag = 'Energy'
             fig_tag = 'energy'
 
         elif objective == 'mission_time':
             metric_tag = None
-            y_label = r'Mission Time $[mins]$'
+            y_label = 'Mission Time (mins)'
             title_tag = 'Mission Time'
             fig_tag = 'time'
 
@@ -164,7 +164,7 @@ if plot_multi_range_at_optimal_speeds:
                 ax.plot(data_dict[f'{battery_list[i]}'][1]['mission_range'], R_1 / v_1 * 60 + 5.34, '-o', ms=4, label='Lift+Cruise' if i == 0 else None)
 
             ax.set_title(f'Battery GED= {battery_list[i]} Wh/kg')
-            ax.set_xlabel(r'Mission range $[km]$')
+            ax.set_xlabel('Mission range (km)')
             if i == 0:
                 ax.set_ylabel(y_label)
 
@@ -193,7 +193,7 @@ if plot_multi_range_at_optimal_speeds:
             ax.plot(data_dict[f'{battery_list[i]}'][1]['mission_range'], W_1 * g * v_1 / P_1, '-o', ms=4, label='Lift+Cruise' if i == 0 else None)
 
             ax.set_title(f'Battery GED: {battery_list[i]} Wh/kg')
-            ax.set_xlabel(r'Mission range $[km]$')
+            ax.set_xlabel('Mission range (km)')
             if i == 0:
                 ax.set_ylabel(r'$L/D_{e} = W*v/P$')
 
