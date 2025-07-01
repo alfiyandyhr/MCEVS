@@ -18,7 +18,7 @@ plot_evaluation_data = True
 # 40 year lifespan of the product
 year_list = np.arange(2030, 2071, 1)
 
-# Fixed mission range requirement but variable speed
+# Fixed mission range requirement
 mission_range = 60 * 1609.344  # 60 miles = 96560.64 m
 cruise_speed = 150 * 1609.344 / 3600  # 150 miles/hour = 67.056 m/s
 
