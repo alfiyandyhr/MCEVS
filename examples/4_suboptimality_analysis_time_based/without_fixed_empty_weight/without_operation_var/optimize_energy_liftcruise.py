@@ -14,6 +14,7 @@ selected_years = [2030, 2070]
 
 plot_utopian_data = False
 plot_evaluation_data = True
+savefig = False
 
 # 40 year lifespan of the product
 year_list = np.arange(2030, 2071, 1)
@@ -298,9 +299,9 @@ if plot_evaluation_data:
         axes[i].set_title(f'{scenario}')
         axes[i].set_xlabel('Sizing year')
         if i == 0:
-            axes[i].set_ylabel(r'Energy consumption $[kWh]$')
+            axes[i].set_ylabel('Energy consumption (kWh)')
 
     plt.subplots_adjust(bottom=0.2, top=0.80, wspace=0.13)
     fig.legend(ncols=len(selected_years) + 1, bbox_to_anchor=(0.5, 0.93), loc='upper center')
     fig.suptitle('Suboptimality analysis based on different battery projection scenarios', size=16)
-    plt.show()
+    plt.savefig('suboptimality_analysis.pdf', format='pdf', dpi=300) if savefig else plt.show()
