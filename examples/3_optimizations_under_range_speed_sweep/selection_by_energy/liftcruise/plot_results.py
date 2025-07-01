@@ -20,27 +20,13 @@ battery_energy_density_list = [250, 400, 550]
 
 if print_best_speed_for_all_range:
     data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
-    data_df = data_df[data_df['Weight|residual'] < 0.1]
-    data_df = data_df[data_df['Aero|Cruise|CL'] < 0.91]
-    data_df = data_df[data_df['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df = data_df[data_df['Propeller|Cruise|T_to_P'] < 12.01]
-    data_df = data_df[data_df['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df = data_df[data_df['Propeller|Cruise|J'] < 3.01]
-    data_df = data_df[data_df['Propeller|Cruise|CT/sigma'] < 0.15]
-    data_df = data_df[data_df['LiftRotor|clearance_constraint'] < 0.1]
+    data_df = data_df[data_df['success']]
     data = data_df[data_df['mission_range'] == 10]
     print(data[['cruise_speed', 'Energy|entire_mission', 'LiftRotor|radius', 'Propeller|Cruise|RPM']].sort_values(by='Energy|entire_mission'))
 
 if check_best_speed_for_all_range:
     data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
-    data_df = data_df[data_df['Weight|residual'] < 0.1]
-    data_df = data_df[data_df['Aero|Cruise|CL'] < 0.91]
-    data_df = data_df[data_df['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df = data_df[data_df['Propeller|Cruise|T_to_P'] < 12.01]
-    data_df = data_df[data_df['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df = data_df[data_df['Propeller|Cruise|J'] < 3.01]
-    data_df = data_df[data_df['Propeller|Cruise|CT/sigma'] < 0.15]
-    data_df = data_df[data_df['LiftRotor|clearance_constraint'] < 0.1]
+    data_df = data_df[data_df['success']]
     data = data_df[data_df['mission_range'] == 10]
 
     opt_speed_data = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
@@ -56,23 +42,8 @@ if plot_2D:
     data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
     data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
 
-    data_df = data_df[data_df['Weight|residual'] < 0.1]
-    data_df = data_df[data_df['Aero|Cruise|CL'] < 0.91]
-    data_df = data_df[data_df['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df = data_df[data_df['Propeller|Cruise|T_to_P'] < 12.01]
-    data_df = data_df[data_df['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df = data_df[data_df['Propeller|Cruise|J'] < 3.01]
-    data_df = data_df[data_df['Propeller|Cruise|CT/sigma'] < 0.15]
-    data_df = data_df[data_df['LiftRotor|clearance_constraint'] < 0.1]
-
-    data_df2 = data_df2[data_df2['Weight|residual'] < 0.1]
-    data_df2 = data_df2[data_df2['Aero|Cruise|CL'] < 0.91]
-    data_df2 = data_df2[data_df2['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df2 = data_df2[data_df2['Propeller|Cruise|T_to_P'] < 12.01]
-    data_df2 = data_df2[data_df2['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df2 = data_df2[data_df2['Propeller|Cruise|J'] < 3.01]
-    data_df2 = data_df2[data_df2['Propeller|Cruise|CT/sigma'] < 0.15]
-    data_df2 = data_df2[data_df2['LiftRotor|clearance_constraint'] < 0.1]
+    data_df = data_df[data_df['success']]
+    data_df2 = data_df2[data_df2['success']]
 
     range_array = np.unique(data_df['mission_range'].to_numpy())
     speed_array = np.unique(data_df['cruise_speed'].to_numpy())
@@ -82,8 +53,8 @@ if plot_2D:
         plt.plot(data['mission_range'], data['Energy|entire_mission'], '-o', label=f'Cruise speed = {cruise_speed}')
 
     plt.plot(data_df2['mission_range'], data_df2['Energy|entire_mission'], 'k-o', label='Cruise speed = optimal')
-    plt.xlabel('Mission range [km]')
-    plt.ylabel('Optimal energy [kWh]')
+    plt.xlabel('Mission range (km)')
+    plt.ylabel('Optimal energy (kWh)')
     plt.legend()
     plt.grid()
     plt.show()
@@ -91,20 +62,13 @@ if plot_2D:
 if plot_2D_with_speed_as_design_var:
     data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
 
-    data_df2 = data_df2[data_df2['Weight|residual'] < 0.1]
-    data_df2 = data_df2[data_df2['Aero|Cruise|CL'] < 0.91]
-    data_df2 = data_df2[data_df2['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df2 = data_df2[data_df2['Propeller|Cruise|T_to_P'] < 12.01]
-    data_df2 = data_df2[data_df2['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df2 = data_df2[data_df2['Propeller|Cruise|J'] < 3.01]
-    data_df2 = data_df2[data_df2['Propeller|Cruise|CT/sigma'] < 0.15]
-    data_df2 = data_df2[data_df2['LiftRotor|clearance_constraint'] < 0.1]
+    data_df2 = data_df2[data_df2['success']]
 
     plt.plot(data_df2['mission_range'], data_df2['Energy|entire_mission'], '-o', label='Cruise speed = optimal speed')
     # plt.plot(data_df2['mission_range'], data_df2['cruise_speed'], '-o', label=f'Cruise speed = optimal speed')
 
-    plt.xlabel('Mission range [km]')
-    plt.ylabel('Optimal energy [kWh]')
+    plt.xlabel('Mission range (km)')
+    plt.ylabel('Optimal energy (kWh)')
     plt.legend()
     plt.grid()
     plt.show()
@@ -113,20 +77,14 @@ if plot_contour:
     data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
     data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
 
-    data_df.loc[data_df['Weight|residual'] > 0.1, 'Energy|entire_mission'] = 2000.0
-    data_df.loc[data_df['Aero|Cruise|CL'] > 0.91, 'Energy|entire_mission'] = 2000.0
-    data_df.loc[data_df['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Energy|entire_mission'] = 2000.0
-    data_df.loc[data_df['Propeller|Cruise|T_to_P'] > 12.01, 'Energy|entire_mission'] = 2000.0
-    data_df.loc[data_df['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Energy|entire_mission'] = 2000.0
-    data_df.loc[data_df['Propeller|Cruise|J'] > 3.01, 'Energy|entire_mission'] = 2000.0
-    data_df.loc[data_df['Propeller|Cruise|CT/sigma'] > 0.15, 'Energy|entire_mission'] = 2000.0
-    data_df.loc[data_df['LiftRotor|clearance_constraint'] > 0.1, 'Energy|entire_mission'] = 2000.0
+    data_df.loc[~data_df['success'], 'Energy|entire_mission'] = 2000.0
+    data_df2.loc[~data_df2['success'], 'Energy|entire_mission'] = None
 
     range_array = np.unique(data_df['mission_range'].to_numpy())
     speed_array = np.unique(data_df['cruise_speed'].to_numpy())
 
     X, Y = np.meshgrid(range_array, speed_array)
-    Z = data_df['Energy|entire_mission'].to_numpy().reshape(len(range_array), len(speed_array)).T
+    Z = data_df['Energy|entire_mission'].to_numpy().reshape(len(speed_array), len(range_array))
 
     # plt.contour(X, Y, Z, 30, colors='k')
     cp = plt.contourf(X, Y, Z, 30, cmap='viridis', vmin=np.nanmin(Z), vmax=np.nanmax(Z), extend='min')
@@ -143,29 +101,14 @@ if plot_surface:
     data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
     data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
 
-    data_df.loc[data_df['Weight|residual'] > 0.1, 'Energy|entire_mission'] = None
-    data_df.loc[data_df['Aero|Cruise|CL'] > 0.91, 'Energy|entire_mission'] = None
-    data_df.loc[data_df['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Energy|entire_mission'] = None
-    data_df.loc[data_df['Propeller|Cruise|T_to_P'] > 12.01, 'Energy|entire_mission'] = None
-    data_df.loc[data_df['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Energy|entire_mission'] = None
-    data_df.loc[data_df['Propeller|Cruise|J'] > 3.01, 'Energy|entire_mission'] = None
-    data_df.loc[data_df['Propeller|Cruise|CT/sigma'] > 0.15, 'Energy|entire_mission'] = None
-    data_df.loc[data_df['LiftRotor|clearance_constraint'] > 0.1, 'Energy|entire_mission'] = None
-
-    data_df2.loc[data_df2['Weight|residual'] > 0.1, 'Energy|entire_mission'] = None
-    data_df2.loc[data_df2['Aero|Cruise|CL'] > 0.91, 'Energy|entire_mission'] = None
-    data_df2.loc[data_df2['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Energy|entire_mission'] = None
-    data_df2.loc[data_df2['Propeller|Cruise|T_to_P'] > 12.01, 'Energy|entire_mission'] = None
-    data_df2.loc[data_df2['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Energy|entire_mission'] = None
-    data_df2.loc[data_df2['Propeller|Cruise|J'] > 3.01, 'Energy|entire_mission'] = None
-    data_df2.loc[data_df2['Propeller|Cruise|CT/sigma'] > 0.15, 'Energy|entire_mission'] = None
-    data_df2.loc[data_df2['LiftRotor|clearance_constraint'] > 0.1, 'Energy|entire_mission'] = None
+    data_df.loc[~data_df['success'], 'Energy|entire_mission'] = None
+    data_df2.loc[~data_df2['success'], 'Energy|entire_mission'] = None
 
     range_array = np.unique(data_df['mission_range'].to_numpy())
     speed_array = np.unique(data_df['cruise_speed'].to_numpy())
 
     X, Y = np.meshgrid(range_array, speed_array)
-    Z = data_df['Energy|entire_mission'].to_numpy().reshape(len(range_array), len(speed_array)).T
+    Z = data_df['Energy|entire_mission'].to_numpy().reshape(len(speed_array), len(range_array))
 
     Z_masked = np.ma.masked_where(Z is None, Z)
 
@@ -202,21 +145,15 @@ if plot_contour_all:
         data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
 
         # Apply filtering conditions
-        data_df.loc[data_df['Weight|residual'] > 0.1, 'Energy|entire_mission'] = 500.0
-        data_df.loc[data_df['Aero|Cruise|CL'] > 0.91, 'Energy|entire_mission'] = 500.0
-        data_df.loc[data_df['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Energy|entire_mission'] = 500.0
-        data_df.loc[data_df['Propeller|Cruise|T_to_P'] > 12.01, 'Energy|entire_mission'] = 500.0
-        data_df.loc[data_df['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Energy|entire_mission'] = 500.0
-        data_df.loc[data_df['Propeller|Cruise|J'] > 3.01, 'Energy|entire_mission'] = 500.0
-        data_df.loc[data_df['Propeller|Cruise|CT/sigma'] > 0.15, 'Energy|entire_mission'] = 500.0
-        data_df.loc[data_df['LiftRotor|clearance_constraint'] > 0.1, 'Energy|entire_mission'] = 500.0
+        data_df.loc[~data_df['success'], 'Energy|entire_mission'] = 500.0
+        data_df2.loc[~data_df2['success'], 'Energy|entire_mission'] = None
 
         # Prepare data for contour plot
         range_array = np.unique(data_df['mission_range'].to_numpy())
         speed_array = np.unique(data_df['cruise_speed'].to_numpy())
 
         X, Y = np.meshgrid(range_array, speed_array)
-        Z = data_df['Energy|entire_mission'].to_numpy().reshape(len(range_array), len(speed_array)).T
+        Z = data_df['Energy|entire_mission'].to_numpy().reshape(len(speed_array), len(range_array))
 
         # Plot in the corresponding subplot
         ax = axes[i]

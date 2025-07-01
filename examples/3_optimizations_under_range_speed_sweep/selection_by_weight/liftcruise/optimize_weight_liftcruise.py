@@ -26,7 +26,11 @@ speed_array = np.arange(speed_i, speed_f, d_speed)
 print(range_array, len(range_array))
 print(speed_array, len(speed_array))
 
-solution_fidelity = {'aero': 1, 'hover_climb': 0}
+# Solver fidelity
+fidelity = {'aerodynamics': {'parasite': 'ComponentBuildUp', 'induced': 'ParabolicDragPolar'},
+            'power_model': {'hover_climb': 'MomentumTheory'},
+            'weight_model': {'structure': 'Roskam'},
+            'stability': {'AoA_trim': {'cruise': 'ManualFixedValue'}}}
 
 if run_without_speed_as_design_var_one_opt or run_with_speed_as_design_var_one_opt:
 
@@ -54,21 +58,24 @@ if run_without_speed_as_design_var_one_opt or run_with_speed_as_design_var_one_o
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         if run_without_speed_as_design_var_one_opt:
-            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=False, print=True)
+            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=False, print=True)
             print(results)
         if run_with_speed_as_design_var_one_opt:
-            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=True, print=True)
+            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=True, print=True)
             print(results)
 
 # Expensive simulations, run once !!!
 if run_without_speed_as_design_var_all_opt:
     t1 = time.time()
     mtow_guess = 3000.0
-    for i, mission_range in enumerate(range_array):
-        for j, cruise_speed in enumerate(speed_array):
+    iter_idx = 0
+    for i, cruise_speed in enumerate(speed_array):
+        f_total_non_hub_non_wing = None
+        Cd0_wing = None
+        for j, mission_range in enumerate(range_array):
 
-            iter_idx = i * len(speed_array) + j + 1
-            print(f"Iter= {iter_idx}, Range= {mission_range}, Speed= {cruise_speed}")
+            iter_idx += 1
+            print(f"Iter= {iter_idx}, Range= {mission_range}, Speed= {cruise_speed}, f_total_non_hub_non_wing= {f_total_non_hub_non_wing}, Cd0_wing= {Cd0_wing}")
             sys.stdout.flush()  # To flush the above print output
 
             # Standard vehicle
@@ -80,21 +87,26 @@ if run_without_speed_as_design_var_all_opt:
             # Changed battery density
             vehicle.battery.density = float(battery_energy_density)
 
+            # Fixed assumed parasite drag from the ref vehicle
+            if f_total_non_hub_non_wing is not None and Cd0_wing is not None:
+                vehicle.f_total_non_hub_non_wing = {'climb': None, 'cruise': f_total_non_hub_non_wing, 'descent': None}  # noqa: F821
+                vehicle.wing.Cd0 = {'climb': None, 'cruise': Cd0_wing, 'descent': None}  # noqa: F821
+
             # Different initial guesses
             if battery_energy_density == 250:
                 if mission_range == 40 and cruise_speed == 130:
                     mtow_guess = 1500.0
                 if mission_range == 60 and cruise_speed == 140:
                     mtow_guess = 1500.0
-                if mission_range in [70, 90, 100] and cruise_speed == 150:
+                if mission_range in [70, 80, 90, 100] and cruise_speed == 150:
                     mtow_guess = 1500.0
                 if mission_range in [80, 90, 130, 150] and cruise_speed == 160:
                     mtow_guess = 1500.0
-                if mission_range in [130, 140, 180] and cruise_speed == 170:
+                if mission_range in [130, 140, 150, 180] and cruise_speed == 170:
                     mtow_guess = 1500.0
                 if mission_range in [150, 190, 210, 220] and cruise_speed == 180:
                     mtow_guess = 1500.0
-                if mission_range in [180, 190, 200, 210, 220] and cruise_speed == 190:
+                if mission_range in [170, 180, 190, 200, 210, 220] and cruise_speed == 190:
                     mtow_guess = 1500.0
                 if mission_range in [190, 200, 210] and cruise_speed == 200:
                     mtow_guess = 1500.0
@@ -105,36 +117,42 @@ if run_without_speed_as_design_var_all_opt:
                     mtow_guess = 1500.0
                 if mission_range in [150, 160] and cruise_speed == 140:
                     mtow_guess = 1500.0
-                if mission_range in [180, 200, 210, 220] and cruise_speed == 150:
+                if mission_range in [180, 190, 200, 210, 220] and cruise_speed == 150:
                     mtow_guess = 1500.0
             elif battery_energy_density == 550:
+                if mission_range in [150] and cruise_speed == 120:
+                    mtow_guess = 1500.0
                 if mission_range in [190, 200, 210] and cruise_speed == 130:
                     mtow_guess = 1500.0
                 if mission_range in [10] and cruise_speed == 160:
                     mtow_guess = 1500.0
-                if mission_range in [20] and cruise_speed == 170:
+                if mission_range in [20, 30] and cruise_speed == 170:
                     mtow_guess = 1500.0
-                if mission_range in [30] and cruise_speed == 180:
+                if mission_range in [10, 30, 40] and cruise_speed == 180:
                     mtow_guess = 1500.0
-                if mission_range in [40] and cruise_speed == 190:
+                if mission_range in [30, 40] and cruise_speed == 190:
                     mtow_guess = 1500.0
                 if mission_range in [20, 50] and cruise_speed == 200:
                     mtow_guess = 1500.0
                 if mission_range in [40, 50, 60] and cruise_speed == 210:
                     mtow_guess = 1500.0
-                if mission_range in [60, 80] and cruise_speed == 220:
+                if mission_range in [60, 70, 80] and cruise_speed == 220:
                     mtow_guess = 1500.0
-                if mission_range in [80] and cruise_speed == 230:
+                if mission_range in [60, 70, 80, 90] and cruise_speed == 230:
                     mtow_guess = 1500.0
                 if mission_range in [60] and cruise_speed == 240:
                     mtow_guess = 1500.0
-                if mission_range in [80, 100] and cruise_speed == 250:
+                if mission_range in [70, 80, 100] and cruise_speed == 250:
                     mtow_guess = 1500.0
-                if mission_range in [90] and cruise_speed == 280:
+                if mission_range == 90 and cruise_speed in [270, 280]:
                     mtow_guess = 1500.0
                 if mission_range in [50, 80] and cruise_speed == 290:
                     mtow_guess = 1500.0
-                if mission_range in [70] and cruise_speed == 310:
+                if mission_range in [60, 80, 90] and cruise_speed == 300:
+                    mtow_guess = 1500.0
+                if mission_range in [70, 80] and cruise_speed == 310:
+                    mtow_guess = 1500.0
+                if mission_range in [10, 120] and cruise_speed == 320:
                     mtow_guess = 1500.0
 
             # Standard mission
@@ -143,8 +161,12 @@ if run_without_speed_as_design_var_all_opt:
             # Standard optimization
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=False, print=False)
+                results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=False, print=False)
                 # print(results)
+
+            if f_total_non_hub_non_wing is None and Cd0_wing is None:
+                f_total_non_hub_non_wing = results['Aero|Cruise|f_total_non_hub_non_wing']
+                Cd0_wing = results['Aero|Cruise|Cd0_wing']
 
             results_df = pd.DataFrame(results, index=[iter_idx])
 
@@ -160,12 +182,15 @@ if run_without_speed_as_design_var_all_opt:
 # Expensive simulations, run once !!!
 if rerun_without_speed_as_design_var_all_opt:
     mtow_guess = 3000.0
-    for i, mission_range in enumerate(range_array):
-        for j, cruise_speed in enumerate(speed_array):
+    iter_idx = 0
+    for i, cruise_speed in enumerate(speed_array):
+        f_total_non_hub_non_wing = None
+        Cd0_wing = None
+        for j, mission_range in enumerate(range_array):
+            iter_idx += 1
+            if mission_range in [10, 120] and cruise_speed == 320:
 
-            if mission_range in [10] and cruise_speed == 160:
-                iter_idx = i * len(speed_array) + j + 1
-                print(f"Iter= {iter_idx}, Range= {mission_range}, Speed= {cruise_speed}")
+                print(f"Iter= {iter_idx}, Range= {mission_range}, Speed= {cruise_speed}, f_total_non_hub_non_wing= {f_total_non_hub_non_wing}, Cd0_wing= {Cd0_wing}")
                 sys.stdout.flush()  # To flush the above print output
 
                 # Standard vehicle
@@ -177,21 +202,26 @@ if rerun_without_speed_as_design_var_all_opt:
                 # Changed battery density
                 vehicle.battery.density = float(battery_energy_density)
 
+                # Fixed assumed parasite drag from the ref vehicle
+                if f_total_non_hub_non_wing is not None and Cd0_wing is not None:
+                    vehicle.f_total_non_hub_non_wing = {'climb': None, 'cruise': f_total_non_hub_non_wing, 'descent': None}  # noqa: F821
+                    vehicle.wing.Cd0 = {'climb': None, 'cruise': Cd0_wing, 'descent': None}  # noqa: F821
+
                 # Different initial guesses
                 if battery_energy_density == 250:
                     if mission_range == 40 and cruise_speed == 130:
                         mtow_guess = 1500.0
                     if mission_range == 60 and cruise_speed == 140:
                         mtow_guess = 1500.0
-                    if mission_range in [70, 90, 100] and cruise_speed == 150:
+                    if mission_range in [70, 80, 90, 100] and cruise_speed == 150:
                         mtow_guess = 1500.0
                     if mission_range in [80, 90, 130, 150] and cruise_speed == 160:
                         mtow_guess = 1500.0
-                    if mission_range in [130, 140, 180] and cruise_speed == 170:
+                    if mission_range in [130, 140, 150, 180] and cruise_speed == 170:
                         mtow_guess = 1500.0
                     if mission_range in [150, 190, 210, 220] and cruise_speed == 180:
                         mtow_guess = 1500.0
-                    if mission_range in [180, 190, 200, 210, 220] and cruise_speed == 190:
+                    if mission_range in [170, 180, 190, 200, 210, 220] and cruise_speed == 190:
                         mtow_guess = 1500.0
                     if mission_range in [190, 200, 210] and cruise_speed == 200:
                         mtow_guess = 1500.0
@@ -202,36 +232,42 @@ if rerun_without_speed_as_design_var_all_opt:
                         mtow_guess = 1500.0
                     if mission_range in [150, 160] and cruise_speed == 140:
                         mtow_guess = 1500.0
-                    if mission_range in [180, 200, 210, 220] and cruise_speed == 150:
+                    if mission_range in [180, 190, 200, 210, 220] and cruise_speed == 150:
                         mtow_guess = 1500.0
                 elif battery_energy_density == 550:
+                    if mission_range in [150] and cruise_speed == 120:
+                        mtow_guess = 1500.0
                     if mission_range in [190, 200, 210] and cruise_speed == 130:
                         mtow_guess = 1500.0
                     if mission_range in [10] and cruise_speed == 160:
                         mtow_guess = 1500.0
-                    if mission_range in [20] and cruise_speed == 170:
+                    if mission_range in [20, 30] and cruise_speed == 170:
                         mtow_guess = 1500.0
-                    if mission_range in [30] and cruise_speed == 180:
+                    if mission_range in [10, 30, 40] and cruise_speed == 180:
                         mtow_guess = 1500.0
-                    if mission_range in [40] and cruise_speed == 190:
+                    if mission_range in [30, 40] and cruise_speed == 190:
                         mtow_guess = 1500.0
                     if mission_range in [20, 50] and cruise_speed == 200:
                         mtow_guess = 1500.0
                     if mission_range in [40, 50, 60] and cruise_speed == 210:
                         mtow_guess = 1500.0
-                    if mission_range in [60, 80] and cruise_speed == 220:
+                    if mission_range in [60, 70, 80] and cruise_speed == 220:
                         mtow_guess = 1500.0
-                    if mission_range in [80] and cruise_speed == 230:
+                    if mission_range in [60, 70, 80, 90] and cruise_speed == 230:
                         mtow_guess = 1500.0
                     if mission_range in [60] and cruise_speed == 240:
                         mtow_guess = 1500.0
-                    if mission_range in [80, 100] and cruise_speed == 250:
+                    if mission_range in [70, 80, 100] and cruise_speed == 250:
                         mtow_guess = 1500.0
-                    if mission_range in [90] and cruise_speed == 280:
+                    if mission_range == 90 and cruise_speed in [270, 280]:
                         mtow_guess = 1500.0
                     if mission_range in [50, 80] and cruise_speed == 290:
                         mtow_guess = 1500.0
-                    if mission_range in [70] and cruise_speed == 310:
+                    if mission_range in [60, 80, 90] and cruise_speed == 300:
+                        mtow_guess = 1500.0
+                    if mission_range in [70, 80] and cruise_speed == 310:
+                        mtow_guess = 1500.0
+                    if mission_range in [10, 120] and cruise_speed == 320:
                         mtow_guess = 1500.0
 
                 # Standard mission
@@ -240,8 +276,12 @@ if rerun_without_speed_as_design_var_all_opt:
                 # Standard optimization
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=False, print=False)
+                    results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=False, print=False)
                     # print(results)
+
+                if f_total_non_hub_non_wing is None and Cd0_wing is None:
+                    f_total_non_hub_non_wing = results['Aero|Cruise|f_total_non_hub_non_wing']
+                    Cd0_wing = results['Aero|Cruise|Cd0_wing']
 
                 results['Unnamed: 0'] = iter_idx
                 results_df = pd.DataFrame(results, index=[iter_idx])
@@ -282,6 +322,11 @@ if run_with_speed_as_design_var_all_opt:
         # Changed battery density
         vehicle.battery.density = float(battery_energy_density)
 
+        # Fixed assumed parasite drag from the ref vehicle
+        if i != 0:
+            vehicle.f_total_non_hub_non_wing = {'climb': None, 'cruise': f_non_hub_non_wing, 'descent': None}  # noqa: F821
+            vehicle.wing.Cd0 = {'climb': None, 'cruise': Cd0_wing, 'descent': None}  # noqa: F821
+
         print(f"Iter= {i}, Range= {mission_range}, Speed guess= {cruise_speed_guess}")
 
         # Standard mission
@@ -290,10 +335,14 @@ if run_with_speed_as_design_var_all_opt:
         # Standard optimization
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=True, print=False)
+            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'takeoff_weight', mtow_guess, speed_as_design_var=True, print=False)
             # print(results)
+
+        if i == 0:
+            f_non_hub_non_wing = results['Aero|Cruise|f_total_non_hub_non_wing']
+            Cd0_wing = results['Aero|Cruise|Cd0_wing']
 
         results_df = pd.DataFrame(results, index=[i])
 
         results_df.to_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv', mode='a', header=True if i == 0 else False)
-        # results_df.to_csv(f'battery_{battery_energy_density}_Whpkg/results_test.csv', mode='a', header=True if i==0 else False)
+        # results_df.to_csv(f'battery_{battery_energy_density}_Whpkg/results_test.csv', mode='a', header=True if i == 0 else False)

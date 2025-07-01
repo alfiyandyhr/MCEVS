@@ -34,21 +34,8 @@ if plot_multi_range_single_speed:
     data_df = pd.read_csv(f'{selection_by}/multirotor/battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
     data_df2 = pd.read_csv(f'{selection_by}/liftcruise/battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
 
-    data_df = data_df[data_df['Weight|residual'] < 0.1]
-    data_df = data_df[data_df['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df = data_df[data_df['LiftRotor|Cruise|T_to_P'] < 12.01]
-    data_df = data_df[data_df['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df = data_df[data_df['LiftRotor|Cruise|mu'] < 1.1]
-    data_df = data_df[data_df['LiftRotor|Cruise|CT/sigma'] < 0.15]
-
-    data_df2 = data_df2[data_df2['Weight|residual'] < 0.1]
-    data_df2 = data_df2[data_df2['Aero|Cruise|CL'] < 0.91]
-    data_df2 = data_df2[data_df2['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df2 = data_df2[data_df2['Propeller|Cruise|T_to_P'] < 12.01]
-    data_df2 = data_df2[data_df2['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df2 = data_df2[data_df2['Propeller|Cruise|J'] < 3.01]
-    data_df2 = data_df2[data_df2['Propeller|Cruise|CT/sigma'] < 0.15]
-    data_df2 = data_df2[data_df2['LiftRotor|clearance_constraint'] < 0.1]
+    data_df = data_df[data_df['success']]
+    data_df2 = data_df2[data_df2['success']]
 
     data = data_df[data_df['cruise_speed'] == at_which_speed]
     data2 = data_df2[data_df2['cruise_speed'] == at_which_speed]
@@ -56,8 +43,8 @@ if plot_multi_range_single_speed:
     if selection_by == 'selection_by_weight':
         plt.plot(data['mission_range'], data['Weight|takeoff'], '-o', label='Multirotor')
         plt.plot(data2['mission_range'], data2['Weight|takeoff'], '-o', label='Lift+cruise')
-        plt.xlabel('Mission range [km]')
-        plt.ylabel('Optimal MTOW [kg]')
+        plt.xlabel('Mission range (km)')
+        plt.ylabel('Optimal MTOW (kg)')
         plt.legend(loc='upper left')
         plt.title(f'Optimal MTOW at cruise speed= {at_which_speed} km/h\nand at battery energy density= {battery_energy_density} Wh/kg')
         plt.grid()
@@ -66,8 +53,8 @@ if plot_multi_range_single_speed:
     if selection_by == 'selection_by_energy':
         plt.plot(data['mission_range'], data['Energy|entire_mission'], '-o', label='Multirotor')
         plt.plot(data2['mission_range'], data2['Energy|entire_mission'], '-o', label='Lift+cruise')
-        plt.xlabel('Mission range [km]')
-        plt.ylabel('Required energy [kWh]')
+        plt.xlabel('Mission range (km)')
+        plt.ylabel('Required energy (kWh)')
         plt.legend(loc='upper left')
         plt.title(f'Required energy at cruise speed= {at_which_speed} km/h\nand at battery energy density= {battery_energy_density} Wh/kg')
         plt.grid()
@@ -79,41 +66,16 @@ if plot_multi_range_multi_speed_optimal_config or plot_multi_range_multi_speed_o
     data_df2 = pd.read_csv(f'{selection_by}/liftcruise/battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
 
     # Filtering
-    data_df.loc[data_df['Weight|residual'] > 0.1, 'Weight|takeoff'] = np.nan
-    data_df.loc[data_df['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-    data_df.loc[data_df['LiftRotor|Cruise|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-    data_df.loc[data_df['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-    data_df.loc[data_df['LiftRotor|Cruise|mu'] > 1, 'Weight|takeoff'] = np.nan
-    data_df.loc[data_df['LiftRotor|Cruise|CT/sigma'] > 0.15, 'Weight|takeoff'] = np.nan
-
-    data_df.loc[data_df['Weight|residual'] > 0.1, 'Energy|entire_mission'] = np.nan
-    data_df.loc[data_df['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-    data_df.loc[data_df['LiftRotor|Cruise|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-    data_df.loc[data_df['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-    data_df.loc[data_df['LiftRotor|Cruise|mu'] > 1, 'Energy|entire_mission'] = np.nan
-    data_df.loc[data_df['LiftRotor|Cruise|CT/sigma'] > 0.15, 'Energy|entire_mission'] = np.nan
-
-    data_df2.loc[data_df2['Weight|residual'] > 0.1, 'Weight|takeoff'] = np.nan
-    data_df2.loc[data_df2['Aero|Cruise|CL'] > 0.91, 'Weight|takeoff'] = np.nan
-    data_df2.loc[data_df2['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-    data_df2.loc[data_df2['Propeller|Cruise|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-    data_df2.loc[data_df2['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-    data_df2.loc[data_df2['Propeller|Cruise|CT/sigma'] > 0.15, 'Weight|takeoff'] = np.nan
-    data_df2.loc[data_df2['Propeller|Cruise|J'] > 3.1, 'Weight|takeoff'] = np.nan
-
-    data_df2.loc[data_df2['Weight|residual'] > 0.1, 'Energy|entire_mission'] = np.nan
-    data_df2.loc[data_df2['Aero|Cruise|CL'] > 0.91, 'Energy|entire_mission'] = np.nan
-    data_df2.loc[data_df2['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-    data_df2.loc[data_df2['Propeller|Cruise|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-    data_df2.loc[data_df2['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-    data_df2.loc[data_df2['Propeller|Cruise|CT/sigma'] > 0.15, 'Energy|entire_mission'] = np.nan
-    data_df2.loc[data_df2['Propeller|Cruise|J'] > 3.1, 'Energy|entire_mission'] = np.nan
+    data_df.loc[~data_df['success'], 'Weight|takeoff'] = np.nan
+    data_df.loc[~data_df['success'], 'Energy|entire_mission'] = np.nan
+    data_df2.loc[~data_df2['success'], 'Weight|takeoff'] = np.nan
+    data_df2.loc[~data_df2['success'], 'Energy|entire_mission'] = np.nan
 
     # Generate data
-    MTOW = data_df['Weight|takeoff'].to_numpy().reshape(len(range_array), len(speed_array)).T
-    MTOW2 = data_df2['Weight|takeoff'].to_numpy().reshape(len(range_array), len(speed_array)).T
-    Energy = data_df['Energy|entire_mission'].to_numpy().reshape(len(range_array), len(speed_array)).T
-    Energy2 = data_df2['Energy|entire_mission'].to_numpy().reshape(len(range_array), len(speed_array)).T
+    MTOW = data_df['Weight|takeoff'].to_numpy().reshape(len(speed_array), len(range_array))
+    MTOW2 = data_df2['Weight|takeoff'].to_numpy().reshape(len(speed_array), len(range_array))
+    Energy = data_df['Energy|entire_mission'].to_numpy().reshape(len(speed_array), len(range_array))
+    Energy2 = data_df2['Energy|entire_mission'].to_numpy().reshape(len(speed_array), len(range_array))
     data = np.empty((len(speed_array), len(range_array)))
     data.fill(np.nan)
     data2 = np.empty((len(speed_array), len(range_array)))
@@ -171,8 +133,8 @@ if plot_multi_range_multi_speed_optimal_config or plot_multi_range_multi_speed_o
             cbar = fig.colorbar(im, ticks=[0.33, 1, 1.66])
             cbar.ax.set_yticklabels(['Multirotor', 'Lift+Cruise', 'Infeasible'])
             ax.set_title(f'Optimal configuration by MTOW\nat battery energy density= {battery_energy_density} Wh/kg')
-            ax.set_xlabel('Mission range [km]')
-            ax.set_ylabel('Cruise speed [km/h]')
+            ax.set_xlabel('Mission range (km)')
+            ax.set_ylabel('Cruise speed (km/h)')
             ax.legend()
             plt.show()
 
@@ -191,8 +153,8 @@ if plot_multi_range_multi_speed_optimal_config or plot_multi_range_multi_speed_o
             cbar = fig.colorbar(im, ticks=[0.33, 1, 1.66])
             cbar.ax.set_yticklabels(['Multirotor', 'Lift+Cruise', 'Infeasible'])
             ax.set_title(f'Optimal configuration by required energy\nat battery energy density= {battery_energy_density} Wh/kg')
-            ax.set_xlabel('Mission range [km]')
-            ax.set_ylabel('Cruise speed [km/h]')
+            ax.set_xlabel('Mission range (km)')
+            ax.set_ylabel('Cruise speed (km/h)')
             ax.legend()
             plt.show()
 
@@ -213,8 +175,8 @@ if plot_multi_range_multi_speed_optimal_config or plot_multi_range_multi_speed_o
             cbar = fig.colorbar(im, ticks=[0.33, 1, 1.66])
             cbar.ax.set_yticklabels(['Multirotor', 'Lift+Cruise', 'Infeasible'])
             ax.set_title(f'Optimal configuration by MTOW\nat battery energy density= {battery_energy_density} Wh/kg')
-            ax.set_xlabel('Mission range [km]')
-            ax.set_ylabel('Cruise speed [km/h]')
+            ax.set_xlabel('Mission range (km)')
+            ax.set_ylabel('Cruise speed (km/h)')
             ax.set_ylim([160, 320])
             ax.legend()
             plt.show()
@@ -234,8 +196,8 @@ if plot_multi_range_multi_speed_optimal_config or plot_multi_range_multi_speed_o
             cbar = fig.colorbar(im, ticks=[0.33, 1, 1.66])
             cbar.ax.set_yticklabels(['Multirotor', 'Lift+Cruise', 'Infeasible'])
             ax.set_title(f'Optimal configuration by required energy\nat battery energy density= {battery_energy_density} Wh/kg')
-            ax.set_xlabel('Mission range [km]')
-            ax.set_ylabel('Cruise speed [km/h]')
+            ax.set_xlabel('Mission range (km)')
+            ax.set_ylabel('Cruise speed (km/h)')
             ax.set_ylim([160, 320])
             ax.legend()
             plt.show()
@@ -249,53 +211,12 @@ if plot_compare_battery_multi_range_optimal_speed:
     data_df_c = pd.read_csv(f'{selection_by}/multirotor/battery_550_Whpkg/results_with_speed_as_design_var.csv')
     data_df2_c = pd.read_csv(f'{selection_by}/liftcruise/battery_550_Whpkg/results_with_speed_as_design_var.csv')
 
-    data_df_a = data_df_a[data_df_a['Weight|residual'] < 0.1]
-    data_df_a = data_df_a[data_df_a['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df_a = data_df_a[data_df_a['LiftRotor|Cruise|T_to_P'] < 12.01]
-    data_df_a = data_df_a[data_df_a['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df_a = data_df_a[data_df_a['LiftRotor|Cruise|mu'] < 1.1]
-    data_df_a = data_df_a[data_df_a['LiftRotor|Cruise|CT/sigma'] < 0.15]
-
-    data_df2_a = data_df2_a[data_df2_a['Weight|residual'] < 0.1]
-    data_df2_a = data_df2_a[data_df2_a['Aero|Cruise|CL'] < 0.91]
-    data_df2_a = data_df2_a[data_df2_a['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df2_a = data_df2_a[data_df2_a['Propeller|Cruise|T_to_P'] < 12.01]
-    data_df2_a = data_df2_a[data_df2_a['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df2_a = data_df2_a[data_df2_a['Propeller|Cruise|J'] < 3.01]
-    data_df2_a = data_df2_a[data_df2_a['Propeller|Cruise|CT/sigma'] < 0.15]
-    data_df2_a = data_df2_a[data_df2_a['LiftRotor|clearance_constraint'] < 0.1]
-
-    data_df_b = data_df_b[data_df_b['Weight|residual'] < 0.1]
-    data_df_b = data_df_b[data_df_b['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df_b = data_df_b[data_df_b['LiftRotor|Cruise|T_to_P'] < 12.01]
-    data_df_b = data_df_b[data_df_b['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df_b = data_df_b[data_df_b['LiftRotor|Cruise|mu'] < 1.1]
-    data_df_b = data_df_b[data_df_b['LiftRotor|Cruise|CT/sigma'] < 0.15]
-
-    data_df2_b = data_df2_b[data_df2_b['Weight|residual'] < 0.1]
-    data_df2_b = data_df2_b[data_df2_b['Aero|Cruise|CL'] < 0.91]
-    data_df2_b = data_df2_b[data_df2_b['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df2_b = data_df2_b[data_df2_b['Propeller|Cruise|T_to_P'] < 12.01]
-    data_df2_b = data_df2_b[data_df2_b['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df2_b = data_df2_b[data_df2_b['Propeller|Cruise|J'] < 3.01]
-    data_df2_b = data_df2_b[data_df2_b['Propeller|Cruise|CT/sigma'] < 0.15]
-    data_df2_b = data_df2_b[data_df2_b['LiftRotor|clearance_constraint'] < 0.1]
-
-    data_df_c = data_df_c[data_df_c['Weight|residual'] < 0.1]
-    data_df_c = data_df_c[data_df_c['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df_c = data_df_c[data_df_c['LiftRotor|Cruise|T_to_P'] < 12.01]
-    data_df_c = data_df_c[data_df_c['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df_c = data_df_c[data_df_c['LiftRotor|Cruise|mu'] < 1.1]
-    data_df_c = data_df_c[data_df_c['LiftRotor|Cruise|CT/sigma'] < 0.15]
-
-    data_df2_c = data_df2_c[data_df2_c['Weight|residual'] < 0.1]
-    data_df2_c = data_df2_c[data_df2_c['Aero|Cruise|CL'] < 0.91]
-    data_df2_c = data_df2_c[data_df2_c['LiftRotor|HoverClimb|T_to_P'] < 12.01]
-    data_df2_c = data_df2_c[data_df2_c['Propeller|Cruise|T_to_P'] < 12.01]
-    data_df2_c = data_df2_c[data_df2_c['LiftRotor|HoverDescent|T_to_P'] < 12.01]
-    data_df2_c = data_df2_c[data_df2_c['Propeller|Cruise|J'] < 3.01]
-    data_df2_c = data_df2_c[data_df2_c['Propeller|Cruise|CT/sigma'] < 0.15]
-    data_df2_c = data_df2_c[data_df2_c['LiftRotor|clearance_constraint'] < 0.1]
+    data_df_a = data_df_a[data_df_a['success']]
+    data_df2_a = data_df2_a[data_df2_a['success']]
+    data_df_b = data_df_b[data_df_b['success']]
+    data_df2_b = data_df2_b[data_df2_b['success']]
+    data_df_c = data_df_c[data_df_c['success']]
+    data_df2_c = data_df2_c[data_df2_c['success']]
 
     plt.plot(data_df_a['mission_range'], data_df_a['Weight|takeoff'], '-.r', label='Multirotor 250 Wh/kg')
     plt.plot(data_df_b['mission_range'], data_df_b['Weight|takeoff'], '-.b', label='Multirotor 400 Wh/kg')
@@ -303,8 +224,8 @@ if plot_compare_battery_multi_range_optimal_speed:
     plt.plot(data_df2_a['mission_range'], data_df2_a['Weight|takeoff'], '-r', label='Lift+Cruise 250 Wh/kg')
     plt.plot(data_df2_b['mission_range'], data_df2_b['Weight|takeoff'], '-b', label='Lift+Cruise 400 Wh/kg')
     plt.plot(data_df2_c['mission_range'], data_df2_c['Weight|takeoff'], '-g', label='Lift+Cruise 550 Wh/kg')
-    plt.xlabel('Mission range [km]')
-    plt.ylabel('MTOW [kg]')
+    plt.xlabel('Mission range (km)')
+    plt.ylabel('MTOW (kg)')
     plt.ylim([1000, 5000])
     plt.legend(loc='upper left')
     plt.title('MTOW vs range at optimal speeds')
@@ -317,8 +238,8 @@ if plot_compare_battery_multi_range_optimal_speed:
     plt.plot(data_df2_a['mission_range'], data_df2_a['Energy|entire_mission'], '-r', label='Lift+Cruise 250 Wh/kg')
     plt.plot(data_df2_b['mission_range'], data_df2_b['Energy|entire_mission'], '-b', label='Lift+Cruise 400 Wh/kg')
     plt.plot(data_df2_c['mission_range'], data_df2_c['Energy|entire_mission'], '-g', label='Lift+Cruise 550 Wh/kg')
-    plt.xlabel('Mission range [km]')
-    plt.ylabel('Required energy [kWh]')
+    plt.xlabel('Mission range (km)')
+    plt.ylabel('Required energy (kWh)')
     plt.ylim([0, 600])
     plt.legend(loc='upper left')
     plt.title('Energy vs range at optimal speeds')
@@ -331,8 +252,8 @@ if plot_compare_battery_multi_range_optimal_speed:
     plt.plot(data_df2_a['mission_range'], data_df2_a['mission_range'] / data_df2_a['cruise_speed'] * 60 + 5.34, '-r', label='Lift+Cruise 250 Wh/kg')
     plt.plot(data_df2_b['mission_range'], data_df2_b['mission_range'] / data_df2_b['cruise_speed'] * 60 + 5.34, '-b', label='Lift+Cruise 400 Wh/kg')
     plt.plot(data_df2_c['mission_range'], data_df2_c['mission_range'] / data_df2_c['cruise_speed'] * 60 + 5.34, '-g', label='Lift+Cruise 550 Wh/kg')
-    plt.xlabel('Mission range [km]')
-    plt.ylabel('Mission time [mins]')
+    plt.xlabel('Mission range (km)')
+    plt.ylabel('Mission time (mins)')
     plt.legend(loc='upper left')
     plt.title('Mission time vs range at optimal speeds')
     plt.grid()
@@ -344,7 +265,7 @@ if plot_compare_battery_multi_range_optimal_speed:
     plt.plot(data_df2_a['mission_range'], data_df2_a['Weight|takeoff'] * 9.8 * data_df2_a['cruise_speed'] * 1000 / 3600 / data_df2_a['Power|segment_3'] / 1000, '-r', label='Lift+Cruise 250 Wh/kg')
     plt.plot(data_df2_b['mission_range'], data_df2_b['Weight|takeoff'] * 9.8 * data_df2_b['cruise_speed'] * 1000 / 3600 / data_df2_b['Power|segment_3'] / 1000, '-b', label='Lift+Cruise 400 Wh/kg')
     plt.plot(data_df2_c['mission_range'], data_df2_c['Weight|takeoff'] * 9.8 * data_df2_c['cruise_speed'] * 1000 / 3600 / data_df2_c['Power|segment_3'] / 1000, '-g', label='Lift+Cruise 550 Wh/kg')
-    plt.xlabel('Mission range [km]')
+    plt.xlabel('Mission range (km)')
     plt.ylabel(r'$L/D_{e} = W*v/P$')
     plt.legend(loc='center right')
     plt.title(r'Equivalent $L/D$ vs range at optimal speed')
@@ -362,41 +283,16 @@ if plot_multi_range_multi_speed_optimal_config_all:
         data_df2 = pd.read_csv(f'{selection_by}/liftcruise/battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
 
         # Filtering
-        data_df.loc[data_df['Weight|residual'] > 0.1, 'Weight|takeoff'] = np.nan
-        data_df.loc[data_df['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-        data_df.loc[data_df['LiftRotor|Cruise|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-        data_df.loc[data_df['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-        data_df.loc[data_df['LiftRotor|Cruise|mu'] > 1, 'Weight|takeoff'] = np.nan
-        data_df.loc[data_df['LiftRotor|Cruise|CT/sigma'] > 0.15, 'Weight|takeoff'] = np.nan
-
-        data_df.loc[data_df['Weight|residual'] > 0.1, 'Energy|entire_mission'] = np.nan
-        data_df.loc[data_df['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-        data_df.loc[data_df['LiftRotor|Cruise|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-        data_df.loc[data_df['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-        data_df.loc[data_df['LiftRotor|Cruise|mu'] > 1, 'Energy|entire_mission'] = np.nan
-        data_df.loc[data_df['LiftRotor|Cruise|CT/sigma'] > 0.15, 'Energy|entire_mission'] = np.nan
-
-        data_df2.loc[data_df2['Weight|residual'] > 0.1, 'Weight|takeoff'] = np.nan
-        data_df2.loc[data_df2['Aero|Cruise|CL'] > 0.91, 'Weight|takeoff'] = np.nan
-        data_df2.loc[data_df2['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-        data_df2.loc[data_df2['Propeller|Cruise|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-        data_df2.loc[data_df2['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Weight|takeoff'] = np.nan
-        data_df2.loc[data_df2['Propeller|Cruise|CT/sigma'] > 0.15, 'Weight|takeoff'] = np.nan
-        data_df2.loc[data_df2['Propeller|Cruise|J'] > 3.1, 'Weight|takeoff'] = np.nan
-
-        data_df2.loc[data_df2['Weight|residual'] > 0.1, 'Energy|entire_mission'] = np.nan
-        data_df2.loc[data_df2['Aero|Cruise|CL'] > 0.91, 'Energy|entire_mission'] = np.nan
-        data_df2.loc[data_df2['LiftRotor|HoverClimb|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-        data_df2.loc[data_df2['Propeller|Cruise|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-        data_df2.loc[data_df2['LiftRotor|HoverDescent|T_to_P'] > 12.01, 'Energy|entire_mission'] = np.nan
-        data_df2.loc[data_df2['Propeller|Cruise|CT/sigma'] > 0.15, 'Energy|entire_mission'] = np.nan
-        data_df2.loc[data_df2['Propeller|Cruise|J'] > 3.1, 'Energy|entire_mission'] = np.nan
+        data_df.loc[~data_df['success'], 'Weight|takeoff'] = np.nan
+        data_df.loc[~data_df['success'], 'Energy|entire_mission'] = np.nan
+        data_df2.loc[~data_df2['success'], 'Weight|takeoff'] = np.nan
+        data_df2.loc[~data_df2['success'], 'Energy|entire_mission'] = np.nan
 
         # Generate data
-        MTOW = data_df['Weight|takeoff'].to_numpy().reshape(len(range_array), len(speed_array)).T
-        MTOW2 = data_df2['Weight|takeoff'].to_numpy().reshape(len(range_array), len(speed_array)).T
-        Energy = data_df['Energy|entire_mission'].to_numpy().reshape(len(range_array), len(speed_array)).T
-        Energy2 = data_df2['Energy|entire_mission'].to_numpy().reshape(len(range_array), len(speed_array)).T
+        MTOW = data_df['Weight|takeoff'].to_numpy().reshape(len(speed_array), len(range_array))
+        MTOW2 = data_df2['Weight|takeoff'].to_numpy().reshape(len(speed_array), len(range_array))
+        Energy = data_df['Energy|entire_mission'].to_numpy().reshape(len(speed_array), len(range_array))
+        Energy2 = data_df2['Energy|entire_mission'].to_numpy().reshape(len(speed_array), len(range_array))
         data = np.empty((len(speed_array), len(range_array)))
         data.fill(np.nan)
         data2 = np.empty((len(speed_array), len(range_array)))
@@ -454,9 +350,9 @@ if plot_multi_range_multi_speed_optimal_config_all:
 
             # Titles and labels for each subplot
             ax.set_title(f'Battery GED: {battery_energy_density_list[i]} Wh/kg')
-            ax.set_xlabel('Mission range [km]')
+            ax.set_xlabel('Mission range (km)')
             if i == 0:
-                ax.set_ylabel('Cruise speed [km/h]')
+                ax.set_ylabel('Cruise speed (km/h)')
 
         # Add a single legend for the "Optimal cruise speed path" line
         fig.legend(['Uber Air Mission Requirement'], loc='upper center', bbox_to_anchor=(0.49, 0.94), ncol=1, prop={'size': 12})
@@ -487,9 +383,9 @@ if plot_multi_range_multi_speed_optimal_config_all:
 
             # Titles and labels for each subplot
             ax.set_title(f'Battery GED: {battery_energy_density_list[i]} Wh/kg')
-            ax.set_xlabel('Mission range [km]')
+            ax.set_xlabel('Mission range (km)')
             if i == 0:
-                ax.set_ylabel('Cruise speed [km/h]')
+                ax.set_ylabel('Cruise speed (km/h)')
 
         # Add a single legend for the "Optimal cruise speed path" line
         fig.legend(['Uber Air Mission Requirement'], loc='upper center', bbox_to_anchor=(0.49, 0.94), ncol=1, prop={'size': 12})

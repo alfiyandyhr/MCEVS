@@ -26,7 +26,10 @@ speed_array = np.arange(speed_i, speed_f, d_speed)
 print(range_array, len(range_array))
 print(speed_array, len(speed_array))
 
-solution_fidelity = {'aero': 1, 'hover_climb': 0}
+# Solver fidelity
+fidelity = {'aerodynamics': {'parasite': 'ComponentBuildUp', 'induced': 'ParabolicDragPolar'},
+            'power_model': {'hover_climb': 'MomentumTheory'},
+            'weight_model': {'structure': 'Roskam'}}
 
 if run_without_speed_as_design_var_one_opt or run_with_speed_as_design_var_one_opt:
 
@@ -54,21 +57,23 @@ if run_without_speed_as_design_var_one_opt or run_with_speed_as_design_var_one_o
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         if run_without_speed_as_design_var_one_opt:
-            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'energy', mtow_guess, speed_as_design_var=False, print=True)
+            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'energy', mtow_guess, speed_as_design_var=False, print=True)
             print(results)
         if run_with_speed_as_design_var_one_opt:
-            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'energy', mtow_guess, speed_as_design_var=True, print=True)
+            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'energy', mtow_guess, speed_as_design_var=True, print=True)
             print(results)
 
 # Expensive simulations, run once !!!
 if run_without_speed_as_design_var_all_opt:
     t1 = time.time()
     mtow_guess = 3000.0
-    for i, mission_range in enumerate(range_array):
-        for j, cruise_speed in enumerate(speed_array):
+    iter_idx = 0
+    for i, cruise_speed in enumerate(speed_array):
+        f_total_non_hub = None
+        for j, mission_range in enumerate(range_array):
 
-            iter_idx = i * len(speed_array) + j + 1
-            print(f"Iter= {iter_idx}, Range= {mission_range}, Speed= {cruise_speed}")
+            iter_idx += 1
+            print(f"Iter= {iter_idx}, Range= {mission_range}, Speed= {cruise_speed}, f_total_non_hub= {f_total_non_hub}")
             sys.stdout.flush()  # To flush the above print output
 
             # Standard vehicle
@@ -80,13 +85,19 @@ if run_without_speed_as_design_var_all_opt:
             # Changed battery density
             vehicle.battery.density = float(battery_energy_density)
 
+            # Fixed assumed parasite drag from the ref vehicle
+            if f_total_non_hub is not None:
+                vehicle.f_total_non_hub = {'climb': None, 'cruise': f_total_non_hub, 'descent': None}  # noqa: F821
+
             # Standard mission
             mission_ij = StandardMissionProfile(mission_range * 1000, cruise_speed * 1000 / 3600)
 
             # Different initial guesses
             if battery_energy_density == 250:
+                if mission_range == 50 and cruise_speed == 90:
+                    mtow_guess = 1500.0
                 if mission_range == 60 and cruise_speed == 100:
-                    mtow_guess = 5000.0
+                    mtow_guess = 2000.0
                 if mission_range == 30 and cruise_speed in [140, 280, 290]:
                     mtow_guess = 1500.0
                 if mission_range == 70 and cruise_speed == 140:
@@ -127,7 +138,7 @@ if run_without_speed_as_design_var_all_opt:
                     mtow_guess = 1500.0
                 if mission_range == 130 and cruise_speed == 190:
                     mtow_guess = 1500.0
-                if mission_range == 220 and cruise_speed == 230:
+                if mission_range in [210, 220] and cruise_speed == 230:
                     mtow_guess = 1500.0
                 if mission_range == 190 and cruise_speed == 300:
                     mtow_guess = 1500.0
@@ -135,8 +146,11 @@ if run_without_speed_as_design_var_all_opt:
             # Standard optimization
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'energy', mtow_guess, speed_as_design_var=False, print=False)
+                results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'energy', mtow_guess, speed_as_design_var=False, print=False)
                 # print(results)
+
+            if f_total_non_hub is None:
+                f_total_non_hub = results['Aero|Cruise|f_total_non_hub']
 
             results_df = pd.DataFrame(results, index=[iter_idx])
 
@@ -152,11 +166,15 @@ if run_without_speed_as_design_var_all_opt:
 # Expensive simulations, run once !!!
 if rerun_without_speed_as_design_var_all_opt:
     mtow_guess = 3000.0
-    for i, mission_range in enumerate(range_array):
-        for j, cruise_speed in enumerate(speed_array):
+    iter_idx = 0
+    for i, cruise_speed in enumerate(speed_array):
+        f_total_non_hub = None
+        for j, mission_range in enumerate(range_array):
 
-            if mission_range in [190] and cruise_speed == 300:
-                iter_idx = i * len(speed_array) + j + 1
+            iter_idx += 1
+
+            if mission_range in [60] and cruise_speed == 100:
+
                 print(f"Iter= {iter_idx}, Range= {mission_range}, Speed= {cruise_speed}")
                 sys.stdout.flush()  # To flush the above print output
 
@@ -169,13 +187,19 @@ if rerun_without_speed_as_design_var_all_opt:
                 # Changed battery density
                 vehicle.battery.density = float(battery_energy_density)
 
+                # Fixed assumed parasite drag from the ref vehicle
+                if f_total_non_hub is not None:
+                    vehicle.f_total_non_hub = {'climb': None, 'cruise': f_total_non_hub, 'descent': None}  # noqa: F821
+
                 # Standard mission
                 mission_ij = StandardMissionProfile(mission_range * 1000, cruise_speed * 1000 / 3600)
 
                 # Different initial guesses
                 if battery_energy_density == 250:
+                    if mission_range == 50 and cruise_speed == 90:
+                        mtow_guess = 1500.0
                     if mission_range == 60 and cruise_speed == 100:
-                        mtow_guess = 5000.0
+                        mtow_guess = 2000.0
                     if mission_range == 30 and cruise_speed in [140, 280, 290]:
                         mtow_guess = 1500.0
                     if mission_range == 70 and cruise_speed == 140:
@@ -216,7 +240,7 @@ if rerun_without_speed_as_design_var_all_opt:
                         mtow_guess = 1500.0
                     if mission_range == 130 and cruise_speed == 190:
                         mtow_guess = 1500.0
-                    if mission_range == 220 and cruise_speed == 230:
+                    if mission_range in [210, 220] and cruise_speed == 230:
                         mtow_guess = 1500.0
                     if mission_range == 190 and cruise_speed == 300:
                         mtow_guess = 1500.0
@@ -224,8 +248,11 @@ if rerun_without_speed_as_design_var_all_opt:
                 # Standard optimization
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'energy', mtow_guess, speed_as_design_var=False, print=False)
+                    results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'energy', mtow_guess, speed_as_design_var=False, print=False)
                     # print(results)
+
+                if f_total_non_hub is None:
+                    f_total_non_hub = results['Aero|Cruise|f_total_non_hub']
 
                 results['Unnamed: 0'] = iter_idx
                 results_df = pd.DataFrame(results, index=[iter_idx])
@@ -273,6 +300,10 @@ if run_with_speed_as_design_var_all_opt:
         # Changed battery density
         vehicle.battery.density = float(battery_energy_density)
 
+        # Fixed assumed parasite drag from the ref vehicle
+        if i != 0:
+            vehicle.f_total_non_hub = {'climb': None, 'cruise': f_total_non_hub, 'descent': None}  # noqa: F821
+
         print(f"Iter= {i}, Range= {mission_range}, Speed guess= {cruise_speed_guess}")
 
         # Standard mission
@@ -281,8 +312,11 @@ if run_with_speed_as_design_var_all_opt:
         # Standard optimization
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, solution_fidelity, 'energy', mtow_guess, speed_as_design_var=True, print=False)
+            results = RunStandardSingleObjectiveOptimization(vehicle, mission_ij, fidelity, 'energy', mtow_guess, speed_as_design_var=True, print=False)
             # print(results)
+
+        if i == 0:
+            f_total_non_hub = results['Aero|Cruise|f_total_non_hub']
 
         results_df = pd.DataFrame(results, index=[i])
 
