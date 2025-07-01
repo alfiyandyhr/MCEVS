@@ -39,7 +39,7 @@ if do_plot_power_energy_breakdown:
 
             data = pd.read_csv(f'minimizing_{obj}/{config}/battery_{battery}_Whpkg/results_with_speed_as_design_var.csv')
             data_list.append(data[data['mission_range'] == mission_range])
-        
+
         if config == 'multirotor':
             vehicle_config = 'Multirotor'
         elif config == 'liftcruise':

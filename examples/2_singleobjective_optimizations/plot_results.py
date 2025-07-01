@@ -162,7 +162,7 @@ if plot_multi_range_at_optimal_speeds:
                 v_1 = data_dict[f'{battery_list[i]}'][1]['cruise_speed']
                 ax.plot(data_dict[f'{battery_list[i]}'][0]['mission_range'], R_0 / v_0 * 60 + 5.34, '-o', ms=4, label='Multirotor' if i == 0 else None)
                 ax.plot(data_dict[f'{battery_list[i]}'][1]['mission_range'], R_1 / v_1 * 60 + 5.34, '-o', ms=4, label='Lift+Cruise' if i == 0 else None)
-    
+
             ax.set_title(f'Battery GED= {battery_list[i]} Wh/kg')
             ax.set_xlabel(r'Mission range $[km]$')
             if i == 0:

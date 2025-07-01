@@ -76,7 +76,7 @@ if plot_2D:
 if plot_2D_with_speed_as_design_var:
     data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
     data2 = data_df2[data_df2['success']]
-    
+
     plt.plot(data2['mission_range'], data2['Energy|entire_mission'], '-o', label='Cruise speed = optimal speed')
 
     plt.xlabel('Mission range (km)')
