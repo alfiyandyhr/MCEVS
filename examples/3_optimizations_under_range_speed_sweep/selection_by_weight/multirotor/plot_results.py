@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
 
 plot_2D = False
 plot_contour = False
@@ -89,25 +91,35 @@ if plot_contour:
     data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
     data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
 
-    data_df.loc[~data_df['success'], 'Weight|takeoff'] = 10000.0
-    data_df2.loc[~data_df2['success'], 'cruise_speed'] = None
+    data_df.loc[~data_df['success'], 'Weight|takeoff'] = np.nan
+    data_df2.loc[~data_df2['success'], 'cruise_speed'] = np.nan
 
     range_array = np.unique(data_df['mission_range'].to_numpy())
     speed_array = np.unique(data_df['cruise_speed'].to_numpy())
 
     X, Y = np.meshgrid(range_array, speed_array)
     Z = data_df['Weight|takeoff'].to_numpy().reshape(len(speed_array), len(range_array))
+    infeasible_mask = np.isnan(Z)
 
-    # plt.contour(X, Y, Z, 30, colors='k')
-    cp = plt.contourf(X, Y, Z, 30, cmap='viridis', vmin=np.nanmin(Z), vmax=np.nanmax(Z), extend='min')
-    plt.plot(data_df2['mission_range'], data_df2['cruise_speed'], 'r--', label='Optimal cruise speed path')
-    plt.colorbar(cp)
-    plt.ylabel('Cruise speed (km/h)')
-    plt.xlabel('Mission range (km)')
-    plt.title('Optimal MTOW (kg)')
-    plt.legend()
+    fig, ax = plt.subplots()
+
+    cp = ax.contourf(X, Y, Z, 15, cmap='viridis', vmin=np.nanmin(Z), vmax=np.nanmax(Z), extend='min')
+    ax.contourf(X, Y, infeasible_mask.astype(float), levels=[0.01, 1.5], colors='white', hatches=['///'], alpha=0.8)
+    ax.plot(data_df2['mission_range'], data_df2['cruise_speed'], 'r--')
+    cbar = plt.colorbar(cp, ax=ax)
+    cbar.set_label('MTOW (kg)')
+    ax.set_ylabel('Cruise speed (km/h)')
+    ax.set_xlabel('Mission range (km)')
+    fig.suptitle('Optimal MTOW (kg)')
+
+    # Legends
+    legend_elements = []
+    legend_elements.append(Line2D([0], [0], color='red', linestyle='--', linewidth=1.5, label='Optimal cruise speed path'))
+    legend_elements.append(Patch(facecolor='white', edgecolor='black', hatch='///', label='Infeasible region'))
+
+    fig.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.49, 0.94), ncol=2)
+    plt.subplots_adjust(top=0.85)
     plt.show()
-    # print(np.nanmin(Z))
 
 if plot_surface:
     data_df = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_without_speed_as_design_var.csv')
@@ -158,8 +170,8 @@ if plot_contour_all:
         data_df2 = pd.read_csv(f'battery_{battery_energy_density}_Whpkg/results_with_speed_as_design_var.csv')
 
         # Apply filtering conditions
-        data_df.loc[~data_df['success'], 'Weight|takeoff'] = 10000.0
-        data_df2.loc[~data_df2['success'], 'cruise_speed'] = None
+        data_df.loc[~data_df['success'], 'Weight|takeoff'] = np.nan
+        data_df2.loc[~data_df2['success'], 'cruise_speed'] = np.nan
 
         # Prepare data for contour plot
         range_array = np.unique(data_df['mission_range'].to_numpy())
@@ -167,19 +179,23 @@ if plot_contour_all:
 
         X, Y = np.meshgrid(range_array, speed_array)
         Z = data_df['Weight|takeoff'].to_numpy().reshape(len(speed_array), len(range_array))
+        infeasible_mask = np.isnan(Z)
 
         # Plot in the corresponding subplot
         ax = axes[i]
-        cp = ax.contourf(X, Y, Z, 30, cmap='viridis', vmin=np.nanmin(Z), vmax=np.nanmax(Z), extend='both')
-        ax.plot(data_df2['mission_range'], data_df2['cruise_speed'], 'r--', label='Optimal cruise speed path')
+        cp = ax.contourf(X, Y, Z, 15, cmap='viridis', vmin=np.nanmin(Z), vmax=np.nanmax(Z), extend='both')
+        ax.contourf(X, Y, infeasible_mask.astype(float), levels=[0.01, 1.5], colors='white', hatches=['///'], alpha=0.8)
+        ax.plot(data_df2['mission_range'], data_df2['cruise_speed'], 'r--')
         ax.set_title(f'Battery GED: {battery_energy_density} Wh/kg')
         ax.set_xlabel('Mission range (km)')
         if i == 0:
             ax.set_ylabel('Cruise speed (km/h)')
-        # ax.legend()
 
-    # Add a single legend for the "Optimal cruise speed path" line
-    fig.legend(['Optimal cruise speed path'], loc='upper center', bbox_to_anchor=(0.49, 0.94), ncol=1, prop={'size': 12})
+    # Legends
+    legend_elements = []
+    legend_elements.append(Line2D([0], [0], color='red', linestyle='--', linewidth=1.5, label='Optimal cruise speed path'))
+    legend_elements.append(Patch(facecolor='white', edgecolor='black', hatch='///', label='Infeasible region'))
+    fig.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 0.94), ncol=2, prop={'size': 12})
 
     # Add a horizontal colorbar below the subplots
     cbar = fig.colorbar(cp, ax=axes, orientation='horizontal', fraction=0.05, pad=0.1)
