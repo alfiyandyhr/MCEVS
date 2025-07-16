@@ -84,7 +84,7 @@ if plot_minimizing_all_objs:
                 obj_ylabel = 'Takeoff weight (kg)'
                 obj_dflabel = 'Weight|takeoff'
             elif obj == 'energy':
-                obj_ylabel = 'Energy (kWh)'
+                obj_ylabel = 'Mission energy (kWh)'
                 obj_dflabel = 'Energy|entire_mission'
             elif obj == 'mission_time':
                 obj_ylabel = 'Mission time (mins)'
