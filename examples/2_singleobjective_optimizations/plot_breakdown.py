@@ -27,7 +27,7 @@ if do_plot_weight_breakdown:
             vehicle_config = 'Lift + Cruise'
 
         plot_weight_breakdown(data_list, ['Weight-minimal', 'Energy-minimal', 'Time-minimal'], figname=f'figures/weight_breakdown_{config}',
-                              figtitle=f'Component Weight Breakdown for {vehicle_config}', savefig=False)
+                              figtitle=f'Component Weight Breakdown for {vehicle_config}\nRange= {mission_range} km; Battery= {battery} Wh/kg', savefig=False)
 
 if do_plot_power_energy_breakdown:
 
@@ -47,4 +47,4 @@ if do_plot_power_energy_breakdown:
 
         plot_power_energy_breakdown(data_list, ['Weight-minimal', 'Energy-minimal', 'Time-minimal'], figname=f'figures/power_energy_breakdown_{config}',
                                     indexes=['Power|segment_1', 'Power|segment_3', 'Power|segment_5', 'Energy|entire_mission'],
-                                    figtitle=f'Power Energy Breakdown for {vehicle_config}', savefig=False)
+                                    figtitle=f'Power Energy Breakdown for {vehicle_config}\nRange= {mission_range} km; Battery= {battery} Wh/kg', savefig=False)
