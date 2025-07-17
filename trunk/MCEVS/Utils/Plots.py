@@ -537,7 +537,7 @@ def plot_weight_breakdown(data_list: list, label_list: list = None, color_list=[
 
 def plot_power_energy_breakdown(data_list: list, label_list: list = None, color_list=['gray', 'blue', 'red', 'green'],
                                 figname='fig', figtitle='Power Energy Breakdown', savefig=False,
-                                xticks_labels=['HoverClimb (kW)', 'Cruise (kW)', 'HoverDescent (kW)', 'Energy Capacity (kWh)'],
+                                xticks_labels=['HoverClimb (kW)', 'Cruise (kW)', 'HoverDescent (kW)', 'Mission Energy (kWh)'],
                                 indexes=['Power|segment_1', 'Power|segment_2', 'Power|segment_3', 'Energy|entire_mission']):
     
     if not isinstance(data_list, list):
