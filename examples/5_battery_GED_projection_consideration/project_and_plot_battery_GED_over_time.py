@@ -53,7 +53,7 @@ plt.plot(curr_year, nominal_curr_GED, 'o', color='#ff7f0e', label=f'GED = {np.ro
 plt.plot(curr_year, aggresive_curr_GED, 'o', color='#2ca02c', label=f'GED = {np.round(aggresive_curr_GED,1)} Wh/kg')
 plt.ylim([0, 1000])
 plt.xlabel('Year')
-plt.ylabel(r'Pack-level battery GED $[Wh/kg]$')
+plt.ylabel('Pack-level battery GED (Wh/kg)')
 plt.legend()
 plt.grid()
 plt.title('Battery technology projection\nby Tiede et al. (2022)')
