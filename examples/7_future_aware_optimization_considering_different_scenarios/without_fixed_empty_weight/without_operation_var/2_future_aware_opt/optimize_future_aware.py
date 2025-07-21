@@ -179,7 +179,7 @@ if compare_best_year_with_current_year:
         axes[i].set_title(f'{scenario}')
         axes[i].set_xlabel('Sizing year')
         if i == 0:
-            axes[i].set_ylabel('Energy consumption (kWh)')
+            axes[i].set_ylabel('Misison energy (kWh)')
         axes[i].legend()
 
     # fig.legend(ncols=3,bbox_to_anchor=(0.49,0.93),loc='upper center')
