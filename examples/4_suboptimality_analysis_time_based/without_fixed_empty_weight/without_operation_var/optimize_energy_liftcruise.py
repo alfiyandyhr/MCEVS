@@ -295,11 +295,11 @@ if plot_evaluation_data:
             axes[i].plot(test_data2['year_test'], test_data2[parameter], '-', markersize=3, label=f'Design opt in {year_opt}' if i == 0 else None)
 
         # Plot data on each subplot
-        axes[i].plot(data['year'], data[parameter], 'k--', markersize=10, label='Utopian designs' if i == 0 else None)
+        axes[i].plot(data['year'], data[parameter], 'k--', markersize=10, label='Utopian benchmark' if i == 0 else None)
         axes[i].set_title(f'{scenario}')
         axes[i].set_xlabel('Sizing year')
         if i == 0:
-            axes[i].set_ylabel('Energy consumption (kWh)')
+            axes[i].set_ylabel('Misison energy (kWh)')
 
     plt.subplots_adjust(bottom=0.2, top=0.80, wspace=0.13)
     fig.legend(ncols=len(selected_years) + 1, bbox_to_anchor=(0.5, 0.93), loc='upper center')
