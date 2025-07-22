@@ -19,7 +19,7 @@ optimal_plan_years = {'conservative': [2030, 2036, 2044, 2055, 2070],
 
 optimize_plan = False
 plot_upgrade_plan = True
-savefig = True
+savefig = False
 
 scenario_list = ['conservative', 'nominal', 'aggresive']
 
@@ -174,7 +174,7 @@ if plot_upgrade_plan:
         axes[i].set_title(f'{scenario}')
         axes[i].set_xlabel('Sizing year')
         if i == 0:
-            axes[i].set_ylabel('Energy consumption (kWh)')
+            axes[i].set_ylabel('Mission energy (kWh)')
 
     for i, scenario in enumerate(scenario_list):
         if i == 0:
