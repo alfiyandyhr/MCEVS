@@ -24,6 +24,8 @@ if plot_geometries_by_scenario:
         if scenario == 'aggresive':
             year_list = [2030, 2041, 2070]
 
+        print(f"Geometries for scenario= {scenario}")
+
         for year in year_list:
 
             data = utopian_data[utopian_data['scenario'] == scenario]
@@ -37,6 +39,8 @@ if plot_geometries_by_scenario:
             design_var['r_propeller'] = data[data['year'] == year]['Propeller|radius'].to_numpy()[0]
             operation_var['RPM_propeller'] = {'cruise': data[data['year'] == year]['Propeller|Cruise|RPM'].to_numpy()[0]}
             vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, n_pax=6)
+
+            print(f"Year: {year}; Wing area= {design_var['wing_area']}; Wing AR= {design_var['wing_aspect_ratio']}; Lift rotor radius= {design_var['r_lift_rotor']}; Propeller radius= {design_var['r_propeller']}")
 
             # Building lists
             if year in [2030, 2070]:
@@ -59,6 +63,8 @@ if plot_geometries_with_minimum_psi:
     label_list = []
     cruise_speed_list = []
 
+    print("Geometries with minimum Psi values")
+
     for scenario in scenario_list:
         if scenario == 'conservative':
             min_psi_year = 2043
@@ -78,6 +84,8 @@ if plot_geometries_with_minimum_psi:
         design_var['r_propeller'] = data[data['year'] == min_psi_year]['Propeller|radius'].to_numpy()[0]
         operation_var['RPM_propeller'] = {'cruise': data[data['year'] == min_psi_year]['Propeller|Cruise|RPM'].to_numpy()[0]}
         vehicle = StandardLiftPlusCruiseEVTOL(design_var, operation_var, n_pax=6)
+
+        print(f"Scenario: {scenario}; Wing area= {design_var['wing_area']}; Wing AR= {design_var['wing_aspect_ratio']}; Lift rotor radius= {design_var['r_lift_rotor']}; Propeller radius= {design_var['r_propeller']}")
 
         label_list.append(fr'$\psi$-minimal {scenario}')
         vehicle_list.append(vehicle)
