@@ -9,6 +9,7 @@ from scipy.integrate import simpson
 import sys
 
 eval_off_design_performace = False
+print_off_design_performance = False
 plot_off_design_performance = True
 savefig = False
 
@@ -167,6 +168,36 @@ if eval_off_design_performace:
                 # Saving to csv file
                 results_df = pd.DataFrame(results, index=[iter_idx])
                 results_df.to_csv('off_design_results.csv', mode='a', header=True if iter_idx == 1 else False)
+
+if print_off_design_performance:
+
+    off_design_results = pd.read_csv('off_design_results.csv')
+
+    psi_df = pd.DataFrame({'opt_scenario': pd.Series(dtype='str'), 'test_scenario': pd.Series(dtype='str'), 'psi': pd.Series(dtype='float')})
+
+    for i, opt_scenario in enumerate(battery_dict):
+
+        off_design_results_i = off_design_results[off_design_results['opt_scenario'] == opt_scenario]
+
+        for j, test_scenario in enumerate(battery_dict):
+
+            y_array = off_design_results_i[off_design_results_i['test_scenario'] == test_scenario]['Energy|entire_mission'].to_numpy()
+
+            time_averaged_J = simpson(y_array, year_list) / (year_list[-1] - year_list[0])
+
+            if test_scenario == 'conservative':
+                time_averaged_utopian_J = 103.11640095639873
+            if test_scenario == 'nominal':
+                time_averaged_utopian_J = 88.53419623780462
+            if test_scenario == 'aggresive':
+                time_averaged_utopian_J = 83.01572130903654
+
+            psi_ij = time_averaged_J / time_averaged_utopian_J - 1
+
+            new_psi_df = pd.DataFrame({'opt_scenario': [opt_scenario], 'test_scenario': [test_scenario], 'psi': [psi_ij]})
+            psi_df = pd.concat([psi_df, new_psi_df], ignore_index=True)
+
+    print(psi_df)
 
 if plot_off_design_performance:
 
