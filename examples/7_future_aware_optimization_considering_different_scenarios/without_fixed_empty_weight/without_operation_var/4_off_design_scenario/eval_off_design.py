@@ -198,9 +198,9 @@ if plot_off_design_performance:
 
     plt.figure(figsize=(8, 5))
     sns.lineplot(data=psi_df, x="test_scenario", y="psi", hue="opt_scenario", marker='o')
-    plt.xlabel("Test Scenario")
-    plt.ylabel(r"Future-aware optimality metric $\Psi$")
-    plt.title(r"Off-design performance of $\Psi$-minimal designs")
-    plt.legend(title="Optimized Scenario")
+    plt.xlabel("Off-Design Scenario")
+    plt.ylabel(r"Future-aware optimality metric $\Psi_{s_\text{eval}}$")
+    plt.title(r"Off-Design Performance of $\Psi$-Minimal Designs")
+    plt.legend(title="On-Design scenario")
     plt.tight_layout()
     plt.savefig('off_design_performance_future_aware.pdf', format='pdf', dpi=300) if savefig else plt.show()
