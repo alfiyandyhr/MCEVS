@@ -57,7 +57,7 @@ class ReserveCruise():
     def _info(self):
         info = f'\t\tSegment ID = {self.id}\n'
         info += f'\t\tSegment Name: {self.name}\n'
-        info += f'\t\t\tDuration = {self.duration} m'
+        info += f'\t\t\tDuration = {self.duration} s'
         return info
 
     def print_info(self):
