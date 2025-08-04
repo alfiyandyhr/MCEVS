@@ -6,7 +6,7 @@ x = XDSM(use_sfmath=False)
 
 create_xdsm_general_sizing = False
 create_xdsm_general_sizing_and_opt_hybrid = False
-create_xdsm_general_sizing_and_opt_MDF = True
+create_xdsm_general_sizing_and_opt_MDF = False
 
 if create_xdsm_general_sizing:
 
