@@ -63,4 +63,4 @@ class ReserveCruise():
     def print_info(self):
         print(f'Segment ID = {self.id}')
         print(f'Segment Name: {self.name}')
-        print(f'\tDuration = {self.duration} m')
+        print(f'\tDuration = {self.duration} s')
