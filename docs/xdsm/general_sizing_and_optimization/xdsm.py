@@ -1,4 +1,4 @@
-from pyxdsm.XDSM import XDSM, OPT, FUNC, LEFT, SOLVER
+from pyxdsm.XDSM import XDSM, OPT, FUNC, LEFT, SOLVER, IFUNC
 import os
 
 # Change `use_sfmath` to False to use computer modern
@@ -128,6 +128,7 @@ if create_xdsm_general_sizing_and_opt_MDF:
     x.add_system("D5", FUNC, r"\text{Battery Weight}")
     x.add_system("D6", FUNC, r"\text{Empty Weight}")
     x.add_system("D7", FUNC, r"\text{Total Weight}")
+    x.add_system("D8", IFUNC, r"\text{Functions}")
 
     x.add_input("opt", r"\mathbf{x}^{(0)}")
     x.add_input("solver", r"W_\text{takeoff}^{(0)}")
@@ -155,18 +156,18 @@ if create_xdsm_general_sizing_and_opt_MDF:
     x.connect("D3", "D6", r"\mathbf{P_\text{segments}}")
     x.connect("D5", "D7", r"W_\text{battery}")
     x.connect("D6", "D7", r"W_\text{empty}")
-    x.connect("D1", "opt", r"g: C_\text{L,cruise}")
-    x.connect("D3", "opt", [r"\mathbf{g}: J_\text{prop}, C_\text{T}/\sigma,", r"\mathbf{PL_\text{segments}}"])
-    x.connect("D4", "opt", r"f: E_\text{required}")
+    x.connect("D1", "D8", r"C_\text{L,cruise}")
+    x.connect("D3", "D8", [r"J_\text{prop}, C_\text{T}/\sigma,", r"\mathbf{PL_\text{segments}}"])
+    x.connect("D4", "D8", r"E_\text{required}")
     x.connect("D7", "solver", r"W_\text{takeoff}")
+    x.connect("D8", "opt", r"f, \mathbf{g}")
 
     x.add_output("opt", r"\mathbf{x}^{*}", side=LEFT)
-    x.add_output("D1", r"g^{*}: C_\text{L,cruise}^{*}", side=LEFT)
-    x.add_output("D3", [r"\mathbf{g}^{*}: J_\text{prop}^{*}, C_\text{T}/\sigma^{*},", r"\mathbf{PL_\text{segments}^{*}}"])
-    x.add_output("D4", r"f^{*}: E_\text{required}^{*}", side=LEFT)
     x.add_output("D5", r"W_\text{battery}^{*}", side=LEFT)
     x.add_output("D6", r"W_\text{empty}^{*}", side=LEFT)
-    x.add_process(["opt", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "solver", "D1", "D2", "D3", "D4", "opt"])
+    x.add_output("D7", r"W_\text{takeoff}^{*}", side=LEFT)
+    x.add_output("D8", r"f^{*}, \mathbf{g}^{*}", side=LEFT)
+    x.add_process(["opt", "solver", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "solver", "D8", "opt"])
 
     x.write("xdsm_general_sizing_and_opt_MDF")
 
