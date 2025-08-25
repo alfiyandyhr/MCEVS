@@ -7,3 +7,9 @@ __pycache__/
 # Ignore OpenVSP caches
 Unnamed_CompGeom.txt
 .vsptime
+
+# Ignore build
+*.egg-info/
+*.egg-info
+dist/
+build/
