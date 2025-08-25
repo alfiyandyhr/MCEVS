@@ -135,7 +135,7 @@ class WeightAnalysis(object):
         indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
         for segment in self.mission.segments:
-            if segment.kind not in ['ConstantPower', 'NoCreditClimb', 'NoCreditDescent', 'ReserveCruise']:
+            if segment.kind not in ['ConstantPower', 'NoCreditClimb', 'NoCreditDescent', 'ReserveCruise', 'HoverStay']:
                 indeps.add_output(f'Mission|segment_{segment.id}|speed', segment.speed, units='m/s')
                 indeps.add_output(f'Mission|segment_{segment.id}|distance', segment.distance, units='m')
             if segment.kind == 'HoverClimbConstantSpeed':
