@@ -25,3 +25,11 @@ class EarthGravityAndAtmosphere(object):
         data['g'] = g
 
         return data
+
+
+if __name__ == '__main__':
+
+    model = EarthGravityAndAtmosphere('US_Standard_1976')
+    altitude = 6025 * 0.3048  # 6,025 ft
+    # altitude = 10000 * 0.3048  # 10,000 ft
+    print(model.compute_constants(altitude=altitude))
