@@ -159,6 +159,17 @@ class AirfoilCoeffs(om.ExplicitComponent):
                 outputs['Cl'] = -0.00000099 * AoA**5 + 0.00003758 * AoA**4 - 0.00048901 * AoA**3 - 0.00283060 * AoA**2 + 0.13597811 * AoA + 0.34119580
                 outputs['Cd'] = -0.000000003 * AoA**6 + 0.000000020 * AoA**5 + 0.000004022 * AoA**4 - 0.000050265 * AoA**3 + 0.000263749 * AoA**2 - 0.000067819 * AoA + 0.026071785
 
+        elif airfoil == 'Jabiru':
+            if AoA < -8.0:
+                outputs['Cl'] = -0.4024
+                outputs['Cd'] = 0.01286
+            elif AoA > 15.0:
+                outputs['Cl'] = 1.5856
+                outputs['Cd'] = 0.04603
+            else:
+                outputs['Cl'] = 0.000003 * AoA**4 - 0.000214 * AoA**3 - 0.000232 * AoA**2 + 0.116466 * AoA + 0.472085
+                outputs['Cd'] = 0.000001 * AoA**4 - 0.000020 * AoA**3 + 0.000161 * AoA**2 + 0.000315 * AoA + 0.004761
+
         else:
             raise NotImplementedError(f'The airfoil database for {airfoil} is not found')
 
@@ -231,6 +242,17 @@ class AirfoilCoeffs(om.ExplicitComponent):
             else:
                 partials['Cl', 'AoA'] = -5 * 0.00000099 * AoA**4 + 4 * 0.00003758 * AoA**3 - 3 * 0.00048901 * AoA**2 - 2 * 0.00283060 * AoA + 0.13597811
                 partials['Cd', 'AoA'] = -6 * 0.000000003 * AoA**5 + 5 * 0.000000020 * AoA**4 + 4 * 0.000004022 * AoA**3 - 3 * 0.000050265 * AoA**2 + 2 * 0.000263749 * AoA - 0.000067819
+
+        elif airfoil == 'Jabiru':
+            if AoA < -8.0:
+                partials['Cl', 'AoA'] = 0.0
+                partials['Cd', 'AoA'] = 0.0
+            elif AoA > 15.0:
+                partials['Cl', 'AoA'] = 0.0
+                partials['Cd', 'AoA'] = 0.0
+            else:
+                partials['Cl', 'AoA'] = 4 * 0.000003 * AoA**3 - 3 * 0.000214 * AoA**2 - 2 * 0.000232 * AoA + 0.116466
+                partials['Cd', 'AoA'] = 4 * 0.000001 * AoA**3 - 3 * 0.000020 * AoA**2 + 2 * 0.000161 * AoA + 0.000315
 
 
 if __name__ == '__main__':
