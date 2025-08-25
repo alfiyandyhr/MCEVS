@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name="MCEVS",
     version="0.0.1",
-    description="MCEVS: Multi-configurational eVTOL Sizing Codes",
+    description="MCEVS: Multi-Configurational eVTOL Sizing",
     license="",
     packages=["MCEVS"],
     package_dir={"": "src"},
