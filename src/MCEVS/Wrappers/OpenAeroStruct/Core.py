@@ -14,6 +14,8 @@ class VLMAeroSolverGroup(om.Group):
             rho_air 				: air density [kg/m**3]
             Re                      : freestream Reynolds number [1/m]
             Mach                    : freestream Mach number (set to 0 if not considering compressibility)
+            CL0                     : CL at zero AoA
+            CD0                     : CD at zero AoA
             with_viscous            : whether or not to calculate viscous drag
             with_wave               : whether or not to calculate wave drag
             num_y                   : number of panels in spanwise direction
@@ -41,6 +43,8 @@ class VLMAeroSolverGroup(om.Group):
         self.options.declare('rho_air', types=float, desc='Air density')
         self.options.declare('Re', types=float, desc='Freestream Reynolds number')
         self.options.declare('Mach', types=float, desc='Freestream Mach number')
+        self.options.declare('CL0', types=float, desc='CL at zero AoA')
+        self.options.declare('CD0', types=float, desc='CD at zero AoA')
         self.options.declare('with_viscous', types=bool, desc='Whether or not to calculate viscous drag')
         self.options.declare('with_wave', types=bool, desc='Whether or not to calculate wave drag')
         self.options.declare('num_y', types=int, desc='Number of panels in spanwise direction')
@@ -53,6 +57,8 @@ class VLMAeroSolverGroup(om.Group):
         rho_air = self.options['rho_air']
         Re = self.options['Re']
         Mach = self.options['Mach']
+        CL0 = self.options['CL0']
+        CD0 = self.options['CD0']
         with_viscous = self.options['with_viscous']
         with_wave = self.options['with_wave']
         num_y = self.options['num_y']
@@ -102,17 +108,19 @@ class VLMAeroSolverGroup(om.Group):
             # Aerodynamic performance of the lifting surface at an angle of attack of 0 (alpha=0).
             # These CL0 and CD0 values are added to the CL and CD obtained from aerodynamic analysis
             # of the surface to get the total CL and CD. These CL0 and CD0 values do not vary wrt alpha.
-            "CL0": 0.0,  # CL of the surface at alpha=0
-            "CD0": 0.0,  # CD of the surface at alpha=0
+            "CL0": CL0,  # CL of the surface at alpha=0
+            "CD0": CD0,  # CD of the surface at alpha=0
 
             # Airfoil properties for viscous drag calculation
             "k_lam": 0.05,  # percentage of chord with laminar flow, used for viscous drag
-            # "t_over_c": 0.12,  # thickness over chord ratio (NACA0012)
             "c_max_t": 0.303,  # chordwise location of maximum (NACA0012) thickness
 
             "with_viscous": with_viscous,  # if true, compute viscous drag,
             "with_wave": with_wave,  # if true, compute wave drag
         }
+
+        if with_viscous:
+            surface["t_over_c"] = 0.12  # thickness over chord ratio (NACA0012)
 
         # Add geometry group to the problem and add suface as a sub group.
         # These groups are responsible for manipulating the geometry of the mesh.
@@ -180,6 +188,13 @@ if __name__ == '__main__':
     wing_AR = 10.0
     wing_S = 10.0
 
+    # CL-CL at zero AoA
+    CL0 = 0.1
+    CD0 = 0.001
+    # CL0 = 0.0
+    # CD0 = 0.0
+
+    # OpenMDAO Problem
     prob = om.Problem(reports=False)
 
     # Define flight variables as independent variables of the model
@@ -196,6 +211,8 @@ if __name__ == '__main__':
                                                 rho_air=0.38,
                                                 Re=1.0E6,
                                                 Mach=0.0,
+                                                CL0=CL0,
+                                                CD0=CD0,
                                                 with_viscous=False,
                                                 with_wave=False,
                                                 num_y=35,
