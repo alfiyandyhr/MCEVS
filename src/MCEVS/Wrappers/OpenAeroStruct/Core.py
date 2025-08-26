@@ -21,8 +21,6 @@ class VLMAeroSolverGroup(om.Group):
             num_y                   : number of panels in spanwise direction
             num_x                   : number of panels in chord direction
     Inputs:
-            Aero|Cd0                : minimum Cd of the polar drag (coefficient of parasitic drag)
-            Aero|lift               : aerodynamic lift [N]
             Wing|area               : wing area [m**2]
             Wing|aspect_ratio       : wing aspect ratio
             Aero|speed              : air speed [m/s]
