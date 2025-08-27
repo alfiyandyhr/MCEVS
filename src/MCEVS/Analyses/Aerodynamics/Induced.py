@@ -130,6 +130,8 @@ class WingedAeroDragViaVLMWithTrimOAS(om.Group):
             Wing|aspect_ratio       : wing aspect ratio
             Aero|speed              : air speed [m/s]
     Outputs:
+            Aero|CL_target          : target lift coefficient
+            Aero|CL_residual        : residual lift coefficient= (CL - CL_target)**2
             Aero|AoA_trimmed        : trimmed AoA to achieve the target lift [deg]
             Aero|total_drag         : aerodynamic drag [N]
             Aero|CL                 : aerodynamic coefficient of lift
