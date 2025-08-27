@@ -186,7 +186,7 @@ if __name__ == '__main__':
     wing_AR = 10.0
     wing_S = 10.0
 
-    # CL-CL at zero AoA
+    # CL-CD at zero AoA
     CL0 = 0.1
     CD0 = 0.001
     # CL0 = 0.0
