@@ -1,10 +1,13 @@
 import numpy as np
 import openmdao.api as om
+from MCEVS.Wrappers.OpenAeroStruct import VLMAeroSolverGroup
+from MCEVS.Analyses.Aerodynamics.Standard import CL_Calculation, Drag_Calculation
 
 
 class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
     """
     Computes the drag of a winged configuration in flight (cruise, climb, descent).
+    CD = CD0 + K * CL**2
     Parameters:
             rho_air					: air density [kg/m**3]
     Inputs:
@@ -12,7 +15,7 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
             Aero|lift				: aerodynamic lift [N]
             Wing|area 				: wing area [m**2]
             Wing|aspect_ratio		: wing aspect ratio
-            Aero|speed 				: air speed of the eVTOL [m/s]
+            Aero|speed 				: air speed [m/s]
     Outputs:
             Aero|total_drag 		: aerodynamic drag [N]
             Aero|CL 				: aerodynamic coefficient of lift
@@ -112,3 +115,106 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
         partials['Aero|f_total', 'Wing|area'] = dCD_dS * S_wing + CD
         partials['Aero|f_total', 'Wing|aspect_ratio'] = dCD_dAR * S_wing
         partials['Aero|f_total', 'Aero|speed'] = dCD_dCL * dCL_dq * dq_dv * S_wing
+
+
+class WingedAeroDragViaVLMWithTrimOAS(om.Group):
+    """
+    Computes the drag of a winged configuration in flight (cruise, climb, descent) using OpenAeroStruct (OAS) framework.
+    CD = CD0 + CDi; where CDi is calculated using OAS, and CD0 is supplied by the user
+    Parameters:
+            rho_air                 : air density [kg/m**3]
+    Inputs:
+            Aero|Cd0                : minimum Cd of the polar drag (coefficient of parasitic drag)
+            Aero|target_lift        : target aerodynamic lift [N]
+            Wing|area               : wing area [m**2]
+            Wing|aspect_ratio       : wing aspect ratio
+            Aero|speed              : air speed [m/s]
+    Outputs:
+            Aero|AoA_trimmed        : trimmed AoA to achieve the target lift [deg]
+            Aero|total_drag         : aerodynamic drag [N]
+            Aero|CL                 : aerodynamic coefficient of lift
+            Aero|CD                 : aerodynamic coefficient of drag
+            Aero|f_total            : total equivalent flat plate area [m**2]
+    Notes:
+            > Only induced drag is computed via VLM OAS; viscous and wave drag are not counted
+            > Clean, rectangular, untapered, unswept wing
+            > Should be used with an OpenMDAO driver !!!
+    Source:
+        Jasa, J. P., Hwang, J. T., and Martins, J. R. R. A., “Open-Source Coupled Aerostructural Optimization Using Python,”
+        Structural and Multidisciplinary Optimization, Vol. 57, No. 4, 2018, pp. 1815–1827.
+        https://doi.org/10.1007/s00158-018-1912-8
+    """
+    def initialize(self):
+        self.options.declare('segment_name', types=str, desc='Segment name (e.g., cruise)')
+        self.options.declare('surface_name', types=str, desc='Surface name (e.g., wing)')
+        self.options.declare('rho_air', types=float, desc='Air density')
+        self.options.declare('CL0', types=float, desc='CL at zero AoA')
+        self.options.declare('num_y', types=int, desc='Number of panels in spanwise direction')
+        self.options.declare('num_x', types=int, desc='Number of panels in chordwise direction')
+        self.options.declare('AoA_guess', default=2.0, types=float, desc='Initial AoA guess [deg]')
+
+    def setup(self):
+
+        segment_name = self.options['segment_name']
+        surface_name = self.options['surface_name']
+        rho_air = self.options['rho_air']
+        CL0 = self.options['CL0']
+        num_y = self.options['num_y']
+        num_x = self.options['num_x']
+        AoA_guess = float(self.options['AoA_guess'])
+        
+        self.set_input_defaults('Aero|AoA', val=AoA_guess, units='deg')
+
+        self.add_subsystem('target_CL_calculation',
+                           CL_Calculation(rho_air=rho_air),
+                           promotes_inputs=[('Aero|lift', 'Aero|target_lift'),
+                                            'Aero|speed', 'Wing|area'],
+                           promotes_outputs=[('Aero|CL', 'Aero|CL_target')])
+
+        self.add_subsystem('VLMGroup',
+                           VLMAeroSolverGroup(segment_name=segment_name,
+                                              surface_name=surface_name,
+                                              rho_air=rho_air,
+                                              Re=0.0,
+                                              Mach=0.0,
+                                              CL0=CL0,
+                                              CD0=0.0,
+                                              with_viscous=False,
+                                              with_wave=False,
+                                              num_y=num_y,
+                                              num_x=num_x),
+                           promotes_inputs=['Wing|*', 'Aero|speed', 'Aero|AoA'],
+                           promotes_outputs=['Aero|CL', 'Aero|CDi'])
+
+        # Objective: minimize (CL - CL_target)^2
+        self.add_subsystem('CL_residual_comp',
+                           om.ExecComp('CL_residual = (CL - CLt)**2', units=None),
+                           promotes_inputs=[('CL', 'Aero|CL'), ('CLt', 'Aero|CL_target')],
+                           promotes_outputs=[('CL_residual', 'Aero|CL_residual')])
+
+        # Pass-through trimmed AoA
+        self.add_subsystem(
+            'AoA_passthrough',
+            om.ExecComp('AoA_out = AoA_in', AoA_in={'units': 'deg'}, AoA_out={'units': 'deg'}),
+            promotes_inputs=[('AoA_in', 'Aero|AoA')],
+            promotes_outputs=[('AoA_out', 'Aero|AoA_trimmed')]
+        )
+
+        # Compute total CD; CD = CD0 + CDi
+        self.add_subsystem('CD_comp',
+                           om.ExecComp('CD = CD0 + CDi', units=None),
+                           promotes_inputs=[('CD0', 'Aero|Cd0'), ('CDi', 'Aero|CDi')],
+                           promotes_outputs=[('CD', 'Aero|CD')])
+
+        # Compute total drag; D = 0.5 * rho * v**2 * S_ref * CD
+        self.add_subsystem('Drag_calculation',
+                           Drag_Calculation(rho_air=rho_air),
+                           promotes_inputs=['Aero|CD', 'Aero|speed', 'Wing|area'],
+                           promotes_outputs=[('Aero|drag', 'Aero|total_drag')])
+
+        # Compute equivalent flat plate area
+        self.add_subsystem('EFPA_comp',
+                           om.ExecComp('EFPA = CD * S_ref', EFPA={'units': 'm**2'},
+                                       CD={'units': None}, S_ref={'units': 'm**2'}),
+                           promotes_inputs=[('CD', 'Aero|CD'), ('S_ref', 'Wing|area')],
+                           promotes_outputs=[('EFPA', 'Aero|f_total')])
