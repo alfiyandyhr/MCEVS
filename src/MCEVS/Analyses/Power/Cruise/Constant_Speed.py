@@ -3,7 +3,7 @@ import openmdao.api as om
 from MCEVS.Analyses.Aerodynamics.Parasite import ParasiteDragViaComponentBuildUpApproach, BacchiniExperimentalFixedValueForLPC
 from MCEVS.Analyses.Aerodynamics.Empirical import MultirotorParasiteDragViaWeightBasedRegression
 from MCEVS.Analyses.Aerodynamics.Empirical import WingedParasiteDragViaWeightBasedRegression
-from MCEVS.Analyses.Aerodynamics.Parabolic import WingedAeroDragViaParabolicDragPolar
+from MCEVS.Analyses.Aerodynamics.Induced import WingedAeroDragViaParabolicDragPolar
 
 from MCEVS.Analyses.Stability.Trim import MultirotorConstantCruiseTrim, WingedTrimOfAoA
 

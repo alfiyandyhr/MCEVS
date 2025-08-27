@@ -3,7 +3,7 @@ from MCEVS.Analyses.Stability.Trim import WingedConstantClimbTrimOfLift, WingedC
 from MCEVS.Analyses.Stability.Trim import MultirotorConstantClimbTrim
 from MCEVS.Analyses.Aerodynamics.Parasite import ParasiteDragViaComponentBuildUpApproach, BacchiniExperimentalFixedValueForLPC
 from MCEVS.Analyses.Aerodynamics.Empirical import WingedParasiteDragViaWeightBasedRegression, MultirotorParasiteDragViaWeightBasedRegression
-from MCEVS.Analyses.Aerodynamics.Parabolic import WingedAeroDragViaParabolicDragPolar
+from MCEVS.Analyses.Aerodynamics.Induced import WingedAeroDragViaParabolicDragPolar
 from MCEVS.Analyses.Aerodynamics.Rotor import ThrustOfEachRotor, ThrustCoefficient, RotorAdvanceRatio
 from MCEVS.Analyses.Aerodynamics.Rotor import RotorInflow, InducedVelocity
 from MCEVS.Analyses.Power.Rotor import RotorProfilePower, InducedPowerFactor, PowerForwardComp
