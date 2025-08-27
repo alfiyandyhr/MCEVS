@@ -2,7 +2,7 @@ class Airfoil(object):
     """
     Represents an airfoil with basic aerodynamic properties at Re= 4E6, Mach= 0.2
     Data are derived from XFOIL analysis,
-    see "MCEVS/examples/0_analyses_of_ref_vehicle/1_aerodynamic_analysis/liftcruise/airfoil"
+    see "MCEVS_tutorials/examples/part_1/0_analyses_of_ref_vehicle/1_aerodynamic_analysis/liftcruise/airfoil"
     """
     _airfoil_data = {
         'NACA2412': {'CL_alpha': 6.512296194147039, 'CL_0': 0.23977560975609744},
