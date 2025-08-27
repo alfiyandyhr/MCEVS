@@ -26,10 +26,10 @@ class VLMAeroSolverGroup(om.Group):
             Aero|speed              : air speed [m/s]
             Aero|AoA                : angle of attack [deg]
     Outputs:
-            Aero|total_drag         : aerodynamic drag [N]
+            Aero|lift               : aerodynamic lift [N]
+            Aero|drag               : aerodynamic drag [N]
             Aero|CL                 : aerodynamic coefficient of lift
             Aero|CD                 : aerodynamic coefficient of drag
-            Aero|f_total            : total equivalent flat plate area [m**2]
     Source:
         Jasa, J. P., Hwang, J. T., and Martins, J. R. R. A., “Open-Source Coupled Aerostructural Optimization Using Python,”
         Structural and Multidisciplinary Optimization, Vol. 57, No. 4, 2018, pp. 1815–1827.
@@ -118,7 +118,7 @@ class VLMAeroSolverGroup(om.Group):
         }
 
         if with_viscous:
-            surface["t_over_c"] = 0.12  # thickness over chord ratio (NACA0012)
+            surface["t_over_c_cp"] = np.array([0.12, 0.12])  # thickness over chord ratio (NACA0012)
 
         # Add geometry group to the problem and add suface as a sub group.
         # These groups are responsible for manipulating the geometry of the mesh.
