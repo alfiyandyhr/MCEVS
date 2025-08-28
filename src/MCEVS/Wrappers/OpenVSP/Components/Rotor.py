@@ -101,7 +101,7 @@ def NASA_QR_Lift_Rotor(n_lift_rotor=4, r_lift_rotor=9.159, n_blade=5, r_hub=None
         vsp.SetParmVal(rotor_id, 'RadiusFrac', 'XSec_2', 1.00)
 
         # Change airfoil shape using BOEING-VERTOL VR-12 AIRFOIL
-        airfoil_dir = MCEVS.__file__[:-11] + 'Applications/OpenVSP/Components/Airfoils/VR12.dat'
+        airfoil_dir = MCEVS.__file__[:-11] + 'Wrappers/OpenVSP/Components/Airfoils/VR12.dat'
         rotor_surf = vsp.GetXSecSurf(rotor_id, 0)
         xsec_num = vsp.GetNumXSec(rotor_surf)
         for i in range(xsec_num):
@@ -258,7 +258,7 @@ def NASA_LPC_Lift_Rotor(l_hub: float, d_hub: float, n_lift_rotor=8, n_blade=2, r
         vsp.SetParmVal(rotor_id, 'RadiusFrac', 'XSec_2', 1.00)
 
         # Change airfoil shape using BOEING-VERTOL VR-12 AIRFOIL
-        airfoil_dir = MCEVS.__file__[:-11] + 'Applications/OpenVSP/Components/Airfoils/VR12.dat'
+        airfoil_dir = MCEVS.__file__[:-11] + 'Wrappers/OpenVSP/Components/Airfoils/VR12.dat'
         rotor_surf = vsp.GetXSecSurf(rotor_id, 0)
         xsec_num = vsp.GetNumXSec(rotor_surf)
         for i in range(xsec_num):
@@ -388,7 +388,7 @@ def NASA_LPC_Propeller(l_hub: float, d_hub: float, n_propeller=1, n_blade=3, r_p
         vsp.SetParmVal(rotor_id, 'RadiusFrac', 'XSec_2', 1.00)
 
         # Change airfoil shape using BOEING-VERTOL VR-12 AIRFOIL
-        airfoil_dir = MCEVS.__file__[:-11] + 'Applications/OpenVSP/Components/Airfoils/VR12.dat'
+        airfoil_dir = MCEVS.__file__[:-11] + 'Wrappers/OpenVSP/Components/Airfoils/VR12.dat'
         rotor_surf = vsp.GetXSecSurf(rotor_id, 0)
         xsec_num = vsp.GetNumXSec(rotor_surf)
         for i in range(xsec_num):
