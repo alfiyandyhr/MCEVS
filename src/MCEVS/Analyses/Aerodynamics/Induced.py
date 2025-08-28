@@ -122,7 +122,13 @@ class WingedAeroDragViaVLMWithTrimOAS(om.Group):
     Computes the drag of a winged configuration in flight (cruise, climb, descent) using OpenAeroStruct (OAS) framework.
     CD = CD0 + CDi; where CDi is calculated using OAS, and CD0 is supplied by the user
     Parameters:
+            segment_name            : segment name (e.g., cruise)
+            surface_name            : surface name (e.g., wing)
             rho_air                 : air density [kg/m**3]
+            CL0                     : CL at zero AoA
+            num_y                   : number of panels in spanwise direction (default: 35)
+            num_x                   : number of panels in chord direction (default: 11)
+            AoA_guess               : AoA initial guess (default: 2.0 deg)
     Inputs:
             Aero|Cd0                : minimum Cd of the polar drag (coefficient of parasitic drag)
             Aero|target_lift        : target aerodynamic lift [N]
@@ -151,8 +157,8 @@ class WingedAeroDragViaVLMWithTrimOAS(om.Group):
         self.options.declare('surface_name', types=str, desc='Surface name (e.g., wing)')
         self.options.declare('rho_air', types=float, desc='Air density')
         self.options.declare('CL0', types=float, desc='CL at zero AoA')
-        self.options.declare('num_y', types=int, desc='Number of panels in spanwise direction')
-        self.options.declare('num_x', types=int, desc='Number of panels in chordwise direction')
+        self.options.declare('num_y', types=int, default=35, desc='Number of panels in spanwise direction')
+        self.options.declare('num_x', types=int, default=11, desc='Number of panels in chordwise direction')
         self.options.declare('AoA_guess', default=2.0, types=float, desc='Initial AoA guess [deg]')
 
     def setup(self):
