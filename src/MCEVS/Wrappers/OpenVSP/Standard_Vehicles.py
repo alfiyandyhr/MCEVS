@@ -42,6 +42,7 @@ def create_NASA_LiftPlusCruise_vsp3(fname: str, vehicle: object):
     d_fuse_max = vehicle.fuselage.max_diameter
     wing_S = vehicle.wing.area
     wing_AR = vehicle.wing.aspect_ratio
+    wing_airfoil = vehicle.wing.airfoil.name
     htail_S = vehicle.horizontal_tail.area
     htail_AR = vehicle.horizontal_tail.aspect_ratio
     vtail_S = vehicle.vertical_tail.area
@@ -63,7 +64,7 @@ def create_NASA_LiftPlusCruise_vsp3(fname: str, vehicle: object):
 
     Human(N_PAX=n_pax, config=config)
     fuse_id = NASA_LPC_Fuselage(l_fuse, d_fuse_max)
-    wing_id = NASA_LPC_Wing(area=wing_S, aspect_ratio=wing_AR, l_fuse=l_fuse, fuse_id=fuse_id)
+    wing_id = NASA_LPC_Wing(airfoil=wing_airfoil, area=wing_S, aspect_ratio=wing_AR, l_fuse=l_fuse, fuse_id=fuse_id)
     _ = NASA_LPC_Horizontal_Tail(area=htail_S, aspect_ratio=htail_AR, l_fuse=l_fuse, fuse_id=fuse_id)
     _ = NASA_LPC_Vertical_Tail(area=vtail_S, aspect_ratio=vtail_AR, l_fuse=l_fuse, fuse_id=fuse_id)
     lg_ids, wheel_ids = NASA_LPC_Landing_Gear(gear_type=gear_type, l_strut=l_strut, fuse_id=fuse_id)
