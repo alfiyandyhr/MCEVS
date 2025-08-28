@@ -65,7 +65,8 @@ class Wing(object):
         info = '\tComponent name: Wing\n'
         info += f'\t\tAspect ratio = {self.aspect_ratio}\n'
         info += f'\t\tArea = {self.area} m**2\n'
-        info += f'\t\tUltimate load factor = {self.ultimate_load_factor}'
+        info += f'\t\tUltimate load factor = {self.ultimate_load_factor}\n'
+        info += f'\t\tAirfoil info: name= {self.airfoil.name}; CL0= {self.airfoil.CL_0}; CL_a= {self.airfoil.CL_alpha}'
         return info
 
     def print_info(self):
@@ -73,3 +74,4 @@ class Wing(object):
         print(f'\tAspect ratio = {self.aspect_ratio}')
         print(f'\tArea = {self.area} m**2')
         print(f'\tUltimate load factor = {self.ultimate_load_factor}')
+        print(f'\tAirfoil info: name= {self.airfoil.name}; CL0= {self.airfoil.CL_0}; CL_a= {self.airfoil.CL_alpha}')
