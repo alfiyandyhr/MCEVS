@@ -180,6 +180,24 @@ class InducedVelocity(om.ExplicitComponent):
         partials['v_induced', 'v_inf'] = - np.sin(a)
 
 
+class RotorInflowGroup(om.Group):
+
+    def setup(self):
+
+        self.add_subsystem('rotor_inflow',
+                           RotorInflow(),
+                           promotes_inputs=['Rotor|mu', 'Rotor|alpha', 'Rotor|thrust_coefficient'],
+                           promotes_outputs=['Rotor|lambda'])
+
+        self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=100, iprint=0, rtol=1e-3)
+        self.nonlinear_solver.options['err_on_non_converge'] = False
+        self.nonlinear_solver.options['reraise_child_analysiserror'] = False
+        self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
+        self.nonlinear_solver.linesearch.options['maxiter'] = 10
+        self.nonlinear_solver.linesearch.options['iprint'] = 0
+        self.linear_solver = om.DirectSolver(assemble_jac=True, rhs_checking=False)
+
+
 class RotorInflow(om.ImplicitComponent):
     """
     Computes the inflow of a rotor (lambda) implicitly
