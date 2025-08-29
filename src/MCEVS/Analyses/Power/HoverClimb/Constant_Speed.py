@@ -1,6 +1,6 @@
 import numpy as np
 import openmdao.api as om
-from MCEVS.Analyses.Aerodynamics.Rotor import ThrustOfEachRotor, RotorAdvanceRatio, ThrustCoefficient, RotorInflow, InducedVelocity
+from MCEVS.Analyses.Aerodynamics.Rotor import ThrustOfEachRotor, RotorAdvanceRatio, ThrustCoefficient, RotorInflowGroup, InducedVelocity
 from MCEVS.Analyses.Power.Rotor import RotorProfilePower, PowerForwardComp, InducedPowerFactor
 
 from MCEVS.Analyses.Aerodynamics.BEMT.Solver import BEMTSolverOMGroup
@@ -177,7 +177,7 @@ class PowerHoverClimbConstantSpeedMMT(om.Group):
 
         # Step 7: Calculate induced power
         self.add_subsystem('rotor_inflow',
-                           RotorInflow(),
+                           RotorInflowGroup(),
                            promotes_inputs=[('Rotor|mu', 'LiftRotor|HoverClimb|mu'),
                                             ('Rotor|alpha', 'LiftRotor|HoverClimb|alpha'),
                                             ('Rotor|thrust_coefficient', 'LiftRotor|HoverClimb|thrust_coefficient')],
