@@ -1,6 +1,7 @@
 import numpy as np
 import openmdao.api as om
 import warnings
+import sys
 
 from MCEVS.Utils.Functions import SoftMax
 
@@ -66,6 +67,8 @@ class PowerForwardComp(om.ExplicitComponent):
         outputs['Power|propulsive_power'] = N_rotor * T_rotor * v_inf * np.sin(a)
         outputs['Rotor|T_to_P'] = (T_rotor / g * 1000.0) / power_fwd_each
         # print(P0, T_rotor, a, k, v_inf, v_ind, outputs['Rotor|T_to_P'])
+        print(f"hey I am here, {outputs['Power|forward']}")
+        sys.stdout.flush()
 
     def compute_partials(self, inputs, partials):
         N_rotor = self.options['N_rotor']
