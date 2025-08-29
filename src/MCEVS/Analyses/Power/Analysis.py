@@ -37,30 +37,30 @@ class PowerAnalysis(object):
         # --- Design parameters --- #
 
         if self.vehicle.configuration == 'Multirotor':
-            r_lift_rotor = self.vehicle.lift_rotor.radius 					# m
-            r_hub_lift_rotor = self.vehicle.lift_rotor.hub_radius 				# m
+            r_lift_rotor = self.vehicle.lift_rotor.radius 					            # m
+            r_hub_lift_rotor = self.vehicle.lift_rotor.hub_radius 			            # m
             mean_c_to_R_lift_rotor = self.vehicle.lift_rotor.mean_c_to_R
-            global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  			# deg
+            global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist              # deg
 
         elif self.vehicle.configuration == 'LiftPlusCruise':
-            r_lift_rotor = self.vehicle.lift_rotor.radius 					# m
-            r_hub_lift_rotor = self.vehicle.lift_rotor.hub_radius 				# m
+            r_lift_rotor = self.vehicle.lift_rotor.radius 					            # m
+            r_hub_lift_rotor = self.vehicle.lift_rotor.hub_radius 			            # m
             mean_c_to_R_lift_rotor = self.vehicle.lift_rotor.mean_c_to_R
-            global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  			# deg
-            r_propeller = self.vehicle.propeller.radius 					# m
+            global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist              # deg
+            r_propeller = self.vehicle.propeller.radius 					            # m
             mean_c_to_R_propeller = self.vehicle.propeller.mean_c_to_R
-            wing_area = self.vehicle.wing.area 							# m**2
+            wing_area = self.vehicle.wing.area 							                # m**2
             wing_aspect_ratio = self.vehicle.wing.aspect_ratio
-            wing_airfoil_CL_alpha = self.vehicle.wing.airfoil.CL_alpha 				# 1/rad
+            wing_airfoil_CL_alpha = self.vehicle.wing.airfoil.CL_alpha 		            # 1/rad
             wing_airfoil_CL_0 = self.vehicle.wing.airfoil.CL_0
-            htail_area = self.vehicle.horizontal_tail.area 				# m**2
+            htail_area = self.vehicle.horizontal_tail.area 				                # m**2
             htail_aspect_ratio = self.vehicle.horizontal_tail.aspect_ratio
             htail_max_root_thickness = self.vehicle.horizontal_tail.max_root_thickness 	# m
-            vtail_area = self.vehicle.vertical_tail.area 					# m**2
+            vtail_area = self.vehicle.vertical_tail.area 					            # m**2
             vtail_aspect_ratio = self.vehicle.vertical_tail.aspect_ratio
             vtail_max_root_thickness = self.vehicle.vertical_tail.max_root_thickness 	# m
-            vtail_sweep_angle = self.vehicle.vertical_tail.sweep_angle 			# deg
-            l_fuse = self.vehicle.fuselage.length 						# m
+            vtail_sweep_angle = self.vehicle.vertical_tail.sweep_angle 			        # deg
+            l_fuse = self.vehicle.fuselage.length 						                # m
 
         # --- OpenMDAO probolem --- #
         prob = om.Problem(reports=False)
@@ -171,6 +171,8 @@ class PowerAnalysis(object):
 
         # Run the model (not in sizing mode !!!)
         prob.setup(check=False)
+        # om.n2(prob)
+        # prob.check_partials(compact_print=True)
         prob.run_model()
 
         if record:
@@ -210,19 +212,19 @@ class PowerRequirement(om.Group):
                 pass
 
         # Unpacking vehicle parameters
-        N_lift_rotor = vehicle.lift_rotor.n_rotor			# number of lift rotors
-        n_blade_lift_rotor = vehicle.lift_rotor.n_blade 			# number of blades per rotor
-        Cd0_lift_rotor = vehicle.lift_rotor.Cd0 				# rotor's drag coefficient
-        hover_FM_lift_rotor = vehicle.lift_rotor.figure_of_merit 	# hover figure of merit
+        N_lift_rotor = vehicle.lift_rotor.n_rotor			         # number of lift rotors
+        n_blade_lift_rotor = vehicle.lift_rotor.n_blade 			 # number of blades per rotor
+        Cd0_lift_rotor = vehicle.lift_rotor.Cd0 				     # rotor's drag coefficient
+        hover_FM_lift_rotor = vehicle.lift_rotor.figure_of_merit 	 # hover figure of merit
 
         if vehicle.configuration == 'Multirotor':
             pass
 
         elif vehicle.configuration == 'LiftPlusCruise':
-            N_propeller = vehicle.propeller.n_propeller			# number of propellers
-            n_blade_propeller = vehicle.propeller.n_blade 			# number of blades per propeller
-            Cd0_propeller = vehicle.propeller.Cd0 				# propeller's drag coefficient
-            hover_FM_propeller = vehicle.propeller.figure_of_merit		# hover figure of merit
+            N_propeller = vehicle.propeller.n_propeller			     # number of propellers
+            n_blade_propeller = vehicle.propeller.n_blade 			 # number of blades per propeller
+            Cd0_propeller = vehicle.propeller.Cd0 				     # propeller's drag coefficient
+            hover_FM_propeller = vehicle.propeller.figure_of_merit	 # hover figure of merit
         else:
             raise RuntimeError('eVTOL configuration is not available.')
 
@@ -240,7 +242,7 @@ class PowerRequirement(om.Group):
                 rho_air = segment.constants['rho'] 		# air density
                 mu_air = segment.constants['mu'] 		# air dynamic viscosity
                 v_sound = segment.constants['v_sound']  # sound speed
-                g = segment.constants['g']		# gravitational acceleration
+                g = segment.constants['g']		        # gravitational acceleration
 
             # LiftPlusCruise's propellers do not work during hover, hoverclimb, or hoverdescent
             # and its lift rotor does not work during cruise, climb, descent, or constant power segment
@@ -343,14 +345,17 @@ class PowerRequirement(om.Group):
                                                          'Aero|Cruise|total_drag', 'Aero|Cruise|f_total'])
 
                 elif vehicle.configuration == 'LiftPlusCruise':
+                    output_list = [('Power|CruiseConstantSpeed', f'Power|Propeller|segment_{segment.id}'), 'Propeller|Cruise|T_to_P', ('Power|profile_power', f'Power|segment_{segment.id}|profile_power'),
+                                   ('Power|induced_power', f'Power|segment_{segment.id}|induced_power'), ('Power|propulsive_power', f'Power|segment_{segment.id}|propulsive_power'),
+                                   'Aero|Cruise|CL', 'Aero|Cruise|CD', 'Propeller|Cruise|thrust_coefficient', 'Propeller|Cruise|J',
+                                   ('Propeller|Cruise|thrust', f'Propeller|thrust_each|segment_{segment.id}'),
+                                   'Aero|Cruise|total_drag', 'Aero|Cruise|f_total', 'Aero|Cruise|AoA']
+                    if fidelity['aerodynamics']['induced'] == 'VortexLatticeMethod':
+                        output_list.append('Aero|Cruise|CL_residual')
                     self.add_subsystem(f'segment_{segment.id}_power',
                                        PowerCruiseConstantSpeedWithWing(vehicle=vehicle, N_propeller=N_propeller, n_blade=n_blade_propeller, rho_air=rho_air, mu_air=mu_air, v_sound=v_sound, Cd0=Cd0_propeller, hover_FM=hover_FM_propeller, g=g, AoA=AoA, fidelity=fidelity),
                                        promotes_inputs=['Weight|*', ('Mission|cruise_speed', f'Mission|segment_{segment.id}|speed'), 'Wing|*', 'Propeller|*'],
-                                       promotes_outputs=[('Power|CruiseConstantSpeed', f'Power|Propeller|segment_{segment.id}'), 'Propeller|Cruise|T_to_P', ('Power|profile_power', f'Power|segment_{segment.id}|profile_power'),
-                                                         ('Power|induced_power', f'Power|segment_{segment.id}|induced_power'), ('Power|propulsive_power', f'Power|segment_{segment.id}|propulsive_power'),
-                                                         'Aero|Cruise|CL', 'Aero|Cruise|CD', 'Aero|Cruise|AoA', 'Propeller|Cruise|thrust_coefficient', 'Propeller|Cruise|J',
-                                                         ('Propeller|Cruise|thrust', f'Propeller|thrust_each|segment_{segment.id}'),
-                                                         'Aero|Cruise|total_drag', 'Aero|Cruise|f_total'])
+                                       promotes_outputs=output_list)
             if segment.kind == 'ConstantPower':
 
                 self.add_subsystem(f'segment_{segment.id}_power',
@@ -535,10 +540,10 @@ class PowerRequirement(om.Group):
         # --- Add nonlinear solvers for implicit equations --- #
         # -----------------------------------------------------#
 
-        self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=100, iprint=0, rtol=1e-3)
-        self.nonlinear_solver.options['err_on_non_converge'] = False
-        self.nonlinear_solver.options['reraise_child_analysiserror'] = False
-        self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
-        self.nonlinear_solver.linesearch.options['maxiter'] = 10
-        self.nonlinear_solver.linesearch.options['iprint'] = 0
-        self.linear_solver = om.DirectSolver(assemble_jac=True, rhs_checking=rhs_checking)
+        # self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=100, iprint=0, rtol=1e-3)
+        # self.nonlinear_solver.options['err_on_non_converge'] = False
+        # self.nonlinear_solver.options['reraise_child_analysiserror'] = False
+        # self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
+        # self.nonlinear_solver.linesearch.options['maxiter'] = 10
+        # self.nonlinear_solver.linesearch.options['iprint'] = 0
+        # self.linear_solver = om.DirectSolver(assemble_jac=True, rhs_checking=rhs_checking)
