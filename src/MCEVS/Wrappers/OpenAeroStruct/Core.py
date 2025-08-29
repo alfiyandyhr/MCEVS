@@ -127,11 +127,11 @@ class VLMAeroSolverGroup(om.Group):
         # Create the aero point group for this flight condition and add it to the model
         self.add_subsystem(segment_name, AeroPoint(surfaces=[surface], rotational=False),
                            promotes_inputs=[('v', 'Aero|speed'), ('alpha', 'Aero|AoA')],
-                           promotes_outputs=[('wing_perf.CL', 'Aero|CL'),
-                                             ('wing_perf.CDi', 'Aero|CDi'),
-                                             ('wing_perf.CDv', 'Aero|CDv'),
-                                             ('wing_perf.CDw', 'Aero|CDw'),
-                                             ('wing_perf.CD', 'Aero|CD')])
+                           promotes_outputs=[(f'{surface_name}_perf.CL', 'Aero|CL'),
+                                             (f'{surface_name}_perf.CDi', 'Aero|CDi'),
+                                             (f'{surface_name}_perf.CDv', 'Aero|CDv'),
+                                             (f'{surface_name}_perf.CDw', 'Aero|CDw'),
+                                             (f'{surface_name}_perf.CD', 'Aero|CD')])
 
         self.connect("flight_vars.beta", f"{segment_name}.beta")
         self.connect("flight_vars.Mach_number", f"{segment_name}.Mach_number")
@@ -146,8 +146,8 @@ class VLMAeroSolverGroup(om.Group):
         self.connect(surface_name + ".mesh", segment_name + ".aero_states." + surface_name + "_def_mesh")
 
         # # Connect user-supplied planform
-        self.connect("Wing|span", "wing.mesh.stretch.span")
-        self.connect("Wing|chord_scale", "wing.chord_cp")
+        self.connect("Wing|span", f"{surface_name}.mesh.stretch.span")
+        self.connect("Wing|chord_scale", f"{surface_name}.chord_cp")
 
 
 class ARS2RectWingPlanform(om.ExplicitComponent):
