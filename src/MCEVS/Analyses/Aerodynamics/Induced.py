@@ -128,7 +128,7 @@ class WingedAeroDragViaVLMWithTrimOAS(om.Group):
             CL0                     : CL at zero AoA
             num_y                   : number of panels in spanwise direction (default: 35)
             num_x                   : number of panels in chord direction (default: 11)
-            AoA_guess               : AoA initial guess (default: 2.0 deg)
+            AoA_guess               : initial guess of AoA [deg] (default: 5.0)
     Inputs:
             Aero|Cd0                : minimum Cd of the polar drag (coefficient of parasitic drag)
             Aero|target_lift        : target aerodynamic lift [N]
@@ -138,11 +138,11 @@ class WingedAeroDragViaVLMWithTrimOAS(om.Group):
     Outputs:
             Aero|CL_target          : target lift coefficient
             Aero|CL_residual        : residual lift coefficient= (CL - CL_target)**2
-            Aero|AoA_trimmed        : trimmed AoA to achieve the target lift [deg]
             Aero|total_drag         : aerodynamic drag [N]
             Aero|CL                 : aerodynamic coefficient of lift
             Aero|CD                 : aerodynamic coefficient of drag
             Aero|f_total            : total equivalent flat plate area [m**2]
+            Aero|AoA_trimmed        : trimmed AoA to achieve the target lift [deg]
     Notes:
             > Only induced drag is computed via VLM OAS; viscous and wave drag are not counted
             > Clean, rectangular, untapered, unswept wing
@@ -159,7 +159,7 @@ class WingedAeroDragViaVLMWithTrimOAS(om.Group):
         self.options.declare('CL0', types=float, desc='CL at zero AoA')
         self.options.declare('num_y', types=int, default=35, desc='Number of panels in spanwise direction')
         self.options.declare('num_x', types=int, default=11, desc='Number of panels in chordwise direction')
-        self.options.declare('AoA_guess', default=2.0, types=float, desc='Initial AoA guess [deg]')
+        self.options.declare('AoA_guess', types=float, default=5.0, desc='Initial guess of AoA in deg')
 
     def setup(self):
 
@@ -169,9 +169,9 @@ class WingedAeroDragViaVLMWithTrimOAS(om.Group):
         CL0 = self.options['CL0']
         num_y = self.options['num_y']
         num_x = self.options['num_x']
-        AoA_guess = float(self.options['AoA_guess'])
-        
-        self.set_input_defaults('Aero|AoA', val=AoA_guess, units='deg')
+        AoA_guess = self.options['AoA_guess']
+
+        self.set_input_defaults('Aero|AoA_guess', AoA_guess, units='deg')
 
         self.add_subsystem('target_CL_calculation',
                            CL_Calculation(rho_air=rho_air),
@@ -179,7 +179,30 @@ class WingedAeroDragViaVLMWithTrimOAS(om.Group):
                                             'Aero|speed', 'Wing|area'],
                            promotes_outputs=[('Aero|CL', 'Aero|CL_target')])
 
-        self.add_subsystem('VLMGroup',
+        # VLM at AoA guess
+        self.add_subsystem('VLMGroup_guess',
+                           VLMAeroSolverGroup(segment_name='dummy_segment',
+                                              surface_name='dummy_name',
+                                              rho_air=rho_air,
+                                              Re=0.0,
+                                              Mach=0.0,
+                                              CL0=CL0,
+                                              CD0=0.0,
+                                              with_viscous=False,
+                                              with_wave=False,
+                                              num_y=num_y,
+                                              num_x=num_x),
+                           promotes_inputs=['Wing|*', 'Aero|speed', ('Aero|AoA', 'Aero|AoA_guess')],
+                           promotes_outputs=[('Aero|CL', 'Aero|CL_guess')])
+
+        # AoA target approximation
+        self.add_subsystem('AoA_target',
+                           AoA_target_approximation(CL0=CL0),
+                           promotes_inputs=['Aero|CL_target', 'Aero|CL_guess', 'Aero|AoA_guess'],
+                           promotes_outputs=[('Aero|AoA_target', 'Aero|AoA_trimmed')])
+
+        # VLM at AoA trimmed
+        self.add_subsystem('VLMGroup_trimmed',
                            VLMAeroSolverGroup(segment_name=segment_name,
                                               surface_name=surface_name,
                                               rho_air=rho_air,
@@ -191,22 +214,14 @@ class WingedAeroDragViaVLMWithTrimOAS(om.Group):
                                               with_wave=False,
                                               num_y=num_y,
                                               num_x=num_x),
-                           promotes_inputs=['Wing|*', 'Aero|speed', 'Aero|AoA'],
+                           promotes_inputs=['Wing|*', 'Aero|speed', ('Aero|AoA', 'Aero|AoA_trimmed')],
                            promotes_outputs=['Aero|CL', 'Aero|CDi'])
 
-        # Objective: minimize (CL - CL_target)^2
+        # Residual CL = CL - CL_target
         self.add_subsystem('CL_residual_comp',
-                           om.ExecComp('CL_residual = (CL - CLt)**2', units=None),
+                           om.ExecComp('CL_residual = CL - CLt', units=None),
                            promotes_inputs=[('CL', 'Aero|CL'), ('CLt', 'Aero|CL_target')],
                            promotes_outputs=[('CL_residual', 'Aero|CL_residual')])
-
-        # Pass-through trimmed AoA
-        self.add_subsystem(
-            'AoA_passthrough',
-            om.ExecComp('AoA_out = AoA_in', AoA_in={'units': 'deg'}, AoA_out={'units': 'deg'}),
-            promotes_inputs=[('AoA_in', 'Aero|AoA')],
-            promotes_outputs=[('AoA_out', 'Aero|AoA_trimmed')]
-        )
 
         # Compute total CD; CD = CD0 + CDi
         self.add_subsystem('CD_comp',
@@ -226,3 +241,38 @@ class WingedAeroDragViaVLMWithTrimOAS(om.Group):
                                        CD={'units': None}, S_ref={'units': 'm**2'}),
                            promotes_inputs=[('CD', 'Aero|CD'), ('S_ref', 'Wing|area')],
                            promotes_outputs=[('EFPA', 'Aero|f_total')])
+
+
+class AoA_target_approximation(om.ExplicitComponent):
+    """
+    Computes AoA target using single iteration of secant method (assuming linear region)
+    AoA_target = (CL_target - CL0) / (CL_guess - CL0) * AoA_guess
+    """
+
+    def initialize(self):
+        self.options.declare('CL0', types=float, desc='CL at zero AoA')
+
+    def setup(self):
+        self.add_input('Aero|CL_target', units=None, desc='Target CL')
+        self.add_input('Aero|CL_guess', units=None, desc='CL at the first AoA guess')
+        self.add_input('Aero|AoA_guess', units='deg', desc='The first AoA guess')
+        self.add_output('Aero|AoA_target', units='deg', desc='Target AoA')
+        self.declare_partials('*', '*')
+
+    def compute(self, inputs, outputs):
+        CL0 = self.options['CL0']
+        CL_target = inputs['Aero|CL_target']
+        CL_guess = inputs['Aero|CL_guess']
+        AoA_guess = inputs['Aero|AoA_guess']
+
+        outputs['Aero|AoA_target'] = (CL_target - CL0) / (CL_guess - CL0) * AoA_guess
+
+    def compute_partials(self, inputs, partials):
+        CL0 = self.options['CL0']
+        CL_target = inputs['Aero|CL_target']
+        CL_guess = inputs['Aero|CL_guess']
+        AoA_guess = inputs['Aero|AoA_guess']
+
+        partials['Aero|AoA_target', 'Aero|CL_target'] = AoA_guess / (CL_guess - CL0)
+        partials['Aero|AoA_target', 'Aero|CL_guess'] = - (CL_target - CL0) / (CL_guess - CL0)**2 * AoA_guess
+        partials['Aero|AoA_target', 'Aero|AoA_guess'] = (CL_target - CL0) / (CL_guess - CL0)
