@@ -3,14 +3,14 @@ import openmdao.api as om
 from MCEVS.Analyses.Aerodynamics.Parasite import ParasiteDragViaComponentBuildUpApproach, BacchiniExperimentalFixedValueForLPC
 from MCEVS.Analyses.Aerodynamics.Empirical import MultirotorParasiteDragViaWeightBasedRegression
 from MCEVS.Analyses.Aerodynamics.Empirical import WingedParasiteDragViaWeightBasedRegression
-from MCEVS.Analyses.Aerodynamics.Induced import WingedAeroDragViaParabolicDragPolar
+from MCEVS.Analyses.Aerodynamics.Induced import WingedAeroDragViaParabolicDragPolar, WingedAeroDragViaVLMWithTrimOAS
 
 from MCEVS.Analyses.Stability.Trim import MultirotorConstantCruiseTrim, WingedTrimOfAoA
 
 from MCEVS.Analyses.Aerodynamics.Rotor import ThrustOfEachRotor
 from MCEVS.Analyses.Aerodynamics.Rotor import RotorAdvanceRatio, PropellerAdvanceRatio
 from MCEVS.Analyses.Aerodynamics.Rotor import ThrustCoefficient
-from MCEVS.Analyses.Aerodynamics.Rotor import RotorInflow
+from MCEVS.Analyses.Aerodynamics.Rotor import RotorInflowGroup
 from MCEVS.Analyses.Aerodynamics.Rotor import InducedVelocity
 
 from MCEVS.Analyses.Power.Rotor import RotorProfilePower, PowerForwardComp, InducedPowerFactor
@@ -123,7 +123,7 @@ class PowerCruiseConstantSpeedEdgewise(om.Group):
 
         # Step 8: Calculate induced power
         self.add_subsystem('rotor_inflow',
-                           RotorInflow(),
+                           RotorInflowGroup(),
                            promotes_inputs=[('Rotor|mu', 'LiftRotor|Cruise|mu'),
                                             ('Rotor|alpha', 'LiftRotor|Cruise|alpha'),
                                             ('Rotor|thrust_coefficient', 'LiftRotor|Cruise|thrust_coefficient'),],
@@ -239,7 +239,18 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
                                promotes_inputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|lift', 'Aero|Cruise|lift'), 'Wing|*', ('Aero|speed', 'Mission|cruise_speed')],
                                promotes_outputs=[('Aero|total_drag', 'Aero|Cruise|total_drag'), ('Aero|CL', 'Aero|Cruise|CL'), ('Aero|CD', 'Aero|Cruise|CD'), ('Aero|f_total', 'Aero|Cruise|f_total')])
 
-        # Step 3: Stability: trimmed AoA at cruise
+        elif fidelity['aerodynamics']['induced'] == 'VortexLatticeMethod':
+            self.add_subsystem('total_drag',
+                               WingedAeroDragViaVLMWithTrimOAS(segment_name='cruise',
+                                                               surface_name='wing',
+                                                               rho_air=rho_air,
+                                                               CL0=vehicle.wing.airfoil.CL_0,
+                                                               AoA_guess=AoA),
+                               promotes_inputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|target_lift', 'Aero|Cruise|lift'), 'Wing|*', ('Aero|speed', 'Mission|cruise_speed')],
+                               promotes_outputs=[('Aero|total_drag', 'Aero|Cruise|total_drag'), ('Aero|CL', 'Aero|Cruise|CL'), ('Aero|CD', 'Aero|Cruise|CD'), ('Aero|f_total', 'Aero|Cruise|f_total'),
+                                                 ('Aero|CL_residual', 'Aero|Cruise|CL_residual'), ('Aero|AoA_trimmed', 'Aero|Cruise|AoA')])
+
+        # Step 3: Stability: trimmed AoA at cruise (skip if using VortexLatticeMethod)
         if fidelity['stability']['AoA_trim']['cruise'] == 'ManualFixedValue':
             indep.add_output('AoA', val=AoA, units='deg')
             self.add_subsystem('fixed_AoA',
@@ -247,7 +258,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
                                promotes_inputs=[('fixed_AoA_val', 'cruise.AoA')],
                                promotes_outputs=[('AoA', 'Aero|Cruise|AoA')])
 
-        elif fidelity['stability']['AoA_trim']['cruise'] == 'Automatic':
+        elif fidelity['stability']['AoA_trim']['cruise'] == 'Automatic' and fidelity['aerodynamics']['induced'] != 'VortexLatticeMethod':
             self.add_subsystem('trimmed_AoA',
                                WingedTrimOfAoA(v_sound=v_sound),
                                promotes_inputs=['Wing|airfoil|CL_alpha', 'Wing|aspect_ratio', ('Aero|speed', 'Mission|cruise_speed'), ('CL', 'Aero|Cruise|CL'), ('CL0', 'Wing|airfoil|CL_0')],
@@ -302,8 +313,8 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
                            promotes_outputs=[('Rotor|profile_power', 'Propeller|Cruise|profile_power')])
 
         # Step 8: Calculate induced power
-        self.add_subsystem('rotor_inflow',
-                           RotorInflow(),
+        self.add_subsystem('rotor_inflow_group',
+                           RotorInflowGroup(),
                            promotes_inputs=[('Rotor|mu', 'Propeller|Cruise|mu'),
                                             ('Rotor|alpha', 'Propeller|Cruise|alpha'),
                                             ('Rotor|thrust_coefficient', 'Propeller|Cruise|thrust_coefficient')],
