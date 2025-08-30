@@ -270,6 +270,7 @@ class WeightAnalysis(object):
 
                     if self.fidelity['power_model']['hover_climb'] == 'MomentumTheory':
                         prob.setup(check=False)
+                        # om.n2(prob)
                         prob.run_model()
 
                     elif self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
@@ -534,7 +535,7 @@ class MTOWEstimation(om.Group):
                                promotes_outputs=[('W_total', 'Weight|takeoff')])
 
             # Add solvers for implicit relations
-            self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=50, iprint=0, rtol=1e-3)
+            self.nonlinear_solver = om.NewtonSolver(solve_subsystems=True, maxiter=50, iprint=0, atol=1e-3)
             self.nonlinear_solver.options['err_on_non_converge'] = False
             self.nonlinear_solver.options['reraise_child_analysiserror'] = True
             self.nonlinear_solver.linesearch = om.ArmijoGoldsteinLS()
