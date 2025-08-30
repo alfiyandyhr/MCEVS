@@ -235,7 +235,7 @@ class PowerCruiseConstantSpeedWithWing(om.Group):
 
         if fidelity['aerodynamics']['induced'] == 'ParabolicDragPolar':
             self.add_subsystem('total_drag',
-                               WingedAeroDragViaParabolicDragPolar(rho_air=rho_air, CL0=vehicle.wing.airfoil.CL0),
+                               WingedAeroDragViaParabolicDragPolar(rho_air=rho_air, CL0=vehicle.wing.airfoil.CL_0),
                                promotes_inputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|lift', 'Aero|Cruise|lift'), 'Wing|*', ('Aero|speed', 'Mission|cruise_speed')],
                                promotes_outputs=[('Aero|total_drag', 'Aero|Cruise|total_drag'), ('Aero|CL', 'Aero|Cruise|CL'), ('Aero|CD', 'Aero|Cruise|CD'), ('Aero|f_total', 'Aero|Cruise|f_total')])
 

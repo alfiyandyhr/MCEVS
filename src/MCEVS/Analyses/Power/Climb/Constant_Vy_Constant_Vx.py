@@ -240,7 +240,7 @@ class PowerClimbConstantVyConstantVxWithWing(om.Group):
                                promotes_outputs=[('Aero|Cd0', 'Aero|Cruise|Cd0'), ('Aero|parasite_drag', 'Aero|Cruise|parasite_drag')])
 
         self.add_subsystem('total_drag',
-                           WingedAeroDragViaParabolicDragPolar(rho_air=rho_air, CL0=vehicle.wing.airfoil.CL0),
+                           WingedAeroDragViaParabolicDragPolar(rho_air=rho_air, CL0=vehicle.wing.airfoil.CL_0),
                            promotes_inputs=[('Aero|Cd0', 'Aero|Climb|Cd0'), ('Aero|lift', 'Aero|Climb|lift'), ('Aero|speed', 'climb.climb_airspeed'), 'Wing|*'],
                            promotes_outputs=[('Aero|total_drag', 'Aero|Climb|total_drag'), ('Aero|CL', 'Aero|Climb|CL')])
 

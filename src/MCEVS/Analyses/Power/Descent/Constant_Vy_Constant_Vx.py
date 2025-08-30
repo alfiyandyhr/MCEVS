@@ -236,7 +236,7 @@ class PowerDescentConstantVyConstantVxWithWing(om.Group):
 
         if fidelity['aerodynamics']['induced'] == 'ParabolicDragPolar':
             self.add_subsystem('total_drag',
-                               WingedAeroDragViaParabolicDragPolar(rho_air=rho_air, CL0=vehicle.wing.airfoil.CL0),
+                               WingedAeroDragViaParabolicDragPolar(rho_air=rho_air, CL0=vehicle.wing.airfoil.CL_0),
                                promotes_inputs=[('Aero|Cd0', 'Aero|Descent|Cd0'), ('Aero|lift', 'Aero|Descent|lift'), ('Aero|speed', 'descent.descent_airspeed'), 'Wing|*'],
                                promotes_outputs=[('Aero|total_drag', 'Aero|Descent|total_drag'), ('Aero|CL', 'Aero|Descent|CL')])
 
