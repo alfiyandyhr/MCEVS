@@ -105,7 +105,7 @@ def StandardLiftPlusCruiseEVTOL(design_var: dict,
         d_prop_hub = 1.5 / 9.0 * r_propeller
 
         vehicle.add_component(kind='fuselage', length=l_fuse, max_diameter=1.8, number_of_passenger=n_pax, payload_per_pax=payload_per_pax)
-        vehicle.add_component(kind='wing', airfoil='NACA2412', area=wing_area, aspect_ratio=wing_AR, thickness_to_chord_ratio=0.16998, ultimate_load_factor=3.0)
+        vehicle.add_component(kind='wing', airfoil='NACA0012', area=wing_area, aspect_ratio=wing_AR, thickness_to_chord_ratio=0.16998, ultimate_load_factor=3.0)
         vehicle.add_component(kind='horizontal_tail', area=2.0, aspect_ratio=2.0, taper_ratio=0.6, max_root_thickness=0.15 * 1.25, thickness_to_chord_ratio=0.15)
         vehicle.add_component(kind='vertical_tail', area=2.5, aspect_ratio=1.2, max_root_thickness=0.12 * 2.92, sweep_angle=35, thickness_to_chord_ratio=0.136)
         vehicle.add_component(kind='landing_gear', gear_type='wheeled', strut_length=0.3, ultimate_load_factor=5.7)
@@ -122,7 +122,7 @@ def StandardLiftPlusCruiseEVTOL(design_var: dict,
 
     if n_pax == 6:
         vehicle.add_component(kind='fuselage', length=30.0 * 0.3048, max_diameter=6.12707 * 0.3048, number_of_passenger=n_pax, payload_per_pax=payload_per_pax)
-        vehicle.add_component(kind='wing', airfoil='NACA2412', area=wing_area, aspect_ratio=wing_AR, thickness_to_chord_ratio=0.16998, ultimate_load_factor=3.0)
+        vehicle.add_component(kind='wing', airfoil='NACA0012', area=wing_area, aspect_ratio=wing_AR, thickness_to_chord_ratio=0.16998, ultimate_load_factor=3.0)
         vehicle.add_component(kind='horizontal_tail', area=39.51120 * 0.3048**2, aspect_ratio=4.30363, taper_ratio=0.6, max_root_thickness=0.15 * 3.78750 * 0.3048, thickness_to_chord_ratio=0.15)
         vehicle.add_component(kind='vertical_tail', area=27.34325 * 0.3048**2, aspect_ratio=1.17990, max_root_thickness=0.11500 * 9.73719 * 0.3048, sweep_angle=35, thickness_to_chord_ratio=(0.115 + 0.14 + 0.15 + 0.15 + 0.115) / 5)
         vehicle.add_component(kind='landing_gear', gear_type='wheeled', strut_length=0.3048, ultimate_load_factor=5.7)
