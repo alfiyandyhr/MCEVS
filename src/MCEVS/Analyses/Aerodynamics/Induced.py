@@ -7,9 +7,10 @@ from MCEVS.Analyses.Aerodynamics.Standard import CL_Calculation, Drag_Calculatio
 class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
     """
     Computes the drag of a winged configuration in flight (cruise, climb, descent).
-    CD = CD0 + K * CL**2
+    CD = CD0 + K * (CL-CL0)**2
     Parameters:
             rho_air					: air density [kg/m**3]
+            CL0                     : CL at zero angle of attack (default: 0.0 for symmetric airfoil)
     Inputs:
             Aero|Cd0				: minimum Cd of the polar drag (coefficient of parasitic drag)
             Aero|lift				: aerodynamic lift [N]
@@ -30,6 +31,7 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
     """
     def initialize(self):
         self.options.declare('rho_air', types=float, desc='Air density')
+        self.options.declare('CL0', types=float, default=0.0, desc='CL at zero angle of attack')
 
     def setup(self):
         self.add_input('Aero|Cd0', desc='Minimum Cd of the polar drag')
@@ -45,6 +47,7 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         rho_air = self.options['rho_air']
+        CL0 = self.options['CL0']
         CD0 = inputs['Aero|Cd0']
         L = inputs['Aero|lift']
         v = inputs['Aero|speed']
@@ -54,10 +57,10 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
         # Raymer's formula for non-swept wing (Oswald efficiency)
         wing_e = 1.78 * (1 - 0.045 * AR_wing**0.68) - 0.64
 
-        q = 0.5 * rho_air * v**2 	 				   # dynamic pressure
-        CL = L / (q * S_wing)						   # lift coefficient
-        CD = CD0 + CL**2 / (np.pi * wing_e * AR_wing)  # drag coefficient
-        f_total = CD * S_wing 						   # total equivalent flat plate area
+        q = 0.5 * rho_air * v**2 	 				             # dynamic pressure
+        CL = L / (q * S_wing)						             # lift coefficient
+        CD = CD0 + (CL - CL0)**2 / (np.pi * wing_e * AR_wing)    # drag coefficient
+        f_total = CD * S_wing 						             # total equivalent flat plate area
 
         outputs['Aero|total_drag'] = q * S_wing * CD  # drag
         outputs['Aero|CL'] = CL
@@ -66,6 +69,7 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
 
     def compute_partials(self, inputs, partials):
         rho_air = self.options['rho_air']
+        CL0 = self.options['CL0']
         CD0 = inputs['Aero|Cd0']
         L = inputs['Aero|lift']
         v = inputs['Aero|speed']
@@ -84,12 +88,12 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
         dCL_dq = -L / (S_wing * q**2)
         dCL_dS = -L / (q * S_wing**2)
 
-        CD = CD0 + CL**2 / (np.pi * wing_e * AR_wing)  # drag coefficient
+        CD = CD0 + (CL - CL0)**2 / (np.pi * wing_e * AR_wing)  # drag coefficient
         dCD_dCD0 = 1
-        dCD_dCL = 2 * CL / (np.pi * wing_e * AR_wing)
+        dCD_dCL = 2 * (CL - CL0) / (np.pi * wing_e * AR_wing)
         dCD_dL = dCD_dCL * dCL_dL
         dCD_dS = dCD_dCL * dCL_dS
-        dCD_dAR = CL**2 / np.pi * (- 1 / (wing_e**2 * AR_wing) * de_dAR - 1 / (wing_e * AR_wing**2))
+        dCD_dAR = (CL - CL0)**2 / np.pi * (- 1 / (wing_e**2 * AR_wing) * de_dAR - 1 / (wing_e * AR_wing**2))
 
         dD_dq = S_wing * CD
         dD_dS = q * CD
@@ -98,7 +102,7 @@ class WingedAeroDragViaParabolicDragPolar(om.ExplicitComponent):
         partials['Aero|total_drag', 'Aero|Cd0'] = q * S_wing * dCD_dCD0
         partials['Aero|total_drag', 'Aero|lift'] = dD_dCD * dCD_dCL * dCL_dL
         partials['Aero|total_drag', 'Wing|area'] = dD_dS + dD_dCD * dCD_dCL * dCL_dS
-        partials['Aero|total_drag', 'Wing|aspect_ratio'] = q * S_wing * CL**2 / np.pi * -(wing_e * AR_wing)**(-2) * (de_dAR * AR_wing + wing_e)
+        partials['Aero|total_drag', 'Wing|aspect_ratio'] = q * S_wing * (CL - CL0)**2 / np.pi * -(wing_e * AR_wing)**(-2) * (de_dAR * AR_wing + wing_e)
         partials['Aero|total_drag', 'Aero|speed'] = (dD_dCD * dCD_dCL * dCL_dq + dD_dq) * dq_dv
         partials['Aero|CL', 'Aero|Cd0'] = 0
         partials['Aero|CL', 'Aero|lift'] = dCL_dL
