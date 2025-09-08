@@ -1,9 +1,3 @@
-import numpy as np
-import openmdao.api as om
-import os
-import sys
-import copy
-
 from MCEVS.Analyses.Energy.Analysis import EnergyConsumption
 from MCEVS.Analyses.Weight.Battery.Groups import BatteryWeight
 from MCEVS.Analyses.Weight.Propulsion.Groups import PropulsionWeight
@@ -11,9 +5,15 @@ from MCEVS.Analyses.Weight.Structure.Groups import StructureWeight
 from MCEVS.Analyses.Weight.Equipment.Groups import EquipmentWeight
 from MCEVS.Analyses.Geometry.Rotor import MeanChord
 from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraint
-
 from MCEVS.Utils.Performance import record_performance_by_segments
 from MCEVS.Utils.Checks import check_fidelity_dict
+from MCEVS.Utils.IndepsVarComp import promote_indeps_var_comp
+
+import numpy as np
+import openmdao.api as om
+import os
+import sys
+import copy
 
 
 class VehicleWeight(object):
@@ -102,102 +102,12 @@ class WeightAnalysis(object):
             if os.name == 'nt':
                 sys.stdout = open(os.devnull, 'w')  # Redirect stdout to os.devnull
 
-        # --- Design parameters --- #
-
-        if self.vehicle.configuration == 'Multirotor':
-            r_lift_rotor = self.vehicle.lift_rotor.radius 					# m
-            r_hub_lift_rotor = self.vehicle.lift_rotor.hub_radius 				# m
-            mean_c_to_R_lift_rotor = self.vehicle.lift_rotor.mean_c_to_R
-            global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  			# deg
-
-        elif self.vehicle.configuration == 'LiftPlusCruise':
-            r_lift_rotor = self.vehicle.lift_rotor.radius 					# m
-            r_hub_lift_rotor = self.vehicle.lift_rotor.hub_radius 				# m
-            mean_c_to_R_lift_rotor = self.vehicle.lift_rotor.mean_c_to_R
-            global_twist_lift_rotor = self.vehicle.lift_rotor.global_twist  			# deg
-            r_propeller = self.vehicle.propeller.radius 					# m
-            mean_c_to_R_propeller = self.vehicle.propeller.mean_c_to_R
-            wing_area = self.vehicle.wing.area 							# m**2
-            wing_aspect_ratio = self.vehicle.wing.aspect_ratio
-            wing_airfoil_CL_alpha = self.vehicle.wing.airfoil.CL_alpha 				# 1/rad
-            wing_airfoil_CL_0 = self.vehicle.wing.airfoil.CL_0
-            htail_area = self.vehicle.horizontal_tail.area 				# m**2
-            htail_aspect_ratio = self.vehicle.horizontal_tail.aspect_ratio
-            htail_max_root_thickness = self.vehicle.horizontal_tail.max_root_thickness 	# m
-            vtail_area = self.vehicle.vertical_tail.area 					# m**2
-            vtail_aspect_ratio = self.vehicle.vertical_tail.aspect_ratio
-            vtail_max_root_thickness = self.vehicle.vertical_tail.max_root_thickness 	# m
-            vtail_sweep_angle = self.vehicle.vertical_tail.sweep_angle 			# deg
-            l_fuse = self.vehicle.fuselage.length 						# m
-
-        # --- OpenMDAO probolem --- #
+        # --- OpenMDAO problem --- #
         prob = om.Problem(reports=False)
         indeps = prob.model.add_subsystem('indeps', om.IndepVarComp(), promotes=['*'])
 
-        for segment in self.mission.segments:
-            if segment.kind not in ['ConstantPower', 'NoCreditClimb', 'NoCreditDescent', 'ReserveCruise', 'HoverStay']:
-                indeps.add_output(f'Mission|segment_{segment.id}|speed', segment.speed, units='m/s')
-                indeps.add_output(f'Mission|segment_{segment.id}|distance', segment.distance, units='m')
-            if segment.kind == 'HoverClimbConstantSpeed':
-                indeps.add_output('LiftRotor|HoverClimb|RPM', self.vehicle.lift_rotor.RPM['hover_climb'], units='rpm')
-            if segment.kind == 'CruiseConstantSpeed':
-                if self.vehicle.configuration == 'Multirotor':
-                    indeps.add_output('LiftRotor|Cruise|RPM', self.vehicle.lift_rotor.RPM['cruise'], units='rpm')
-                elif self.vehicle.configuration == 'LiftPlusCruise':
-                    indeps.add_output('Propeller|Cruise|RPM', self.vehicle.propeller.RPM['cruise'], units='rpm')
-            if segment.kind == 'ClimbConstantVyConstantVx':
-                if self.vehicle.configuration == 'Multirotor':
-                    indeps.add_output('LiftRotor|Climb|RPM', self.vehicle.lift_rotor.RPM['climb'], units='rpm')
-                elif self.vehicle.configuration == 'LiftPlusCruise':
-                    indeps.add_output('Propeller|Climb|RPM', self.vehicle.propeller.RPM['climb'], units='rpm')
-            if segment.kind == 'DescentConstantVyConstantVx':
-                if self.vehicle.configuration == 'Multirotor':
-                    indeps.add_output('LiftRotor|Descent|RPM', self.vehicle.lift_rotor.RPM['descent'], units='rpm')
-                elif self.vehicle.configuration == 'LiftPlusCruise':
-                    indeps.add_output('Propeller|Descent|RPM', self.vehicle.propeller.RPM['descent'], units='rpm')
-
-        if self.vehicle.configuration == 'Multirotor':
-            indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
-            indeps.add_output('LiftRotor|mean_c_to_R', mean_c_to_R_lift_rotor, units=None)
-            indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
-            indeps.add_output('LiftRotor|global_twist', global_twist_lift_rotor, units='deg')
-
-        elif self.vehicle.configuration == 'LiftPlusCruise':
-            indeps.add_output('LiftRotor|radius', r_lift_rotor, units='m')
-            indeps.add_output('LiftRotor|mean_c_to_R', mean_c_to_R_lift_rotor, units=None)
-            indeps.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
-            indeps.add_output('LiftRotor|global_twist', global_twist_lift_rotor, units='deg')
-            indeps.add_output('Propeller|radius', r_propeller, units='m')
-            indeps.add_output('Propeller|mean_c_to_R', mean_c_to_R_propeller, units=None)
-            indeps.add_output('Wing|area', wing_area, units='m**2')
-            indeps.add_output('Wing|aspect_ratio', wing_aspect_ratio)
-            indeps.add_output('Wing|airfoil|CL_alpha', wing_airfoil_CL_alpha, units='1/rad')
-            indeps.add_output('Wing|airfoil|CL_0', wing_airfoil_CL_0)
-            indeps.add_output('HorizontalTail|area', htail_area, units='m**2')
-            indeps.add_output('HorizontalTail|aspect_ratio', htail_aspect_ratio)
-            indeps.add_output('HorizontalTail|max_root_thickness', htail_max_root_thickness, units='m')
-            indeps.add_output('VerticalTail|area', vtail_area, units='m**2')
-            indeps.add_output('VerticalTail|aspect_ratio', vtail_aspect_ratio)
-            indeps.add_output('VerticalTail|max_root_thickness', vtail_max_root_thickness, units='m')
-            indeps.add_output('VerticalTail|sweep_angle', vtail_sweep_angle, units='deg')
-            indeps.add_output('Fuselage|length', l_fuse, units='m')
-
-        # Variables needed for BEMT
-        if self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
-            n_sections = self.vehicle.lift_rotor.n_section
-            r_to_R_list = self.vehicle.lift_rotor.r_to_R_list
-            c_to_R_list = self.vehicle.lift_rotor.c_to_R_list
-            w_to_R_list = self.vehicle.lift_rotor.w_to_R_list
-            if self.vehicle.lift_rotor.pitch_linear_grad is not None:
-                indeps.add_output('LiftRotor|pitch_linear_grad', self.vehicle.lift_rotor.pitch_linear_grad, units='deg')
-            else:
-                pitch_list = np.array(self.vehicle.lift_rotor.pitch_list)
-                for i in range(n_sections):
-                    indeps.add_output(f'LiftRotor|Section{i+1}|pitch', pitch_list[i], units='deg')
-            for i in range(n_sections):
-                indeps.add_output(f'LiftRotor|Section{i+1}|r_to_R', r_to_R_list[i], units=None)
-                indeps.add_output(f'LiftRotor|Section{i+1}|c_to_R', c_to_R_list[i], units=None)
-                indeps.add_output(f'LiftRotor|Section{i+1}|w_to_R', w_to_R_list[i], units=None)
+        # Promoting independent variable components
+        indeps = promote_indeps_var_comp(indeps, self.vehicle, self.mission, self.fidelity)
 
         # Geometric analysis
         if self.vehicle.configuration == 'Multirotor':
@@ -270,7 +180,6 @@ class WeightAnalysis(object):
 
                     if self.fidelity['power_model']['hover_climb'] == 'MomentumTheory':
                         prob.setup(check=False)
-                        # om.n2(prob)
                         prob.run_model()
 
                     elif self.fidelity['power_model']['hover_climb'] == 'BladeElementMomentumTheory':
