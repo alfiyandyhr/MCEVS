@@ -416,6 +416,8 @@ def plot_geometries(vehicle_list: list, label_list: list, cruise_speed_list=[Non
                     arrow_loc_x = center_x + (i - 1 / 2)
                 elif len(cruise_speed_list) == 3:
                     arrow_loc_x = center_x + (i / 2 - 1 / 2)
+                elif len(cruise_speed_list) == 4:
+                    arrow_loc_x = center_x + (i - 1.5)
                 dy = cruise_speed_list[i] / max(cruise_speed_list) * (-2.5)
                 ax.arrow(x=arrow_loc_x, y=arrow_loc_y, dx=0, dy=dy, head_width=0.2, head_length=0.2, fc=color_list[i], ec=color_list[i])
 
