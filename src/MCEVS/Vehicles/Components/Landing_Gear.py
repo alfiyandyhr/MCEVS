@@ -66,7 +66,7 @@ class LandingGear(object):
 
     def print_info(self):
         print('Component name: Landing Gear')
-        print(f'\tGear type = {self.gear_type} m')
+        print(f'\tGear type = {self.gear_type}')
         if self.gear_type == 'wheeled':
             print(f'\tStrut length = {self.strut_length} m')
             print(f'\tUltimate load factor = {self.ultimate_load_factor}')

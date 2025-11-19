@@ -1,4 +1,5 @@
 from MCEVS.Vehicles.Components.Airfoil import Airfoil
+import numpy as np
 
 
 class Wing(object):
@@ -54,6 +55,10 @@ class Wing(object):
                     self.thickness_to_chord_ratio = float(self.kwargs[item])
             elif item == 'technology_factor':
                 self.technology_factor = float(self.kwargs[item])
+
+        if self.area is not None and self.aspect_ratio is not None:
+            self.span = np.sqrt(self.area * self.aspect_ratio)
+            self.mean_chord_length = self.area / self.span
 
     def _calculate_weight_given_mtow(self, mtow):
         W_wing = 0.04674 * (mtow * 2.20462)**0.397

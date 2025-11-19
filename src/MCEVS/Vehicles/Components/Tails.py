@@ -49,6 +49,9 @@ class HorizontalTail(object):
             elif item == 'technology_factor':
                 self.technology_factor = float(self.kwargs[item])
 
+        if self.area is not None and self.aspect_ratio is not None:
+            self.span = np.sqrt(self.area * self.aspect_ratio)
+
     def _calculate_weight_given_mtow(self, mtow):
         W_HTail = 3.184 * (mtow * 2.20462)**0.887
         W_HTail *= (self.area * 3.28084 * 3.28084)**0.101
@@ -119,6 +122,9 @@ class VerticalTail(object):
                 self.thickness_to_chord_ratio = float(self.kwargs[item])
             elif item == 'technology_factor':
                 self.technology_factor = float(self.kwargs[item])
+
+        if self.area is not None and self.aspect_ratio is not None:
+            self.span = np.sqrt(self.area * self.aspect_ratio)
 
     def _calculate_weight_given_mtow(self, mtow):
         W_VTail = 1.68 * (mtow * 2.20462)**0.567

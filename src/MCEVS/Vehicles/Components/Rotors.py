@@ -45,6 +45,11 @@ class LiftRotor(object):
         # Attached motor
         self.motor_power_margin = 50.0  # %; default value
 
+        # Clearance constraint (typically used for lift+cruise)
+        # clearance = {'type': 1, 'percent_max_span': 95.0}; default
+        # clearance = {'type': 2, 'alpha': 0.33228, 'beta': 0.74124, 'clearance_c': 0.1}
+        self.clearance = None
+
     def _initialize(self):
         for item in list(self.kwargs):
             if item == 'n_rotor':
@@ -87,6 +92,8 @@ class LiftRotor(object):
                 self.technology_factor = float(self.kwargs[item])
             elif item == 'motor_power_margin':
                 self.motor_power_margin = float(self.kwargs[item])
+            elif item == 'clearance':
+                self.clearance = self.kwargs[item]
 
         self.solidity = self.n_blade * self.mean_c_to_R / np.pi
 
@@ -116,7 +123,8 @@ class LiftRotor(object):
         info += f'\t\tCd0 = {self.Cd0}\n'
         info += f'\t\tFigure of Merit = {self.figure_of_merit}\n'
         info += f'\t\tRPM = {self.RPM}\n'
-        info += f'\t\tMotor power margin = {self.motor_power_margin}%'
+        info += f'\t\tMotor power margin = {self.motor_power_margin}'
+        info += f'\t\tClearance = {self.clearance}%'
         return info
 
     def print_info(self):
@@ -129,7 +137,7 @@ class LiftRotor(object):
         print(f'\tSection c/R = {np.round(self.c_to_R_list,4)}')
         print(f'\tSection w/R = {np.round(self.w_to_R_list,4)}')
         print(f'\tSection pitch = {np.round(self.pitch_list,4)}')
-        print(f'\tPitch linear grad = {self.self.pitch_linear_grad}')
+        print(f'\tPitch linear grad = {self.pitch_linear_grad}')
         print(f'\tGlobal twist = {np.round(self.global_twist,4)}')
         print(f'\tSolidity = {self.solidity}')
         print(f'\tRadius = {self.radius} m')
@@ -139,6 +147,7 @@ class LiftRotor(object):
         print(f'\tFigure of Merit = {self.figure_of_merit}')
         print(f'\tRPM = {self.RPM}')
         print(f'\tMotor power margin = {self.motor_power_margin}%')
+        print(f'\tClearance = {self.clearance}')
 
 
 class Propeller(object):
@@ -261,7 +270,7 @@ class Propeller(object):
 
     def print_info(self):
         print('Component name: Propeller')
-        print(f'\tNumber of propeller(s) = {self.n_propeller} m')
+        print(f'\tNumber of propeller(s) = {self.n_propeller}')
         print(f'\tNumber of blade(s) per propeller = {self.n_blade}')
         print(f'\tNumber of section(s) per blade = {self.n_section}')
         print(f'\tSection airfoil = {self.airfoil}')
@@ -269,7 +278,7 @@ class Propeller(object):
         print(f'\tSection c/R = {np.round(self.c_to_R_list,4)}')
         print(f'\tSection w/R = {np.round(self.w_to_R_list,4)}')
         print(f'\tSection pitch = {np.round(self.pitch_list,4)}')
-        print(f'\tPitch linear grad = {np.round(self.self.pitch_linear_grad,4)}')
+        print(f'\tPitch linear grad = {np.round(self.pitch_linear_grad,4)}')
         print(f'\tGlobal twist = {np.round(self.global_twist,4)}')
         print(f'\tSolidity = {self.solidity} m')
         print(f'\tRadius = {self.radius} m')

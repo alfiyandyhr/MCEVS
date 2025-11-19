@@ -119,6 +119,94 @@ class LiftPlusCruiseEVTOL(object):
         print(self.propeller._info())
         print(self.boom._info())
 
+    def compute_component_weights(self):
+
+        if self.weight.max_takeoff is None:
+            raise ValueError("MTOW is not defined on vehicle.weight.max_takeoff")
+
+        mtow = self.weight.max_takeoff
+
+        # Apply group tf factors to each component
+        self._apply_technology_factors()
+
+        # Structure
+        if self.fuselage:
+            self.fuselage._calculate_weight_given_mtow(mtow)
+        if self.wing:
+            self.wing._calculate_weight_given_mtow(mtow)
+        if self.horizontal_tail:
+            self.horizontal_tail._calculate_weight_given_mtow(mtow)
+        if self.vertical_tail:
+            self.vertical_tail._calculate_weight_given_mtow(mtow)
+        if self.landing_gear:
+            self.landing_gear._calculate_weight_given_mtow(mtow)
+        if self.boom:
+            self.boom._calculate_weight_given_mtow(mtow)
+
+        # # Propulsion (power-based for now)
+        # if self.lift_rotor and p_max_lift is not None:
+        #     self.lift_rotor.calculate_weight(p_max_lift)
+        # if self.propeller and p_max_cruise is not None:
+        #     self.propeller.calculate_weight(p_max_cruise)
+
+        # # Totals
+        # self.weight.structure = sum(filter(None, [
+        #     getattr(self.fuselage, 'weight', None),
+        #     getattr(self.wing, 'weight', None),
+        #     getattr(self.horizontal_tail, 'weight', None),
+        #     getattr(self.vertical_tail, 'weight', None),
+        #     getattr(self.landing_gear, 'weight', None),
+        #     getattr(self.boom, 'weight', None),
+        # ])) or 0.0
+
+        # self.weight.propulsion = sum(filter(None, [
+        #     getattr(self.lift_rotor, 'weight', None),
+        #     getattr(self.propeller, 'weight', None),
+        # ])) or 0.0
+
+        # self.weight.battery = getattr(self.battery, 'weight', None) or 0.0
+        # self.weight.gross_takeoff = (self.weight.structure +
+        #                              self.weight.propulsion +
+        #                              self.weight.battery +
+        #                              (self.weight.payload or 0.0))
+
+    def _apply_technology_factors(self):
+
+        # Structure group
+        for comp in [
+            getattr(self, 'fuselage', None),
+            getattr(self, 'wing', None),
+            getattr(self, 'horizontal_tail', None),
+            getattr(self, 'vertical_tail', None),
+            getattr(self, 'landing_gear', None),
+            getattr(self, 'boom', None),
+        ]:
+            if comp is not None:
+                # Only set if not already set by user kwargs
+                if getattr(comp, 'technology_factor', None) is None:
+                    comp.technology_factor = self.tf_structure
+
+        # Propulsion group
+        for comp in [
+            getattr(self, 'lift_rotor', None),
+            getattr(self, 'propeller', None),
+            # motors, controllers, etc. in the future
+        ]:
+            if comp is not None:
+                if getattr(comp, 'technology_factor', None) is None:
+                    comp.technology_factor = self.tf_propulsion
+
+        # Equipment group (if/when you add avionics, anti-icing, furnishings, etc.)
+        for comp in [
+            # getattr(self, 'avionics', None),
+            # getattr(self, 'anti_icing', None),
+            # getattr(self, 'flight_control', None),
+            # getattr(self, 'furnishings', None),
+        ]:
+            if comp is not None:
+                if getattr(comp, 'technology_factor', None) is None:
+                    comp.technology_factor = self.tf_equipment
+
 
 class MultirotorEVTOL(object):
     """
