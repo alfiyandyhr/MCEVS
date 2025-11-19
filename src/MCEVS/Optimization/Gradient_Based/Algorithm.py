@@ -2,7 +2,7 @@ import openmdao.api as om
 
 from MCEVS.Analyses.Weight.Analysis import MTOWEstimation, GTOWEstimation, OffDesignMTOWEstimation
 from MCEVS.Analyses.Weight.Analysis import MultiPointMTOWEstimation, MultiPointMTOWEstimationWithFixedEmptyWeight
-from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraint
+from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraintTypeOne, LiftRotorClearanceConstraintTypeTwo
 from MCEVS.Analyses.Geometry.Rotor import MeanChord
 # from MCEVS.Utils.Performance import record_performance_by_segments
 
@@ -57,30 +57,45 @@ def run_gradient_based_optimization(DesignProblem: object):
 
     elif DesignProblem.vehicle.configuration == 'LiftPlusCruise':
         # Calculate spanwise clearance constraint for lift rotor of LPC config
-        if DesignProblem.kind in ['SingleObjectiveProblem', 'MultiObjectiveProblem', 'GTOWSingleObjectiveProblem']:
-            prob.model.add_subsystem('lift_rotor_clearance',
-                                     LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
-                                                                  max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
-                                                                  percent_max_span=95.0),
-                                     promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
-                                     promotes_outputs=[('clearance_constraint', 'LiftRotor|clearance_constraint')])
-        elif DesignProblem.kind in ['MultiPointSingleObjectiveProblem', 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight']:
-            for n in range(1, DesignProblem.multipoint_options['n_points'] + 1):
-                prob.model.add_subsystem(f'lift_rotor_clearance_{n}',
-                                         LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
-                                                                      max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
-                                                                      percent_max_span=95.0),
+        if DesignProblem.vehicle.lift_rotor.clearance['type'] == 1:
+            if DesignProblem.kind in ['SingleObjectiveProblem', 'MultiObjectiveProblem', 'GTOWSingleObjectiveProblem']:
+                prob.model.add_subsystem('lift_rotor_clearance',
+                                         LiftRotorClearanceConstraintTypeOne(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
+                                                                             max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
+                                                                             percent_max_span=DesignProblem.vehicle.lift_rotor.clearance['percent_max_span']),
                                          promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
-                                         promotes_outputs=[('clearance_constraint', f'Point_{n}|LiftRotor|clearance_constraint')])
-        elif DesignProblem.kind in ['OffDesignSingleObjectiveProblem']:
-            points = ['OnDesign', 'OffDesign']
-            for point in points:
-                prob.model.add_subsystem(f'lift_rotor_clearance_{point}',
-                                         LiftRotorClearanceConstraint(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
-                                                                      max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
-                                                                      percent_max_span=95.0),
+                                         promotes_outputs=[('clearance_constraint', 'LiftRotor|clearance_constraint')])
+            elif DesignProblem.kind in ['MultiPointSingleObjectiveProblem', 'MultiPointSingleObjectiveProblemWithFixedEmptyWeight']:
+                for n in range(1, DesignProblem.multipoint_options['n_points'] + 1):
+                    prob.model.add_subsystem(f'lift_rotor_clearance_{n}',
+                                             LiftRotorClearanceConstraintTypeOne(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
+                                                                                 max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
+                                                                                 percent_max_span=DesignProblem.vehicle.lift_rotor.clearance['percent_max_span']),
+                                             promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
+                                             promotes_outputs=[('clearance_constraint', f'Point_{n}|LiftRotor|clearance_constraint')])
+            elif DesignProblem.kind in ['OffDesignSingleObjectiveProblem']:
+                points = ['OnDesign', 'OffDesign']
+                for point in points:
+                    prob.model.add_subsystem(f'lift_rotor_clearance_{point}',
+                                             LiftRotorClearanceConstraintTypeOne(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
+                                                                                 max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
+                                                                                 percent_max_span=DesignProblem.vehicle.lift_rotor.clearance['percent_max_span']),
+                                             promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
+                                             promotes_outputs=[('clearance_constraint', f'{point}|LiftRotor|clearance_constraint')])
+
+        elif DesignProblem.vehicle.lift_rotor.clearance['type'] == 2:
+            if DesignProblem.kind in ['SingleObjectiveProblem']:
+                prob.model.add_subsystem('lift_rotor_clearance',
+                                         LiftRotorClearanceConstraintTypeTwo(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
+                                                                             max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
+                                                                             alpha=DesignProblem.vehicle.lift_rotor.clearance['alpha'],
+                                                                             beta=DesignProblem.vehicle.lift_rotor.clearance['beta'],
+                                                                             clearance_c=DesignProblem.vehicle.lift_rotor.clearance['clearance_c']),
                                          promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
-                                         promotes_outputs=[('clearance_constraint', f'{point}|LiftRotor|clearance_constraint')])
+                                         promotes_outputs=[('clearance_inner_fuselage', 'LiftRotor|clearance_inner_fuselage'), ('clearance_inner_outer', 'LiftRotor|clearance_inner_outer')])
+
+        else:
+            raise ValueError('LiftRotorClearance type should be in [1, 2] !!!')
 
         # Convert mean_c_to_R into mean_chord
         prob.model.add_subsystem('chord_calc_lift_rotor',

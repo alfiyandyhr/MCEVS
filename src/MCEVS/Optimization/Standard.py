@@ -351,7 +351,11 @@ def bookkeep_results(problem: object, vehicle: object, mission: object, om_resul
             results['LiftRotor|HoverClimb|T_to_P'] = res.get_val('LiftRotor|HoverClimb|T_to_P')[0]
             results['Propeller|Cruise|T_to_P'] = res.get_val('Propeller|Cruise|T_to_P')[0]
             results['LiftRotor|HoverDescent|T_to_P'] = res.get_val('LiftRotor|HoverDescent|T_to_P')[0]
-            results['LiftRotor|clearance_constraint'] = res.get_val('LiftRotor|clearance_constraint')[0]
+            if vehicle.lift_rotor.clearance['type'] == 1:
+                results['LiftRotor|clearance_constraint'] = res.get_val('LiftRotor|clearance_constraint')[0]
+            elif vehicle.lift_rotor.clearance['type'] == 2:
+                results['LiftRotor|clearance_inner_fuselage'] = res.get_val('LiftRotor|clearance_inner_fuselage')[0]
+                results['LiftRotor|clearance_inner_outer'] = res.get_val('LiftRotor|clearance_inner_outer')[0]
             results['Weight|residual'] = res.get_val('Weight|residual', 'kg')[0]
 
             # Other importants results
