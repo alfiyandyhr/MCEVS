@@ -343,6 +343,9 @@ def bookkeep_results(problem: object, vehicle: object, mission: object, om_resul
             results['Wing|area'] = res.get_val('Wing|area', 'm**2')[0]
             results['Wing|aspect_ratio'] = res.get_val('Wing|aspect_ratio', None)[0]
             results['LiftRotor|radius'] = res.get_val('LiftRotor|radius', 'm')[0]
+            if vehicle.lift_rotor.clearance['type'] == 3:
+                results['LiftRotor|s_inner'] = res.get_val('LiftRotor|s_inner', None)[0]
+                results['LiftRotor|s_outer'] = res.get_val('LiftRotor|s_outer', None)[0]
             results['Propeller|radius'] = res.get_val('Propeller|radius', 'm')[0]
             results['Propeller|Cruise|RPM'] = res.get_val('Propeller|Cruise|RPM', 'rpm')[0]
             results['Aero|Cruise|CL'] = res.get_val('Aero|Cruise|CL', None)[0]
@@ -356,6 +359,12 @@ def bookkeep_results(problem: object, vehicle: object, mission: object, om_resul
             elif vehicle.lift_rotor.clearance['type'] == 2:
                 results['LiftRotor|clearance_inner_fuselage'] = res.get_val('LiftRotor|clearance_inner_fuselage')[0]
                 results['LiftRotor|clearance_inner_outer'] = res.get_val('LiftRotor|clearance_inner_outer')[0]
+            elif vehicle.lift_rotor.clearance['type'] == 3:
+                results['LiftRotor|clearance_inner_fuselage'] = res.get_val('LiftRotor|clearance_inner_fuselage')[0]
+                results['LiftRotor|clearance_inner_outer'] = res.get_val('LiftRotor|clearance_inner_outer')[0]
+                results['LiftRotor|clearance_tip_outer'] = res.get_val('LiftRotor|clearance_tip_outer')[0]
+                results['LiftRotor|order_constraint'] = res.get_val('LiftRotor|order_constraint')[0]
+                
             results['Weight|residual'] = res.get_val('Weight|residual', 'kg')[0]
 
             # Other importants results

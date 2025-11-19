@@ -2,7 +2,7 @@ import openmdao.api as om
 
 from MCEVS.Analyses.Weight.Analysis import MTOWEstimation, GTOWEstimation, OffDesignMTOWEstimation
 from MCEVS.Analyses.Weight.Analysis import MultiPointMTOWEstimation, MultiPointMTOWEstimationWithFixedEmptyWeight
-from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraintTypeOne, LiftRotorClearanceConstraintTypeTwo
+from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraintTypeOne, LiftRotorClearanceConstraintTypeTwo, LiftRotorClearanceConstraintTypeThree
 from MCEVS.Analyses.Geometry.Rotor import MeanChord
 # from MCEVS.Utils.Performance import record_performance_by_segments
 
@@ -88,14 +88,25 @@ def run_gradient_based_optimization(DesignProblem: object):
                 prob.model.add_subsystem('lift_rotor_clearance',
                                          LiftRotorClearanceConstraintTypeTwo(N_rotor=DesignProblem.vehicle.lift_rotor.n_rotor,
                                                                              max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
-                                                                             alpha=DesignProblem.vehicle.lift_rotor.clearance['alpha'],
-                                                                             beta=DesignProblem.vehicle.lift_rotor.clearance['beta'],
+                                                                             s_outer=DesignProblem.vehicle.lift_rotor.clearance['s_outer'],
+                                                                             s_inner=DesignProblem.vehicle.lift_rotor.clearance['s_inner'],
                                                                              clearance_c=DesignProblem.vehicle.lift_rotor.clearance['clearance_c']),
                                          promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
                                          promotes_outputs=[('clearance_inner_fuselage', 'LiftRotor|clearance_inner_fuselage'), ('clearance_inner_outer', 'LiftRotor|clearance_inner_outer')])
 
+        elif DesignProblem.vehicle.lift_rotor.clearance['type'] == 3:
+            if DesignProblem.kind in ['SingleObjectiveProblem']:
+                prob.model.add_subsystem('lift_rotor_clearance',
+                                         LiftRotorClearanceConstraintTypeThree(max_d_fuse=DesignProblem.vehicle.fuselage.max_diameter,
+                                                                               clearance_c=DesignProblem.vehicle.lift_rotor.clearance['clearance_c']),
+                                         promotes_inputs=['LiftRotor|radius', 'LiftRotor|s_inner', 'LiftRotor|s_outer', 'Wing|area', 'Wing|aspect_ratio'],
+                                         promotes_outputs=[('g_inner_fuse', 'LiftRotor|clearance_inner_fuselage'),
+                                                           ('g_tip_outer', 'LiftRotor|clearance_tip_outer'),
+                                                           ('g_inner_outer', 'LiftRotor|clearance_inner_outer'),
+                                                           ('g_order', 'LiftRotor|order_constraint')])
+
         else:
-            raise ValueError('LiftRotorClearance type should be in [1, 2] !!!')
+            raise ValueError('LiftRotorClearance type should be in [1, 2, 3] !!!')
 
         # Convert mean_c_to_R into mean_chord
         prob.model.add_subsystem('chord_calc_lift_rotor',

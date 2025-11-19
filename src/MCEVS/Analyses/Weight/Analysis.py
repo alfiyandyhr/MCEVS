@@ -5,6 +5,8 @@ from MCEVS.Analyses.Weight.Structure.Groups import StructureWeight
 from MCEVS.Analyses.Weight.Equipment.Groups import EquipmentWeight
 from MCEVS.Analyses.Geometry.Rotor import MeanChord
 from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraintTypeOne
+from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraintTypeTwo
+from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraintTypeThree
 from MCEVS.Utils.Performance import record_performance_by_segments
 from MCEVS.Utils.Checks import check_fidelity_dict
 from MCEVS.Utils.IndepsVarComp import promote_indeps_var_comp
@@ -114,12 +116,35 @@ class WeightAnalysis(object):
 
         elif self.vehicle.configuration == 'LiftPlusCruise':
             # Calculate spanwise clearance constraint for lift rotor of LPC config
-            prob.model.add_subsystem('lift_rotor_clearance',
-                                     LiftRotorClearanceConstraintTypeOne(N_rotor=self.vehicle.lift_rotor.n_rotor,
-                                                                         max_d_fuse=self.vehicle.fuselage.max_diameter,
-                                                                         percent_max_span=95.0),
-                                     promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
-                                     promotes_outputs=[('clearance_constraint', 'LiftRotor|clearance_constraint')])
+            if self.vehicle.lift_rotor.clearance['type'] == 1:
+                prob.model.add_subsystem('lift_rotor_clearance',
+                                         LiftRotorClearanceConstraintTypeOne(N_rotor=self.vehicle.lift_rotor.n_rotor,
+                                                                             max_d_fuse=self.vehicle.fuselage.max_diameter,
+                                                                             percent_max_span=95.0),
+                                         promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
+                                         promotes_outputs=[('clearance_constraint', 'LiftRotor|clearance_constraint')])
+            elif self.vehicle.lift_rotor.clearance['type'] == 2:
+                prob.model.add_subsystem('lift_rotor_clearance',
+                                         LiftRotorClearanceConstraintTypeTwo(N_rotor=self.vehicle.lift_rotor.n_rotor,
+                                                                             max_d_fuse=self.vehicle.fuselage.max_diameter,
+                                                                             s_inner=self.vehicle.lift_rotor.clearance['s_inner'],
+                                                                             s_outer=self.vehicle.lift_rotor.clearance['s_outer'],
+                                                                             clearance_c=self.vehicle.lift_rotor.clearance['clearance_c']),
+                                         promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
+                                         promotes_outputs=[('clearance_inner_fuselage', 'LiftRotor|clearance_inner_fuselage'),
+                                                           ('clearance_inner_outer', 'LiftRotor|clearance_inner_outer')])
+            elif self.vehicle.lift_rotor.clearance['type'] == 3:
+                prob.model.add_subsystem('lift_rotor_clearance',
+                                         LiftRotorClearanceConstraintTypeThree(max_d_fuse=self.vehicle.fuselage.max_diameter,
+                                                                               clearance_c=self.vehicle.lift_rotor.clearance['clearance_c']),
+                                         promotes_inputs=['LiftRotor|radius', 'LiftRotor|s_inner', 'LiftRotor|s_outer', 'Wing|area', 'Wing|aspect_ratio'],
+                                         promotes_outputs=[('g_inner_fuse', 'LiftRotor|clearance_inner_fuselage'),
+                                                           ('g_tip_outer', 'LiftRotor|clearance_tip_outer'),
+                                                           ('g_inner_outer', 'LiftRotor|clearance_inner_outer'),
+                                                           ('g_order', 'LiftRotor|order_constraint')])
+            else:
+                raise ValueError('LiftRotorClearance type must be in [1, 2, 3] !!!')
+
             # Convert mean_c_to_R into mean_chord
             prob.model.add_subsystem('chord_calc_lift_rotor',
                                      MeanChord(),

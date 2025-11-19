@@ -47,7 +47,8 @@ class LiftRotor(object):
 
         # Clearance constraint (typically used for lift+cruise)
         # clearance = {'type': 1, 'percent_max_span': 95.0}; default
-        # clearance = {'type': 2, 'alpha': 0.33228, 'beta': 0.74124, 'clearance_c': 0.1}
+        # clearance = {'type': 2, 's_inner': 0.33228, 's_outer': 0.74124, 'clearance_c': 0.1}
+        # clearance = {'type': 3, 's_inner': None, 's_outer': None, 'clearance_c': 0.1}
         self.clearance = None
 
     def _initialize(self):
@@ -124,7 +125,7 @@ class LiftRotor(object):
         info += f'\t\tFigure of Merit = {self.figure_of_merit}\n'
         info += f'\t\tRPM = {self.RPM}\n'
         info += f'\t\tMotor power margin = {self.motor_power_margin}'
-        info += f'\t\tClearance = {self.clearance}%'
+        info += f'\t\tClearance = {self.clearance}'
         return info
 
     def print_info(self):

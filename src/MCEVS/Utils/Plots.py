@@ -354,62 +354,30 @@ def plot_geometries(vehicle_list: list, label_list: list, cruise_speed_list=[Non
             vert_circle_offset = boom_length / 2.0  # distance from wing plane to rotor centers
 
             # --- Lift rotors by clearance type --- #
-            clr = vehicle.lift_rotor.clearance
-            clr_type = clr.get('type', 1)
 
-            if clr_type == 1:
-                # Your original Type One placement (outer at tips)
-                for j in range(2):
-                    # Outer rotors
-                    circle_x = center_x + (j - 0.5) * wing_span
-                    for sgn in (+1, -1):  # above / below
-                        circ = patches.Circle((circle_x, center_y + sgn * vert_circle_offset),
-                                              r_lift_rotor, ec=color_list[i], fc='none',
-                                              linewidth=1.5, alpha=alpha_list[i])
-                        ax.add_patch(circ)
-                    ax.plot([circle_x, circle_x], [-vert_circle_offset, vert_circle_offset],
-                            color=color_list[i], linewidth=2, alpha=0.5)
-
-                for j in range(2):
-                    # Inner rotors (evenly spaced by your original expression)
-                    circle_x = center_x + (2 * j - 1) * ((fuse_max_D + wing_span) / 4 - 0.5 * r_lift_rotor)
-                    for sgn in (+1, -1):
-                        circ = patches.Circle((circle_x, center_y + sgn * vert_circle_offset),
-                                              r_lift_rotor, ec=color_list[i], fc='none',
-                                              linewidth=1.5, alpha=alpha_list[i])
-                        ax.add_patch(circ)
-                    ax.plot([circle_x, circle_x], [-vert_circle_offset, vert_circle_offset],
-                            color=color_list[i], linewidth=2, alpha=0.5)
-
-            elif clr_type == 2:
-                # Type Two: alpha-beta layout (two spanwise stations per semi-span)
-                alpha_ab = float(clr.get('alpha', 0.85))
-                beta_ab = float(clr.get('beta', 0.45))
-
-                # Spanwise station x-locations (top view uses x as span coordinate)
-                # Stations are at +/- (fraction of semi-span)*b/2 from centerline.
-                # Here we draw four stations total (two per side): inner (beta), outer (alpha).
-                x_stations = [
-                    -0.5 * wing_span * beta_ab,
-                    -0.5 * wing_span * alpha_ab,
-                    0.5 * wing_span * beta_ab,
-                    0.5 * wing_span * alpha_ab,
-                ]
-
-                # Draw circles and booms at each station
-                for xst in x_stations:
-                    for sgn in (+1, -1):
-                        circ = patches.Circle((xst, center_y + sgn * vert_circle_offset),
-                                              r_lift_rotor, ec=color_list[i], fc='none',
-                                              linewidth=1.5, alpha=alpha_list[i])
-                        ax.add_patch(circ)
-                    ax.plot([xst, xst], [-vert_circle_offset, vert_circle_offset],
-                            color=color_list[i], linewidth=2, alpha=0.5)
-
+            if vehicle.lift_rotor.clearance['type'] == 1:
+                s_inner = 0.5
+                s_outer = 1.0
+            elif vehicle.lift_rotor.clearance['type'] in [2, 3]:
+                s_inner = vehicle.lift_rotor.clearance['s_inner']
+                s_outer = vehicle.lift_rotor.clearance['s_outer']
             else:
-                # Fallback: do nothing, or warn
-                ax.text(center_x, center_y + 0.2, f'Unknown clearance type: {clr_type}',
-                        color='red', fontsize=10, ha='center')
+                raise ValueError('LiftRotorClearance type must be in [1, 2, 3]')
+
+            # Spanwise station x-locations (top view uses x as span coordinate)
+            # Stations are at +/- (fraction of semi-span)*b/2 from centerline.
+            # Here we draw four stations total (two per side): inner, outer.
+            x_stations = [-0.5 * wing_span * s_inner, -0.5 * wing_span * s_outer, 0.5 * wing_span * s_inner, 0.5 * wing_span * s_outer]
+
+            # Draw circles and booms at each station
+            for xst in x_stations:
+                for sgn in (+1, -1):
+                    circ = patches.Circle((xst, center_y + sgn * vert_circle_offset),
+                                          r_lift_rotor, ec=color_list[i], fc='none',
+                                          linewidth=1.5, alpha=alpha_list[i])
+                    ax.add_patch(circ)
+                ax.plot([xst, xst], [-vert_circle_offset, vert_circle_offset],
+                        color=color_list[i], linewidth=2, alpha=0.5)
 
             # --- Frontal View --- #
 

@@ -16,6 +16,9 @@ def promote_indeps_var_comp(ivc, vehicle, mission, fidelity):
         r_hub_lift_rotor = vehicle.lift_rotor.hub_radius 			            # m
         mean_c_to_R_lift_rotor = vehicle.lift_rotor.mean_c_to_R
         global_twist_lift_rotor = vehicle.lift_rotor.global_twist               # deg
+        if vehicle.lift_rotor.clearance['type'] == 3:
+            s_inner_lift_rotor = vehicle.lift_rotor.clearance['s_inner']
+            s_outer_lift_rotor = vehicle.lift_rotor.clearance['s_outer']
         r_propeller = vehicle.propeller.radius 					                # m
         mean_c_to_R_propeller = vehicle.propeller.mean_c_to_R
         wing_area = vehicle.wing.area 							                # m**2
@@ -42,6 +45,9 @@ def promote_indeps_var_comp(ivc, vehicle, mission, fidelity):
         ivc.add_output('LiftRotor|mean_c_to_R', mean_c_to_R_lift_rotor, units=None)
         ivc.add_output('LiftRotor|hub_radius', r_hub_lift_rotor, units='m')
         ivc.add_output('LiftRotor|global_twist', global_twist_lift_rotor, units='deg')
+        if vehicle.lift_rotor.clearance['type'] == 3:
+            ivc.add_output('LiftRotor|s_inner', s_inner_lift_rotor, units=None)
+            ivc.add_output('LiftRotor|s_outer', s_outer_lift_rotor, units=None)
         ivc.add_output('Propeller|radius', r_propeller, units='m')
         ivc.add_output('Propeller|mean_c_to_R', mean_c_to_R_propeller, units=None)
         ivc.add_output('Wing|area', wing_area, units='m**2')
