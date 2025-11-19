@@ -4,12 +4,11 @@ from MCEVS.Analyses.Weight.Propulsion.Groups import PropulsionWeight
 from MCEVS.Analyses.Weight.Structure.Groups import StructureWeight
 from MCEVS.Analyses.Weight.Equipment.Groups import EquipmentWeight
 from MCEVS.Analyses.Geometry.Rotor import MeanChord
-from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraint
+from MCEVS.Analyses.Geometry.Clearance import LiftRotorClearanceConstraintTypeOne
 from MCEVS.Utils.Performance import record_performance_by_segments
 from MCEVS.Utils.Checks import check_fidelity_dict
 from MCEVS.Utils.IndepsVarComp import promote_indeps_var_comp
 
-import numpy as np
 import openmdao.api as om
 import os
 import sys
@@ -58,14 +57,10 @@ class VehicleWeight(object):
         self.equipment = None
         self.is_sized = False
 
-    def print_info(self):
-        print(f'Weight|maximum_takeoff= {self.max_takeoff} kg')
-        print(f'Weight|gross_takeoff= {self.gross_takeoff} kg')
-        print(f'Weight|payload= {self.payload} kg')
-        print(f'Weight|battery= {self.battery} kg')
-        print(f'Weight|propulsion= {self.propulsion} kg')
-        print(f'Weight|structure= {self.structure} kg')
-        print(f'Weight|equipment= {self.equipment} kg')
+    def __repr__(self):
+        return (f"VehicleWeight(max_takeoff={self.max_takeoff}, gross_takeoff={self.gross_takeoff}, "
+                f"payload={self.payload}, battery={self.battery}, propulsion={self.propulsion}, "
+                f"structure={self.structure}, equipment={self.equipment})")
 
 
 class WeightAnalysis(object):
@@ -120,9 +115,9 @@ class WeightAnalysis(object):
         elif self.vehicle.configuration == 'LiftPlusCruise':
             # Calculate spanwise clearance constraint for lift rotor of LPC config
             prob.model.add_subsystem('lift_rotor_clearance',
-                                     LiftRotorClearanceConstraint(N_rotor=self.vehicle.lift_rotor.n_rotor,
-                                                                  max_d_fuse=self.vehicle.fuselage.max_diameter,
-                                                                  percent_max_span=95.0),
+                                     LiftRotorClearanceConstraintTypeOne(N_rotor=self.vehicle.lift_rotor.n_rotor,
+                                                                         max_d_fuse=self.vehicle.fuselage.max_diameter,
+                                                                         percent_max_span=95.0),
                                      promotes_inputs=['LiftRotor|radius', 'Wing|area', 'Wing|aspect_ratio'],
                                      promotes_outputs=[('clearance_constraint', 'LiftRotor|clearance_constraint')])
             # Convert mean_c_to_R into mean_chord
