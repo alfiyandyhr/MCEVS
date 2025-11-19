@@ -350,51 +350,66 @@ def plot_geometries(vehicle_list: list, label_list: list, cruise_speed_list=[Non
             # Draw the propeller
             ax.plot([-r_propeller, r_propeller], [-fuse_length * 0.72 - i * 0.1, -fuse_length * 0.72 - i * 0.1], color=color_list[i], linewidth=1.5, alpha=alpha_list[i])
 
-            # Define the circle properties
-            circle_radius = r_lift_rotor
-            # circle_spacing = wing_span / 4  # Spaced evenly along the rectangle's length
+            # Vertical offset to draw fore/aft rotors (two chordwise rows)
+            vert_circle_offset = boom_length / 2.0  # distance from wing plane to rotor centers
 
-            hor_rect_length = wing_span
-            # hor_rect_width = wing_chord
-            # vert_rect_length = fuse_length
+            # --- Lift rotors by clearance type --- #
+            clr = vehicle.lift_rotor.clearance
+            clr_type = clr.get('type', 1)
 
-            # Calculate horizontal circle positions (4 above and 4 below the horizontal rectangle)
-            # hor_circle_spacing = hor_rect_length / 4
-            vert_circle_offset = boom_length / 2  # Offset from the rectangle
+            if clr_type == 1:
+                # Your original Type One placement (outer at tips)
+                for j in range(2):
+                    # Outer rotors
+                    circle_x = center_x + (j - 0.5) * wing_span
+                    for sgn in (+1, -1):  # above / below
+                        circ = patches.Circle((circle_x, center_y + sgn * vert_circle_offset),
+                                              r_lift_rotor, ec=color_list[i], fc='none',
+                                              linewidth=1.5, alpha=alpha_list[i])
+                        ax.add_patch(circ)
+                    ax.plot([circle_x, circle_x], [-vert_circle_offset, vert_circle_offset],
+                            color=color_list[i], linewidth=2, alpha=0.5)
 
-            # Draw the outer lift rotors
-            for j in range(2):
-                # Circle positions along the x-axis
-                circle_x = center_x + (j - 1 / 2) * hor_rect_length
+                for j in range(2):
+                    # Inner rotors (evenly spaced by your original expression)
+                    circle_x = center_x + (2 * j - 1) * ((fuse_max_D + wing_span) / 4 - 0.5 * r_lift_rotor)
+                    for sgn in (+1, -1):
+                        circ = patches.Circle((circle_x, center_y + sgn * vert_circle_offset),
+                                              r_lift_rotor, ec=color_list[i], fc='none',
+                                              linewidth=1.5, alpha=alpha_list[i])
+                        ax.add_patch(circ)
+                    ax.plot([circle_x, circle_x], [-vert_circle_offset, vert_circle_offset],
+                            color=color_list[i], linewidth=2, alpha=0.5)
 
-                # Circle above the horizontal rectangle
-                circle_above = patches.Circle((circle_x, center_y + vert_circle_offset), circle_radius, ec=color_list[i], fc='none', linewidth=1.5, alpha=alpha_list[i])
-                ax.add_patch(circle_above)
+            elif clr_type == 2:
+                # Type Two: alpha-beta layout (two spanwise stations per semi-span)
+                alpha_ab = float(clr.get('alpha', 0.85))
+                beta_ab = float(clr.get('beta', 0.45))
 
-                # Circle below the horizontal rectangle
-                circle_below = patches.Circle((circle_x, center_y - vert_circle_offset), circle_radius, ec=color_list[i], fc='none', linewidth=1.5, alpha=alpha_list[i])
-                ax.add_patch(circle_below)
+                # Spanwise station x-locations (top view uses x as span coordinate)
+                # Stations are at +/- (fraction of semi-span)*b/2 from centerline.
+                # Here we draw four stations total (two per side): inner (beta), outer (alpha).
+                x_stations = [
+                    -0.5 * wing_span * beta_ab,
+                    -0.5 * wing_span * alpha_ab,
+                    0.5 * wing_span * beta_ab,
+                    0.5 * wing_span * alpha_ab,
+                ]
 
-                # Draw the booms
-                ax.plot([circle_x, circle_x], [-vert_circle_offset, vert_circle_offset], color=color_list[i], linewidth=2, alpha=0.5)
+                # Draw circles and booms at each station
+                for xst in x_stations:
+                    for sgn in (+1, -1):
+                        circ = patches.Circle((xst, center_y + sgn * vert_circle_offset),
+                                              r_lift_rotor, ec=color_list[i], fc='none',
+                                              linewidth=1.5, alpha=alpha_list[i])
+                        ax.add_patch(circ)
+                    ax.plot([xst, xst], [-vert_circle_offset, vert_circle_offset],
+                            color=color_list[i], linewidth=2, alpha=0.5)
 
-            # Draw the inner lift rotors
-            for j in range(2):
-                # Circle positions along the x-axis
-                circle_x = center_x + (2 * j - 1) * ((fuse_max_D + wing_span) / 4 - 0.5 * r_lift_rotor)
-
-                # Circle above the horizontal rectangle
-                circle_above = patches.Circle((circle_x, center_y + vert_circle_offset), circle_radius, ec=color_list[i], fc='none', linewidth=1.5, alpha=alpha_list[i])
-                ax.add_patch(circle_above)
-
-                # Circle below the horizontal rectangle
-                circle_below = patches.Circle((circle_x, center_y - vert_circle_offset), circle_radius, ec=color_list[i], fc='none', linewidth=1.5, alpha=alpha_list[i])
-                ax.add_patch(circle_below)
-
-                # Draw the booms
-                ax.plot([circle_x, circle_x], [-vert_circle_offset, vert_circle_offset], color=color_list[i], linewidth=2, alpha=0.5)
-
-                # --------------------------------------------------------------------------------------------------------------------------- #
+            else:
+                # Fallback: do nothing, or warn
+                ax.text(center_x, center_y + 0.2, f'Unknown clearance type: {clr_type}',
+                        color='red', fontsize=10, ha='center')
 
             # --- Frontal View --- #
 
